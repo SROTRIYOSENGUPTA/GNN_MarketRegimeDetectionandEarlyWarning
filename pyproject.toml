@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "gnn-market-regime-detection-and-early-warning"
 version = "0.1.0"
@@ -12,9 +16,20 @@ dependencies = [
     "yfinance",
 ]
 
+[project.scripts]
+market-regime-real-data = "market_regime_gnn.run_real_data:cli"
+thgnn-real-data = "GNNProject.thgnn.run_real_data:cli"
+
 [dependency-groups]
 dev = [
     "pytest",
+]
+
+[tool.setuptools.packages.find]
+include = ["market_regime_gnn*", "GNNProject*"]
+exclude = [
+    "GNNProject.thgnn.tests",
+    "GNNProject.thgnn.tests.*",
 ]
 
 [tool.pytest.ini_options]

@@ -3,16 +3,22 @@ End-to-end integration test: Dataset → TemporalEncoder → RelationalEncoder.
 Validates the full forward pass from raw features to final node + edge embeddings.
 """
 
-import sys, os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-
 import datetime
+from pathlib import Path
 import numpy as np
+import pytest
 import torch
-from config import THGNNConfig
-from data.dataset import THGNNDataset, build_dataloader
-from models.temporal_encoder import TemporalEncoder
-from models.relational_encoder import RelationalEncoder
+
+pytest.importorskip("torch_geometric")
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+import sys
+sys.path.insert(0, str(REPO_ROOT))
+
+from GNNProject.thgnn.config import THGNNConfig
+from GNNProject.thgnn.data.dataset import THGNNDataset, build_dataloader
+from GNNProject.thgnn.models.temporal_encoder import TemporalEncoder
+from GNNProject.thgnn.models.relational_encoder import RelationalEncoder
 
 
 def generate_synthetic_data(n_stocks=20, n_days=200, n_features=37, seed=42):

@@ -22,14 +22,21 @@ Implements the final prediction layer from Section 4.2.4:
 
 from __future__ import annotations
 
-from typing import Tuple
+from typing import Optional, Tuple
 
 import torch
 import torch.nn as nn
 
-import sys, os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from config import THGNNConfig
+try:
+    from ..config import THGNNConfig
+except ImportError as exc:
+    if __package__:
+        raise
+    import os
+    import sys
+
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+    from config import THGNNConfig
 
 
 class ExpertMLP(nn.Module):
@@ -99,8 +106,9 @@ class ExpertPredictionHeads(nn.Module):
         rho_pred     : (E,)          — predicted correlation = tanh(z_base + Δẑ)
     """
 
-    def __init__(self, cfg: THGNNConfig = THGNNConfig()):
+    def __init__(self, cfg: Optional[THGNNConfig] = None):
         super().__init__()
+        cfg = THGNNConfig() if cfg is None else cfg
         self.cfg = cfg
 
         # Input dim = h_i (512) + h_j (512) + e_ij (64) = 1088

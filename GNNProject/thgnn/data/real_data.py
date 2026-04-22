@@ -198,7 +198,7 @@ def fetch_real_data(
     spy_vol_10 = spy_ret.rolling(10).std().fillna(0)
 
     # VIX close
-    vix_close = vix_data["Close"].fillna(method="ffill").fillna(20.0) if len(vix_data) > 0 else pd.Series(20.0, index=spy_close.index)
+    vix_close = vix_data["Close"].ffill().fillna(20.0) if len(vix_data) > 0 else pd.Series(20.0, index=spy_close.index)
     if isinstance(vix_close, pd.DataFrame):
         vix_close = vix_close.squeeze()
 
@@ -236,7 +236,7 @@ def fetch_real_data(
                 if verbose:
                     print(f"  Skipping {ticker}: insufficient data ({close.dropna().shape[0]}/{T})")
                 continue
-            close = close.fillna(method="ffill").fillna(method="bfill")
+            close = close.ffill().bfill()
             stock_close_dict[ticker] = close
 
             high = tk_data["High"].reindex(trading_dates)
@@ -249,8 +249,8 @@ def fetch_real_data(
             if isinstance(vol, pd.DataFrame):
                 vol = vol.squeeze()
 
-            stock_high_dict[ticker] = high.fillna(method="ffill").fillna(close)
-            stock_low_dict[ticker] = low.fillna(method="ffill").fillna(close)
+            stock_high_dict[ticker] = high.ffill().fillna(close)
+            stock_low_dict[ticker] = low.ffill().fillna(close)
             stock_vol_dict[ticker] = vol.fillna(0)
             all_returns_df[ticker] = close.pct_change().fillna(0)
             valid_tickers.append(ticker)

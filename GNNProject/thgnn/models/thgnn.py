@@ -29,12 +29,22 @@ from typing import Dict, Optional, Tuple
 import torch
 import torch.nn as nn
 
-import sys, os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from config import THGNNConfig
-from models.temporal_encoder import TemporalEncoder
-from models.relational_encoder import RelationalEncoder
-from models.expert_heads import ExpertPredictionHeads
+try:
+    from ..config import THGNNConfig
+    from .temporal_encoder import TemporalEncoder
+    from .relational_encoder import RelationalEncoder
+    from .expert_heads import ExpertPredictionHeads
+except ImportError as exc:
+    if __package__:
+        raise
+    import os
+    import sys
+
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+    from config import THGNNConfig
+    from models.temporal_encoder import TemporalEncoder
+    from models.relational_encoder import RelationalEncoder
+    from models.expert_heads import ExpertPredictionHeads
 
 
 class THGNN(nn.Module):
@@ -45,8 +55,9 @@ class THGNN(nn.Module):
         x → TemporalEncoder → RelationalEncoder → ExpertHeads → (Δẑ, ρ̂)
     """
 
-    def __init__(self, cfg: THGNNConfig = THGNNConfig()):
+    def __init__(self, cfg: Optional[THGNNConfig] = None):
         super().__init__()
+        cfg = THGNNConfig() if cfg is None else cfg
         self.cfg = cfg
 
         self.temporal_encoder = TemporalEncoder(cfg)

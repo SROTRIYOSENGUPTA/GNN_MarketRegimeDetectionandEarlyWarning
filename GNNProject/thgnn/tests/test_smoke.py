@@ -3,15 +3,21 @@ End-to-end smoke test: synthetic data → Dataset → DataLoader → TemporalEnc
 Validates that all tensor shapes are correct and the pipeline runs without error.
 """
 
-import sys, os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from pathlib import Path
 
 import numpy as np
 import pytest
 import torch
-from config import THGNNConfig
-from data.dataset import THGNNDataset, build_dataloader
-from models.temporal_encoder import TemporalEncoder
+
+pytest.importorskip("torch_geometric")
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+import sys
+sys.path.insert(0, str(REPO_ROOT))
+
+from GNNProject.thgnn.config import THGNNConfig
+from GNNProject.thgnn.data.dataset import THGNNDataset, build_dataloader
+from GNNProject.thgnn.models.temporal_encoder import TemporalEncoder
 
 
 def generate_synthetic_data(

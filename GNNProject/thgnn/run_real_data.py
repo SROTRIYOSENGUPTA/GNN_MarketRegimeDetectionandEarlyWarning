@@ -13,24 +13,188 @@ Usage:
 
 from __future__ import annotations
 
+import argparse
+from datetime import date, timedelta
 import math
+from numbers import Integral
 import time
-import sys
-import os
-
-sys.path.insert(0, os.path.dirname(__file__))
 
 import numpy as np
 import torch
 
-from config import THGNNConfig
-from data.real_data import fetch_real_data
-from data.dataset import THGNNDataset, build_dataloader
-from models.thgnn import THGNN
-from train import Trainer
+try:
+    from .config import THGNNConfig
+    from .data.real_data import fetch_real_data
+except ImportError as exc:
+    if __package__:
+        raise
+    import os
+    import sys
+
+    sys.path.insert(0, os.path.dirname(__file__))
+    from config import THGNNConfig
+    from data.real_data import fetch_real_data
 
 
-def main():
+class CLIArgumentError(ValueError):
+    """Raised when CLI arguments are malformed or unsupported."""
+
+
+def _parse_iso_date(name: str, value: str) -> date:
+    try:
+        return date.fromisoformat(str(value))
+    except ValueError as exc:
+        raise CLIArgumentError(f"{name} must be in YYYY-MM-DD format, got {value!r}.") from exc
+
+
+def build_split_date_ranges(
+    start: str,
+    end: str,
+    train_cutoff: str,
+) -> tuple[tuple[str, str], tuple[str, str]]:
+    start_date = _parse_iso_date("start", start)
+    end_date = _parse_iso_date("end", end)
+    cutoff_date = _parse_iso_date("train_cutoff", train_cutoff)
+
+    if start_date > end_date:
+        raise CLIArgumentError("start must be on or before end.")
+    if not start_date <= cutoff_date <= end_date:
+        raise CLIArgumentError("train_cutoff must fall within the inclusive [start, end] range.")
+
+    train_range = (start_date.isoformat(), cutoff_date.isoformat())
+    val_range = ((cutoff_date + timedelta(days=1)).isoformat(), end_date.isoformat())
+    return train_range, val_range
+
+
+def validate_split_sample_counts(
+    train_samples: int,
+    val_samples: int,
+    train_range: tuple[str, str],
+    val_range: tuple[str, str],
+) -> None:
+    if train_samples <= 0:
+        raise ValueError(
+            "Training split is empty after warm-up and forecast-horizon filtering "
+            f"for range {train_range[0]} -> {train_range[1]}. "
+            "Try an earlier --start, a later --train-cutoff, or a larger date range."
+        )
+    if val_samples <= 0:
+        print(
+            "  Validation split is empty after filtering; training will run without "
+            f"validation for range {val_range[0]} -> {val_range[1]}."
+        )
+
+
+def resolve_device(device: str | torch.device) -> torch.device:
+    supported_hint = "Supported values are cpu, cuda, cuda:N, or mps."
+
+    try:
+        resolved = torch.device(str(device))
+    except (TypeError, RuntimeError, ValueError) as exc:
+        raise CLIArgumentError(f"Invalid --device {device!r}. {supported_hint}") from exc
+
+    if resolved.type not in {"cpu", "cuda", "mps"}:
+        raise CLIArgumentError(f"Unsupported --device {device!r}. {supported_hint}")
+
+    if resolved.type == "cuda":
+        if not torch.cuda.is_available():
+            raise CLIArgumentError(
+                f"CUDA device requested via --device={device!r}, "
+                "but torch.cuda.is_available() is False."
+            )
+        if resolved.index is not None and resolved.index >= torch.cuda.device_count():
+            raise CLIArgumentError(
+                f"CUDA device index {resolved.index} is out of range; "
+                f"found {torch.cuda.device_count()} visible CUDA device(s)."
+            )
+
+    if resolved.type == "mps":
+        mps_backend = getattr(torch.backends, "mps", None)
+        is_built = bool(mps_backend and getattr(mps_backend, "is_built", lambda: False)())
+        is_available = bool(
+            mps_backend and getattr(mps_backend, "is_available", lambda: False)()
+        )
+        if resolved.index not in (None, 0):
+            raise CLIArgumentError("MPS exposes a single logical device; use --device mps or mps:0.")
+        if not is_built:
+            raise CLIArgumentError(
+                f"MPS device requested via --device={device!r}, "
+                "but this PyTorch build does not include MPS support."
+            )
+        if not is_available:
+            raise CLIArgumentError(
+                f"MPS device requested via --device={device!r}, "
+                "but torch.backends.mps.is_available() is False."
+            )
+
+    return resolved
+
+
+def _validate_positive_int(name: str, value: int) -> None:
+    if isinstance(value, bool) or not isinstance(value, Integral) or value <= 0:
+        raise CLIArgumentError(f"{name} must be a positive integer, got {value!r}.")
+
+
+def _validate_nonnegative_int(name: str, value: int) -> None:
+    if isinstance(value, bool) or not isinstance(value, Integral) or value < 0:
+        raise CLIArgumentError(f"{name} must be a non-negative integer, got {value!r}.")
+
+
+def validate_runtime_args(
+    *,
+    n_stocks: int,
+    epochs: int,
+    batch_size: int,
+    grad_accum_steps: int,
+    top_k_corr: int,
+    bot_k_corr: int,
+    rand_mid_k: int,
+) -> None:
+    if isinstance(n_stocks, bool) or not isinstance(n_stocks, Integral) or n_stocks < 2:
+        raise CLIArgumentError(f"n_stocks must be an integer >= 2, got {n_stocks!r}.")
+
+    _validate_positive_int("epochs", epochs)
+    _validate_positive_int("batch_size", batch_size)
+    _validate_positive_int("grad_accum_steps", grad_accum_steps)
+    _validate_nonnegative_int("top_k_corr", top_k_corr)
+    _validate_nonnegative_int("bot_k_corr", bot_k_corr)
+    _validate_nonnegative_int("rand_mid_k", rand_mid_k)
+
+
+def main(
+    n_stocks: int = 30,
+    start: str = "2021-01-01",
+    end: str = "2024-06-30",
+    train_cutoff: str = "2023-12-31",
+    epochs: int = 5,
+    batch_size: int = 2,
+    grad_accum_steps: int = 2,
+    top_k_corr: int = 10,
+    bot_k_corr: int = 10,
+    rand_mid_k: int = 15,
+    device: str = "cpu",
+):
+    try:
+        from .data.dataset import THGNNDataset, build_dataloader
+        from .models.thgnn import THGNN
+        from .train import Trainer
+    except ImportError as exc:
+        if __package__:
+            raise
+        from data.dataset import THGNNDataset, build_dataloader
+        from models.thgnn import THGNN
+        from train import Trainer
+
+    validate_runtime_args(
+        n_stocks=n_stocks,
+        epochs=epochs,
+        batch_size=batch_size,
+        grad_accum_steps=grad_accum_steps,
+        top_k_corr=top_k_corr,
+        bot_k_corr=bot_k_corr,
+        rand_mid_k=rand_mid_k,
+    )
+
     print("=" * 70)
     print("  THGNN — Real Market Data Training")
     print("=" * 70)
@@ -39,20 +203,19 @@ def main():
     cfg = THGNNConfig()
 
     # Adjust for smaller real-data test
-    cfg.epochs = 5                     # quick feasibility test
-    cfg.top_k_corr = 10                # fewer edges (smaller universe)
-    cfg.bot_k_corr = 10
-    cfg.rand_mid_k = 15
-    cfg.grad_accum_steps = 2           # smaller effective batch
-    cfg.batch_size = 2                 # smaller for memory
-
-    N_STOCKS = 30                      # 30 stocks from 11 sectors
-    START = "2021-01-01"
-    END = "2024-06-30"
-    TRAIN_CUTOFF = "2023-12-31"        # train: 2021-2023, val: 2024-H1
+    cfg.epochs = epochs
+    cfg.top_k_corr = top_k_corr
+    cfg.bot_k_corr = bot_k_corr
+    cfg.rand_mid_k = rand_mid_k
+    cfg.grad_accum_steps = grad_accum_steps
+    cfg.batch_size = batch_size
+    train_range, val_range = build_split_date_ranges(start, end, train_cutoff)
+    resolved_device = resolve_device(device)
 
     torch.manual_seed(cfg.seed)
     np.random.seed(cfg.seed)
+
+    print(f"  Using device: {resolved_device}")
 
     # ── Fetch Real Data ──────────────────────────────────────────────────
     print(f"\n{'─' * 70}")
@@ -60,9 +223,9 @@ def main():
     print(f"{'─' * 70}")
 
     features, dates, sector_map, subind_map, returns = fetch_real_data(
-        n_stocks=N_STOCKS,
-        start=START,
-        end=END,
+        n_stocks=n_stocks,
+        start=start,
+        end=end,
         verbose=True,
     )
 
@@ -75,26 +238,32 @@ def main():
     print(f"\n{'─' * 70}")
     print("  Step 2: Building train/val datasets")
     print(f"{'─' * 70}")
+    print(f"  Train split   : {train_range[0]} -> {train_range[1]}")
+    print(f"  Validation    : {val_range[0]} -> {val_range[1]}")
 
     train_ds = THGNNDataset(
         features=features, dates=dates,
         sector_map=sector_map, subind_map=subind_map,
         returns=returns, cfg=cfg,
-        date_range=(START, TRAIN_CUTOFF),
+        date_range=train_range,
     )
 
     val_ds = THGNNDataset(
         features=features, dates=dates,
         sector_map=sector_map, subind_map=subind_map,
         returns=returns, cfg=cfg,
-        date_range=("2024-01-01", END),
+        date_range=val_range,
     )
+
+    train_samples = len(train_ds)
+    val_samples = len(val_ds)
+    validate_split_sample_counts(train_samples, val_samples, train_range, val_range)
 
     train_loader = build_dataloader(train_ds, cfg, shuffle=True)
     val_loader = build_dataloader(val_ds, cfg, shuffle=False)
 
-    print(f"  Train samples : {len(train_ds)} days")
-    print(f"  Val samples   : {len(val_ds)} days")
+    print(f"  Train samples : {train_samples} days")
+    print(f"  Val samples   : {val_samples} days")
     print(f"  Train batches : {len(train_loader)}")
     print(f"  Val batches   : {len(val_loader)}")
 
@@ -132,7 +301,7 @@ def main():
     print("  Step 4: Initialising THGNN model")
     print(f"{'─' * 70}")
 
-    model = THGNN(cfg)
+    model = THGNN(cfg).to(resolved_device)
     n_params = sum(p.numel() for p in model.parameters())
     print(f"  Total parameters: {n_params:,}")
 
@@ -147,14 +316,17 @@ def main():
     print("  Step 5: Forward pass sanity check")
     print(f"{'─' * 70}")
 
+    sanity_batch = sample_batch.to(resolved_device)
     with torch.no_grad():
         delta_z, rho = model(
-            x=sample_batch.x,
-            edge_index=sample_batch.edge_index,
-            edge_attr=sample_batch.edge_attr,
-            edge_type=sample_batch.edge_type,
-            baseline_z=sample_batch.baseline_z,
+            x=sanity_batch.x,
+            edge_index=sanity_batch.edge_index,
+            edge_attr=sanity_batch.edge_attr,
+            edge_type=sanity_batch.edge_type,
+            baseline_z=sanity_batch.baseline_z,
         )
+    delta_z = delta_z.cpu()
+    rho = rho.cpu()
     print(f"  Δẑ shape : {tuple(delta_z.shape)}")
     print(f"  ρ̂ shape  : {tuple(rho.shape)}")
     print(f"  Δẑ range : [{delta_z.min():.4f}, {delta_z.max():.4f}]")
@@ -173,7 +345,7 @@ def main():
         train_loader=train_loader,
         val_loader=val_loader if len(val_ds) > 0 else None,
         cfg=cfg,
-        device="cpu",
+        device=str(resolved_device),
     )
 
     t0 = time.time()
@@ -223,6 +395,7 @@ def main():
 
     with torch.no_grad():
         for batch in val_loader:
+            batch = batch.to(resolved_device)
             dz, rh = model(
                 x=batch.x,
                 edge_index=batch.edge_index,
@@ -230,9 +403,9 @@ def main():
                 edge_type=batch.edge_type,
                 baseline_z=batch.baseline_z,
             )
-            all_delta_z.append(dz)
-            all_rho.append(rh)
-            all_targets.append(batch.target_z_resid)
+            all_delta_z.append(dz.cpu())
+            all_rho.append(rh.cpu())
+            all_targets.append(batch.target_z_resid.cpu())
 
     if all_delta_z:
         all_dz = torch.cat(all_delta_z)
@@ -270,5 +443,68 @@ def main():
     print(f"{'=' * 70}")
 
 
+def build_arg_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Run the THGNN real-data pipeline.",
+    )
+    parser.add_argument("--n-stocks", type=int, default=30, help="Number of stocks to fetch.")
+    parser.add_argument("--start", default="2021-01-01", help="Start date (YYYY-MM-DD).")
+    parser.add_argument("--end", default="2024-06-30", help="End date (YYYY-MM-DD).")
+    parser.add_argument(
+        "--train-cutoff",
+        default="2023-12-31",
+        help="Last training date; validation starts on the next calendar day.",
+    )
+    parser.add_argument("--epochs", type=int, default=5, help="Number of training epochs.")
+    parser.add_argument("--batch-size", type=int, default=2, help="Physical batch size.")
+    parser.add_argument(
+        "--grad-accum-steps",
+        type=int,
+        default=2,
+        help="Gradient accumulation steps.",
+    )
+    parser.add_argument("--top-k-corr", type=int, default=10, help="Top-K positive neighbours.")
+    parser.add_argument(
+        "--bot-k-corr",
+        type=int,
+        default=10,
+        help="Bottom-K negative neighbours.",
+    )
+    parser.add_argument(
+        "--rand-mid-k",
+        type=int,
+        default=15,
+        help="Number of random mid-correlation neighbours.",
+    )
+    parser.add_argument(
+        "--device",
+        default="cpu",
+        help="Torch device to run on: cpu, cuda, cuda:N, or mps.",
+    )
+    return parser
+
+
+def cli(argv: list[str] | None = None) -> int:
+    parser = build_arg_parser()
+    args = parser.parse_args(argv)
+    try:
+        main(
+            n_stocks=args.n_stocks,
+            start=args.start,
+            end=args.end,
+            train_cutoff=args.train_cutoff,
+            epochs=args.epochs,
+            batch_size=args.batch_size,
+            grad_accum_steps=args.grad_accum_steps,
+            top_k_corr=args.top_k_corr,
+            bot_k_corr=args.bot_k_corr,
+            rand_mid_k=args.rand_mid_k,
+            device=args.device,
+        )
+    except CLIArgumentError as exc:
+        parser.error(str(exc))
+    return 0
+
+
 if __name__ == "__main__":
-    main()
+    raise SystemExit(cli())

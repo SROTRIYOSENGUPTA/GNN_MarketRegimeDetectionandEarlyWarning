@@ -51,9 +51,16 @@ import torch.nn.functional as F
 from torch_geometric.utils import softmax as pyg_softmax
 from torch_geometric.nn import MessagePassing
 
-import sys, os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from config import THGNNConfig
+try:
+    from ..config import THGNNConfig
+except ImportError as exc:
+    if __package__:
+        raise
+    import os
+    import sys
+
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+    from config import THGNNConfig
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -331,8 +338,9 @@ class RelationalEncoder(nn.Module):
         edge_embed  : (E, d_e)    — final edge states e_ij^{L_g}
     """
 
-    def __init__(self, cfg: THGNNConfig = THGNNConfig()):
+    def __init__(self, cfg: Optional[THGNNConfig] = None):
         super().__init__()
+        cfg = THGNNConfig() if cfg is None else cfg
         self.cfg = cfg
 
         # Continuous edge attributes: ρ_base, |ρ_base|, sign → dim 3

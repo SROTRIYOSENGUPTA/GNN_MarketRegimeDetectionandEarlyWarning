@@ -32,11 +32,20 @@ import torch.nn as nn
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR
 
-import sys, os
-sys.path.insert(0, os.path.dirname(__file__))
-from config import THGNNConfig
-from models.thgnn import THGNN
-from losses.loss import THGNNLoss
+try:
+    from .config import THGNNConfig
+    from .models.thgnn import THGNN
+    from .losses.loss import THGNNLoss
+except ImportError as exc:
+    if __package__:
+        raise
+    import os
+    import sys
+
+    sys.path.insert(0, os.path.dirname(__file__))
+    from config import THGNNConfig
+    from models.thgnn import THGNN
+    from losses.loss import THGNNLoss
 
 
 class Trainer:
@@ -57,9 +66,10 @@ class Trainer:
         model: THGNN,
         train_loader,
         val_loader=None,
-        cfg: THGNNConfig = THGNNConfig(),
+        cfg: Optional[THGNNConfig] = None,
         device: str = "cpu",
     ):
+        cfg = THGNNConfig() if cfg is None else cfg
         self.cfg = cfg
         self.device = torch.device(device)
         self.model = model.to(self.device)
@@ -261,7 +271,12 @@ class Trainer:
 if __name__ == "__main__":
     import datetime
     import numpy as np
-    from data.dataset import THGNNDataset, build_dataloader
+    try:
+        from .data.dataset import THGNNDataset, build_dataloader
+    except ImportError as exc:
+        if __package__:
+            raise
+        from data.dataset import THGNNDataset, build_dataloader
 
     print("=" * 68)
     print("  THGNN Training Loop — Integration Test (3 epochs)")

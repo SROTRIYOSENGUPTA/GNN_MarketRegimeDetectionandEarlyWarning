@@ -48,9 +48,16 @@ except ImportError:
         "pip install torch-geometric"
     )
 
-import sys, os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from config import THGNNConfig
+try:
+    from ..config import THGNNConfig
+except ImportError as exc:
+    if __package__:
+        raise
+    import os
+    import sys
+
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+    from config import THGNNConfig
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -231,10 +238,11 @@ class THGNNDataset(Dataset):
         sector_map: Dict[int, int],
         subind_map: Dict[int, int],
         returns: Dict[int, np.ndarray],
-        cfg: THGNNConfig = THGNNConfig(),
+        cfg: Optional[THGNNConfig] = None,
         date_range: Optional[Tuple[str, str]] = None,
     ):
         super().__init__()
+        cfg = THGNNConfig() if cfg is None else cfg
         self.cfg = cfg
         self.features = features          # raw features per stock
         self.dates = dates
@@ -270,7 +278,12 @@ class THGNNDataset(Dataset):
         #
         # Without this guard, the last `forecast_horizon` days of a split either
         # get fake zero targets or leak future information across train/val splits.
-        min_start = cfg.rolling_zscore_window - 1 + cfg.max_gap_days
+        #
+        # The earliest day is when we have the minimum required count of
+        # z-scored feature rows inside the recent eligibility window.
+        # With contiguous data this occurs after:
+        #   first_valid_zscore_day + (min_trading_days - 1)
+        min_start = cfg.rolling_zscore_window + cfg.min_trading_days - 2
         max_target = len(dates) - cfg.forecast_horizon - 1
 
         if date_range is not None:

@@ -28,9 +28,16 @@ from typing import Optional
 import torch
 import torch.nn as nn
 
-import sys, os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from config import THGNNConfig
+try:
+    from ..config import THGNNConfig
+except ImportError as exc:
+    if __package__:
+        raise
+    import os
+    import sys
+
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+    from config import THGNNConfig
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -170,8 +177,9 @@ class TemporalEncoder(nn.Module):
         Dropout → Linear(512→512)
     """
 
-    def __init__(self, cfg: THGNNConfig = THGNNConfig()):
+    def __init__(self, cfg: Optional[THGNNConfig] = None):
         super().__init__()
+        cfg = THGNNConfig() if cfg is None else cfg
         self.cfg = cfg
 
         # ── 1. Input projection: F=37 → d_model=128 ──────────────────

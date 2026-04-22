@@ -1,69 +1,73 @@
 # GNN Market Regime Detection and Early Warning
 
-This repository contains two closely related research prototypes built around graph neural networks for financial markets:
+This repository contains two related financial-graph learning prototypes:
 
 1. `GNNsMarketRegimeDetection&Early-Warning/`
-   Primary project in this repo. It models the equity market as a sequence of heterogeneous graphs and predicts:
-   - the current market regime (`Bull`, `Crash`, `Liquidity`, `Stress`)
-   - whether a systemic stress regime is likely to appear in the next `5-20` trading days
+   The main project. It models the equity market as a sequence of heterogeneous graphs and predicts:
+   - the current market regime: `Bull`, `Crash`, `Liquidity`, `Stress`
+   - whether a `Stress` regime is likely to appear in the next `5-20` trading days
 2. `GNNProject/thgnn/`
-   A separate but related prototype focused on forecasting future stock-to-stock correlations with a temporal heterogeneous GNN (THGNN).
+   A related THGNN prototype for forecasting future stock-to-stock correlation structure.
 
-If you only want to understand what this repo is "about", start with `GNNsMarketRegimeDetection&Early-Warning/`. The repo name, labeling logic, and end-to-end training script all point to that directory as the main deliverable. The `thgnn` directory is best treated as a reference implementation or adjacent experiment rather than the headline project.
+If you only need one entry point, start with `GNNsMarketRegimeDetection&Early-Warning/`. That branch matches the repository title, contains the regime-labeling logic, and exposes the clearest end-to-end real-data pipeline.
 
-## What Problem This Repo Is Solving
+## What The Main Project Does
 
 The main idea is to turn the stock market into a dynamic multi-relational graph:
 
 - nodes are stocks
-- edges describe relationships between stocks
+- edges encode relationships between stocks
 - graphs evolve daily
 - a temporal model consumes a rolling window of graph snapshots
 
-Instead of only predicting prices, the main pipeline predicts market state and a forward-looking warning signal:
+Instead of only predicting returns, the main pipeline predicts:
 
-- `regime_label`: a 4-way classification of current market conditions
-- `transition_label`: a binary early-warning label that becomes positive when a `Stress` regime appears within the next `5-20` trading days
+- `regime_label`: a 4-class description of current market conditions
+- `transition_label`: a binary early-warning target that becomes positive when `Stress` appears in the next `5-20` trading days
 
-This makes the project closer to a market monitoring / systemic risk detection system than a traditional alpha model.
+This makes the project closer to a market monitoring and systemic-risk early-warning system than a standard alpha model.
 
 ## Main Project: Dynamic Regime GNN
 
 Directory: [`GNNsMarketRegimeDetection&Early-Warning`](./GNNsMarketRegimeDetection%26Early-Warning)
 
-### Core pipeline
+### Pipeline
 
-The main pipeline implemented in [`GNNsMarketRegimeDetection&Early-Warning/run_real_data.py`](/Users/yifanzhang/Library/CloudStorage/OneDrive-Personal/Courses/ECE538/GNN_MarketRegimeDetectionandEarlyWarning/GNNsMarketRegimeDetection&Early-Warning/run_real_data.py) is:
+The real-data entry point is [`GNNsMarketRegimeDetection&Early-Warning/run_real_data.py`](/Users/yifanzhang/Library/CloudStorage/OneDrive-Personal/Courses/ECE538/GNN_MarketRegimeDetectionandEarlyWarning/GNNsMarketRegimeDetection&Early-Warning/run_real_data.py).
 
-1. Download a curated sample of S&P 500 stocks, plus `SPY` and `^VIX`, from Yahoo Finance.
-2. Build a `37`-dimensional daily feature vector per stock.
-3. Compute rule-based market regime labels from SPY returns, realized volatility, and average cross-sectional correlation.
-4. Build daily heterogeneous graphs with three relation types:
+It does the following:
+
+1. Downloads a curated sample of S&P 500 stocks, plus `SPY` and `^VIX`, from Yahoo Finance.
+2. Builds a `37`-dimensional daily feature vector per stock.
+3. Computes rule-based market regime labels from SPY returns, realized volatility, and average cross-sectional correlation.
+4. Builds daily heterogeneous graphs with three relation types:
    - `correlation`
    - `etf_cohold`
    - `supply_chain`
-5. Slice the data into rolling sequences of `T=30` graph snapshots.
-6. Train a dynamic GNN with two prediction heads:
-   - regime classification head
-   - transition / early-warning head
+5. Slices the data into rolling sequences of `T=30` graph snapshots.
+6. Trains a dynamic GNN with two heads:
+   - a 4-way regime classifier
+   - a binary transition / early-warning head
 
 ### Model architecture
 
-The main model is defined in [`models/dynamic_regime_gnn.py`](/Users/yifanzhang/Library/CloudStorage/OneDrive-Personal/Courses/ECE538/GNN_MarketRegimeDetectionandEarlyWarning/GNNsMarketRegimeDetection&Early-Warning/models/dynamic_regime_gnn.py):
+The main model is defined in [`GNNsMarketRegimeDetection&Early-Warning/models/dynamic_regime_gnn.py`](/Users/yifanzhang/Library/CloudStorage/OneDrive-Personal/Courses/ECE538/GNN_MarketRegimeDetectionandEarlyWarning/GNNsMarketRegimeDetection&Early-Warning/models/dynamic_regime_gnn.py).
+
+Its structure is:
 
 1. `NodeFeatureEncoder`
-   Projects raw per-stock features from `37 -> 128`.
+   Projects raw stock features from `37 -> 128`.
 2. `SpatialRGCN`
    Applies relation-aware message passing over the three edge types.
-3. `Graph pooling`
+3. Graph pooling
    Aggregates node embeddings into one graph-level embedding per day.
-4. `Temporal encoder`
+4. Temporal encoder
    Uses either:
    - `LSTM` by default
    - `Transformer` as an alternative
-5. Dual heads
-   - `RegimeClassifierHead`: 4-class logits
-   - `TransitionLogitHead`: binary stress-warning logit
+5. Dual prediction heads
+   - `RegimeClassifierHead`
+   - `TransitionLogitHead`
 
 In short:
 
@@ -71,104 +75,62 @@ In short:
 
 ### Label generation logic
 
-The statistical labeling engine lives in [`data/label_generator.py`](/Users/yifanzhang/Library/CloudStorage/OneDrive-Personal/Courses/ECE538/GNN_MarketRegimeDetectionandEarlyWarning/GNNsMarketRegimeDetection&Early-Warning/data/label_generator.py).
+The statistical labeling engine lives in [`GNNsMarketRegimeDetection&Early-Warning/data/label_generator.py`](/Users/yifanzhang/Library/CloudStorage/OneDrive-Personal/Courses/ECE538/GNN_MarketRegimeDetectionandEarlyWarning/GNNsMarketRegimeDetection&Early-Warning/data/label_generator.py).
 
 It derives four market states using expanding-window thresholds to reduce look-ahead bias:
 
 - `Stress`
-  High volatility and high average cross-sectional correlation
+  High volatility and high average cross-sectional correlation.
 - `Crash`
-  Large negative recent return plus elevated volatility
+  Large negative recent return plus elevated volatility.
 - `Bull`
-  Positive recent return plus relatively low volatility
+  Positive recent return plus relatively low volatility.
 - `Liquidity`
-  Residual bucket for everything else
+  Residual bucket for everything else.
 
 The early-warning target is:
 
 - `transition_label = 1` if a `Stress` regime appears anywhere in the next `5-20` trading days
 
-This is important because the repo is not using manually curated crisis dates; it is generating supervision from market statistics.
-
 ### Graph construction
 
-Graph building logic lives in [`data/hetero_dataset.py`](/Users/yifanzhang/Library/CloudStorage/OneDrive-Personal/Courses/ECE538/GNN_MarketRegimeDetectionandEarlyWarning/GNNsMarketRegimeDetection&Early-Warning/data/hetero_dataset.py).
+Graph building logic lives in [`GNNsMarketRegimeDetection&Early-Warning/data/hetero_dataset.py`](/Users/yifanzhang/Library/CloudStorage/OneDrive-Personal/Courses/ECE538/GNN_MarketRegimeDetectionandEarlyWarning/GNNsMarketRegimeDetection&Early-Warning/data/hetero_dataset.py).
 
 Each daily graph has one node type, `stock`, and three edge types:
 
 - `correlation`
   Built from rolling return correlations using top-K positive and bottom-K negative neighbors per node.
 - `etf_cohold`
-  Intended to represent ETF co-holding overlap. In the current prototype, when real holdings are not provided, this falls back to a sector/sub-industry similarity proxy.
+  Intended to represent ETF co-holding overlap. If real holdings are not provided, the current prototype falls back to a sector/sub-industry proxy.
 - `supply_chain`
-  Intended to represent production-network links. In the current prototype, when no external adjacency is provided, this falls back to a sparse synthetic adjacency.
-
-This means the repo already encodes the right modeling idea, but two of the three relation channels are still proxy-based unless you plug in real external data.
-
-### Training setup
-
-Training logic lives in [`train.py`](/Users/yifanzhang/Library/CloudStorage/OneDrive-Personal/Courses/ECE538/GNN_MarketRegimeDetectionandEarlyWarning/GNNsMarketRegimeDetection&Early-Warning/train.py).
-
-Key defaults from [`config.py`](/Users/yifanzhang/Library/CloudStorage/OneDrive-Personal/Courses/ECE538/GNN_MarketRegimeDetectionandEarlyWarning/GNNsMarketRegimeDetection&Early-Warning/config.py):
-
-- `seq_len = 30`
-- `num_features = 37`
-- `num_relations = 3`
-- `temporal_type = "lstm"`
-- `num_regime_classes = 4`
-- loss = regime focal cross-entropy + transition BCE-with-logits
-- optimizer = `AdamW`
-- scheduler = linear warmup + cosine decay
-
-Validation metrics computed by the trainer include:
-
-- regime accuracy
-- per-class regime accuracy
-- macro-F1
-- transition accuracy
-- transition precision / recall
-- transition ROC-AUC
+  Intended to represent production-network links. If no external adjacency is provided, the current prototype falls back to a sparse synthetic adjacency.
 
 ## Secondary Project: THGNN Correlation Forecasting
 
 Directory: [`GNNProject/thgnn`](./GNNProject/thgnn)
 
-This directory is a separate project focused on forecasting future stock correlation structure rather than regime classification.
+This branch focuses on forecasting future stock correlation structure rather than regime classification.
 
-### What it does
-
-The THGNN branch:
-
-- builds graphs from rolling pairwise correlations
-- encodes per-stock temporal features with a Transformer-based temporal encoder
-- applies a relation-aware GAT-style relational encoder
-- predicts future Fisher-z correlation residuals and reconstructed correlations
-
-The main files are:
+Key files:
 
 - [`GNNProject/thgnn/models/thgnn.py`](/Users/yifanzhang/Library/CloudStorage/OneDrive-Personal/Courses/ECE538/GNN_MarketRegimeDetectionandEarlyWarning/GNNProject/thgnn/models/thgnn.py)
 - [`GNNProject/thgnn/data/dataset.py`](/Users/yifanzhang/Library/CloudStorage/OneDrive-Personal/Courses/ECE538/GNN_MarketRegimeDetectionandEarlyWarning/GNNProject/thgnn/data/dataset.py)
 - [`GNNProject/thgnn/train.py`](/Users/yifanzhang/Library/CloudStorage/OneDrive-Personal/Courses/ECE538/GNN_MarketRegimeDetectionandEarlyWarning/GNNProject/thgnn/train.py)
 - [`GNNProject/thgnn/run_real_data.py`](/Users/yifanzhang/Library/CloudStorage/OneDrive-Personal/Courses/ECE538/GNN_MarketRegimeDetectionandEarlyWarning/GNNProject/thgnn/run_real_data.py)
 
-### Why it is still relevant here
-
-Although it is not the same task, it clearly feeds the same broader theme:
-
-- temporal structure in stock features
-- graph-based cross-sectional modeling
-- market structure / dependency learning
-
-The `thgnn` directory is therefore useful as:
-
-- a baseline
-- a precursor implementation
-- a source of reusable engineering patterns
-
 ## Repository Structure
 
 ```text
 .
+├── market_regime_gnn/
+│   ├── config.py
+│   ├── run_real_data.py
+│   ├── train.py
+│   ├── data/
+│   └── models/
+├── pyproject.toml
+├── uv.lock
+├── README.md
 ├── GNNsMarketRegimeDetection&Early-Warning/
 │   ├── config.py
 │   ├── run_real_data.py
@@ -179,139 +141,192 @@ The `thgnn` directory is therefore useful as:
 │   ├── models/
 │   │   └── dynamic_regime_gnn.py
 │   └── tests/
-├── GNNProject/
-│   └── thgnn/
-│       ├── config.py
-│       ├── run_real_data.py
-│       ├── train.py
-│       ├── data/
-│       ├── losses/
-│       ├── models/
-│       └── tests/
-└── README.md
+└── GNNProject/
+    └── thgnn/
+        ├── config.py
+        ├── run_real_data.py
+        ├── train.py
+        ├── data/
+        ├── losses/
+        ├── models/
+        └── tests/
 ```
 
-## Dependencies
+## Environment Setup
 
-There is no pinned environment file in the repo right now, but the code clearly depends on:
+The repository already includes [`pyproject.toml`](/Users/yifanzhang/Library/CloudStorage/OneDrive-Personal/Courses/ECE538/GNN_MarketRegimeDetectionandEarlyWarning/pyproject.toml) and [`uv.lock`](/Users/yifanzhang/Library/CloudStorage/OneDrive-Personal/Courses/ECE538/GNN_MarketRegimeDetectionandEarlyWarning/uv.lock).
 
-- Python `3.10+`
+Required runtime stack:
+
+- Python `>=3.11,<3.12`
 - `torch`
 - `torch-geometric`
 - `numpy`
 - `pandas`
 - `yfinance`
 
-Optional but useful:
-
-- `pytest` if you want to adapt the existing test scripts into a standard test workflow
-
-A minimal install path is:
+Recommended setup:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install torch numpy pandas yfinance
-pip install torch-geometric
+uv sync --dev
 ```
 
-Note:
+This creates a local `.venv`, installs runtime and test dependencies from the lockfile, and installs the local project in editable mode so package imports and console scripts work from outside the repo root.
 
-- `torch-geometric` is required by both projects.
-- In the current local environment, `torch_geometric` was missing, so the GNN smoke tests did not run successfully until that dependency is installed.
+If you prefer not to activate the environment manually, run commands through `uv run`.
+
+## Python API Notes
+
+The two subprojects are not equally import-friendly:
+
+- `GNNProject/thgnn` now supports stable package-style imports from the repo root, for example:
+
+```python
+from GNNProject.thgnn.config import THGNNConfig
+from GNNProject.thgnn.data.dataset import THGNNDataset
+from GNNProject.thgnn.models.thgnn import THGNN
+```
+
+- The main regime-detection project now has an import-friendly wrapper package:
+
+```python
+from market_regime_gnn import RegimeConfig
+from market_regime_gnn.data.label_generator import generate_market_labels
+from market_regime_gnn.models.dynamic_regime_gnn import DynamicRegimeGNN
+```
+
+The wrapper keeps the legacy source layout working for in-repo scripts, but the installable package now ships a bundled `market_regime_gnn._legacy` implementation so editable installs and built wheels behave the same way.
+
+After `uv sync --dev`, these imports work from any current working directory as long as you use the project environment's Python:
+
+```bash
+.venv/bin/python -c "import market_regime_gnn, GNNProject.thgnn"
+```
+
+## Build And Install
+
+Build an sdist and wheel:
+
+```bash
+uv build
+```
+
+The generated wheel includes the bundled `market_regime_gnn._legacy` package, so isolated installs do not need the repository checkout path to resolve the main regime-detection prototype.
 
 ## How To Run
 
-Because the directory name contains `&`, quote the path in shell commands.
+Because the main project directory contains `&`, quote that path in shell commands.
 
 ### Run the main regime-detection pipeline
 
 ```bash
-cd "GNNsMarketRegimeDetection&Early-Warning"
-python run_real_data.py
+uv run python "GNNsMarketRegimeDetection&Early-Warning/run_real_data.py"
 ```
 
-What this does:
+Equivalent module entry point:
+
+```bash
+uv run python -m market_regime_gnn.run_real_data
+```
+
+See available CLI options without starting a run:
+
+```bash
+uv run python -m market_regime_gnn.run_real_data --help
+```
+
+Installed console script:
+
+```bash
+uv run market-regime-real-data --help
+```
+
+What it does:
 
 - downloads Yahoo Finance data
 - generates regime labels
 - builds temporal heterogeneous graphs
 - trains the dynamic regime GNN
 - prints validation metrics and prediction statistics
+- uses `--train-cutoff` as the last training day and starts validation on the next calendar day
+- currently uses a fixed curated 30-stock sample instead of a user-configurable universe size
 
 ### Run the THGNN real-data experiment
 
 ```bash
-cd "GNNProject/thgnn"
-python run_real_data.py
+uv run python GNNProject/thgnn/run_real_data.py
 ```
 
-### Smoke tests / sanity checks
-
-THGNN branch:
+See THGNN CLI options:
 
 ```bash
-python GNNProject/thgnn/tests/test_smoke.py
-python GNNProject/thgnn/tests/test_e2e_step2.py
-python GNNProject/thgnn/tests/test_e2e_step3.py
+uv run python -m GNNProject.thgnn.run_real_data --help
 ```
 
-Main regime branch:
+Installed console script:
 
 ```bash
-python "GNNsMarketRegimeDetection&Early-Warning/data/hetero_dataset.py"
-python "GNNsMarketRegimeDetection&Early-Warning/models/dynamic_regime_gnn.py"
+uv run thgnn-real-data --help
 ```
 
-## Current Validation Status
+For both real-data CLIs, `--train-cutoff` must lie inside the inclusive `[--start, --end]` range. Validation begins on the next calendar day after the cutoff, so if `--train-cutoff` equals `--end`, the validation split is intentionally empty.
+If the training split becomes empty after each model's warm-up and forecast/label horizon rules are applied, the script now fails fast with a clear error telling you to widen the training window.
+For both real-data CLIs, `--device` accepts `cpu`, `cuda`, `cuda:0`, or `mps`. Unsupported or unavailable accelerators now fail fast before the run proceeds, and the quick sanity-check forward pass uses the same device as training.
+Both real-data entry points also validate integer hyperparameters before downloading data: `--epochs`, `--batch-size`, and `--grad-accum-steps` must be positive; correlation-neighbour counts must be non-negative; the regime pipeline requires positive `--seq-len` and `--rolling-zscore-window`; and THGNN requires `--n-stocks >= 2`.
+When a CLI argument is invalid, the scripts now return a normal argparse `usage: ... error: ...` message instead of a Python traceback. Runtime/data failures that happen after argument parsing still surface as normal runtime errors rather than being mislabeled as usage mistakes.
 
-What I verified while inspecting the repo:
+## Testing And Smoke Checks
 
-- the repo is clean and currently has no top-level README before this one
-- the main regime-detection branch is the most aligned with the repository name and problem statement
-- the THGNN branch has more explicit test scripts
-- the market-regime branch currently has almost no dedicated test coverage under `tests/`
+Recommended full test command:
 
-What I attempted locally:
+```bash
+uv run pytest -q
+```
 
-- `python GNNProject/thgnn/tests/test_smoke.py`
-- `python "GNNsMarketRegimeDetection&Early-Warning/data/hetero_dataset.py"`
-- `python "GNNsMarketRegimeDetection&Early-Warning/models/dynamic_regime_gnn.py"`
+Validated locally:
 
-All three failed for the same reason in the current environment:
+```bash
+uv run pytest -q
+uv build
+uv run python "GNNsMarketRegimeDetection&Early-Warning/data/hetero_dataset.py"
+uv run python "GNNsMarketRegimeDetection&Early-Warning/models/dynamic_regime_gnn.py"
+uv run python "GNNsMarketRegimeDetection&Early-Warning/train.py"
+```
 
-- `ModuleNotFoundError: No module named 'torch_geometric'`
+Notes:
 
-So the code layout is coherent, but the environment is not yet fully provisioned for execution.
-
-## Strengths of the Repo
-
-- Clear research direction: systemic market monitoring via dynamic graphs.
-- Reasonable decomposition: data, labels, model, training, and run scripts are separated cleanly.
-- Good inline documentation inside the Python files.
-- The main project combines cross-sectional structure and temporal dynamics in a sensible way.
-- The THGNN branch includes useful smoke and integration tests that help explain the intended tensor flow.
+- `uv run pytest -q` currently passes for the checked-in THGNN test suite plus lightweight main-project smoke tests and import-regression tests.
+- The project now includes setuptools build metadata and console scripts, so `uv sync --dev` and `uv build` produce importable packages instead of relying only on the repo root being on `sys.path`.
+- The `market_regime_gnn` package now bundles the main prototype's legacy implementation, which avoids wheel-install regressions caused by resolving modules from the checkout path.
+- If `torch_geometric` is missing in a plain system interpreter, the THGNN tests now skip instead of failing during collection.
+- Dataset boundary tests now guard against over-trimming early valid samples in both projects.
+- THGNN import regression tests now guard against leaking bare module names like `config`, `data`, or `models` into a shared interpreter.
+- The new `market_regime_gnn` wrapper is covered by root-level tests so main-project labeling logic can be imported without relying on ad hoc `sys.path` edits.
+- Both real-data entry points now provide a real `--help` path instead of immediately starting downloads and training.
+- Script-mode import fallbacks are now guarded so package imports raise real dependency errors instead of silently dropping into `sys.path` hacks.
+- The real-data scripts depend on Yahoo Finance availability and network access.
 
 ## Current Limitations
 
-- No `requirements.txt`, `environment.yml`, or `pyproject.toml`.
-- No root README existed before this file.
-- The main regime project depends on proxy graph relations for ETF co-holdings and supply-chain links unless external data is provided.
-- Real-data scripts fetch from Yahoo Finance directly, so runs are sensitive to network access and upstream data availability.
-- The primary market-regime branch has limited automated test coverage compared with the THGNN branch.
-- The repo contains generated `__pycache__` files in versioned directories, which usually should not be committed.
+- The main regime branch still uses proxy relations for `etf_cohold` and `supply_chain` unless external datasets are provided.
+- The market-regime branch has smoke checks, but its dedicated `tests/` package is still sparse compared with `GNNProject/thgnn/tests/`.
+- Real-data runs pull directly from Yahoo Finance, so reproducibility depends on upstream data availability and any ticker-history revisions.
+- The repository contains two related but distinct prototypes, so some engineering patterns are duplicated rather than fully shared.
 
-## Recommended Next Steps
+## Recent Fixes
 
-If you want to turn this from a research prototype into a more usable project, the highest-value next steps are:
+The following issues were addressed while updating this repository:
 
-1. Add a real dependency file (`requirements.txt` or `pyproject.toml`).
-2. Add a root-level quickstart that assumes a clean machine.
-3. Add smoke tests for the market-regime branch similar to the THGNN tests.
-4. Replace proxy `etf_cohold` and `supply_chain` relations with real external datasets.
-5. Save checkpoints, config snapshots, and evaluation outputs to disk instead of only printing to stdout.
-6. Add notebooks or reports showing qualitative regime periods and warning examples.
+- README was aligned with the current repo state: `pyproject.toml`, `uv.lock`, `uv`-based setup, and validated commands are now documented accurately.
+- THGNN tests now skip cleanly when `torch_geometric` is not installed, instead of failing during `pytest` collection.
+- Deprecated Pandas `fillna(method=...)` calls in the real-data and labeling code were replaced with `.ffill()` / `.bfill()` equivalents for forward compatibility.
+- Dataset warm-up boundary logic was corrected so both projects keep the earliest valid supervised samples instead of silently dropping them.
+- THGNN internals and tests were refactored toward package-relative imports so they can coexist with the regime-detection prototype in the same Python interpreter without import-name collisions.
+- The main regime-detection prototype now has a wrapper package and relative-import-friendly internals, so it can be imported programmatically despite the legacy directory name.
+- The wrapper package no longer depends on the repository checkout path at runtime, so isolated wheel installs can import `market_regime_gnn` successfully.
+- Shared default `RegimeConfig()` / `THGNNConfig()` constructor arguments were replaced with per-call `None` sentinels, avoiding accidental cross-instance config reuse.
+- Import fallback branches now distinguish direct script execution from package imports, preventing misleading fallback behavior when a real dependency import fails.
 
 ## One-Sentence Summary
 
-This repo is a financial GNN research workspace whose main contribution is a dynamic heterogeneous graph model for classifying market regimes and issuing early warnings for systemic stress, with a second THGNN branch for stock-correlation forecasting.
+This repository is a financial GNN research workspace centered on dynamic heterogeneous graphs for market regime detection and early warning, with a secondary THGNN branch for correlation forecasting.
