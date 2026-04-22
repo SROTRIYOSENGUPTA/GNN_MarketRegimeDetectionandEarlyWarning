@@ -638,8 +638,8 @@ if __name__ == "__main__":
         print(f"\n  Sanity checks:")
 
         # COVID crash (Feb-Mar 2020) should be Crash or Stress
-        if "2020-03-15" in [d.strftime("%Y-%m-%d") for d in real_labels.index]:
-            covid_period = real_labels.loc["2020-02-20":"2020-04-01"]
+        covid_period = real_labels.loc["2020-02-20":"2020-04-01"]
+        if len(covid_period) > 0:
             crisis_days = covid_period["regime_label"].isin([REGIME_CRASH, REGIME_STRESS]).sum()
             print(f"  COVID crash (Feb-Mar 2020): {crisis_days}/{len(covid_period)} days = Crash/Stress")
 

@@ -36,7 +36,7 @@ def generate_synthetic_data(n_stocks=20, n_days=200, n_features=37, seed=42):
     return features, dates, sector_map, subind_map, returns
 
 
-def main():
+def run_e2e_step3():
     print("=" * 68)
     print("  THGNN Full Pipeline Integration Test — Step 3")
     print("  Dataset → Temporal → GAT → Experts → Loss")
@@ -186,5 +186,9 @@ def main():
     print(f"{'=' * 68}")
 
 
+def test_e2e_step3():
+    run_e2e_step3()
+
+
 if __name__ == "__main__":
-    main()
+    run_e2e_step3()

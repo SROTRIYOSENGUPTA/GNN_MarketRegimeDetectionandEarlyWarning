@@ -7,6 +7,7 @@ import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import numpy as np
+import pytest
 import torch
 from config import THGNNConfig
 from data.dataset import THGNNDataset, build_dataloader
@@ -40,16 +41,19 @@ def generate_synthetic_data(
     return features, dates, sector_map, subind_map, returns, stock_ids
 
 
-def test_dataset_shapes():
-    """Verify shapes of a single Data object from the dataset."""
+def make_cfg() -> THGNNConfig:
+    """Build a small config suitable for fast synthetic tests."""
     cfg = THGNNConfig()
-    cfg.top_k_corr = 5       # small for 20-stock test
+    cfg.top_k_corr = 5
     cfg.bot_k_corr = 5
     cfg.rand_mid_k = 5
+    return cfg
 
+
+def build_dataset(cfg: THGNNConfig) -> THGNNDataset:
+    """Create a small synthetic dataset for smoke tests."""
     features, dates, sector_map, subind_map, returns, _ = generate_synthetic_data()
-
-    ds = THGNNDataset(
+    return THGNNDataset(
         features=features,
         dates=dates,
         sector_map=sector_map,
@@ -57,6 +61,31 @@ def test_dataset_shapes():
         returns=returns,
         cfg=cfg,
     )
+
+
+def build_batch(ds: THGNNDataset, cfg: THGNNConfig):
+    """Fetch the first batch from the PyG dataloader."""
+    loader = build_dataloader(ds, cfg, shuffle=False)
+    return next(iter(loader))
+
+
+@pytest.fixture
+def cfg():
+    return make_cfg()
+
+
+@pytest.fixture
+def ds(cfg):
+    return build_dataset(cfg)
+
+
+@pytest.fixture
+def batch(ds, cfg):
+    return build_batch(ds, cfg)
+
+
+def test_dataset_shapes(ds, cfg):
+    """Verify shapes of a single Data object from the dataset."""
 
     print(f"Dataset length: {len(ds)} trading-day snapshots")
     assert len(ds) > 0
@@ -81,14 +110,10 @@ def test_dataset_shapes():
     assert data.edge_type.min() >= 0
 
     print("  ✓ All single-sample shapes correct.\n")
-    return ds, cfg
 
 
-def test_dataloader_batching(ds, cfg):
+def test_dataloader_batching(batch, cfg):
     """Verify PyG batching produces correct concatenated shapes."""
-    loader = build_dataloader(ds, cfg, shuffle=False)
-
-    batch = next(iter(loader))
     N_batch = batch.x.shape[0]  # sum of N_t across batch items
     E_batch = batch.edge_index.shape[1]
 
@@ -104,7 +129,6 @@ def test_dataloader_batching(ds, cfg):
     assert batch.x.shape[1] == cfg.seq_len
     assert batch.x.shape[2] == cfg.num_features
     print("  ✓ Batched shapes correct.\n")
-    return batch
 
 
 def test_temporal_encoder_on_batch(batch, cfg):
@@ -142,8 +166,12 @@ if __name__ == "__main__":
     print("  THGNN Smoke Tests — Step 1")
     print("=" * 64 + "\n")
 
-    ds, cfg = test_dataset_shapes()
-    batch = test_dataloader_batching(ds, cfg)
+    cfg = make_cfg()
+    ds = build_dataset(cfg)
+    batch = build_batch(ds, cfg)
+
+    test_dataset_shapes(ds, cfg)
+    test_dataloader_batching(batch, cfg)
     test_temporal_encoder_on_batch(batch, cfg)
     test_gradient_flow(cfg)
 

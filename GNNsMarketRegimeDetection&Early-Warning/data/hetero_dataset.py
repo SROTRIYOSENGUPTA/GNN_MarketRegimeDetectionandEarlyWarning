@@ -424,28 +424,86 @@ class RegimeDataset(Dataset):
         self.returns = returns
         self.regime_labels = regime_labels
         self.transition_labels = transition_labels
-        self.etf_holdings = etf_holdings
-        self.supply_chain_adj = supply_chain_adj
-        self.rng = np.random.default_rng(cfg.seed)
-
+        self.etf_holdings = (
+            np.asarray(etf_holdings) if etf_holdings is not None else None
+        )
+        self.supply_chain_adj = (
+            np.asarray(supply_chain_adj) if supply_chain_adj is not None else None
+        )
         self.all_stock_ids = sorted(features.keys())
+        self.stock_id_to_pos = {
+            sid: idx for idx, sid in enumerate(self.all_stock_ids)
+        }
+
+        if len(self.regime_labels) != len(self.dates):
+            raise ValueError(
+                "regime_labels must be aligned 1:1 with dates."
+            )
+        if len(self.transition_labels) != len(self.dates):
+            raise ValueError(
+                "transition_labels must be aligned 1:1 with dates."
+            )
+        for sid in self.all_stock_ids:
+            if sid not in self.returns:
+                raise KeyError(f"Missing returns for stock_id={sid}")
+            if self.features[sid].shape[0] != len(self.dates):
+                raise ValueError(
+                    f"Feature length mismatch for stock_id={sid}: "
+                    f"{self.features[sid].shape[0]} vs {len(self.dates)} dates."
+                )
+            if self.returns[sid].shape[0] != len(self.dates):
+                raise ValueError(
+                    f"Return length mismatch for stock_id={sid}: "
+                    f"{self.returns[sid].shape[0]} vs {len(self.dates)} dates."
+                )
+
+        n_total = len(self.all_stock_ids)
+        if self.etf_holdings is not None:
+            if self.etf_holdings.ndim != 2 or self.etf_holdings.shape[0] != n_total:
+                raise ValueError(
+                    "etf_holdings must have shape (num_stocks, num_etfs) aligned "
+                    "with sorted feature keys."
+                )
+        if self.supply_chain_adj is not None:
+            if self.supply_chain_adj.shape != (n_total, n_total):
+                raise ValueError(
+                    "supply_chain_adj must have shape (num_stocks, num_stocks) "
+                    "aligned with sorted feature keys."
+                )
 
         # Pre-compute z-scored features
         self.norm_features: Dict[int, np.ndarray] = {}
         for sid, feat in self.features.items():
             self.norm_features[sid] = rolling_zscore(feat, cfg.rolling_zscore_window)
 
-        # Determine valid date indices:
-        # Need: rolling_zscore_window warm-up + seq_len lookback + enough data
+        # Determine valid target dates.
+        # A valid day needs:
+        #   1. enough history for rolling z-score + sequence lookback
+        #   2. a full transition horizon available
+        #   3. if a split range is provided, that full horizon must remain
+        #      inside the split to avoid train/val label leakage.
         min_start = cfg.rolling_zscore_window - 1 + cfg.seq_len
+        max_target = len(dates) - cfg.transition_horizon_max - 1
+
         if date_range is not None:
             start_str, end_str = date_range
+            split_end_idx = max(
+                (i for i, d in enumerate(dates) if d <= end_str),
+                default=-1,
+            )
+            max_target = min(max_target, split_end_idx - cfg.transition_horizon_max)
             self.date_indices = [
                 i for i, d in enumerate(dates)
-                if start_str <= d <= end_str and i >= min_start
+                if start_str <= d <= end_str and min_start <= i <= max_target
             ]
         else:
-            self.date_indices = list(range(min_start, len(dates)))
+            self.date_indices = list(range(min_start, max_target + 1))
+
+        # Exclude dates that would yield empty or trivial graphs.
+        self.date_indices = [
+            i for i in self.date_indices
+            if len(self._get_eligible_stocks(i)) >= 2
+        ]
 
     def __len__(self) -> int:
         return len(self.date_indices)
@@ -485,6 +543,7 @@ class RegimeDataset(Dataset):
         """
         cfg = self.cfg
         N = len(stock_ids)
+        rng = np.random.default_rng(cfg.seed + int(t_idx))
 
         # ── Node features: use day t_idx's z-scored features ────────────
         node_features = np.zeros((N, cfg.num_features), dtype=np.float32)
@@ -501,28 +560,40 @@ class RegimeDataset(Dataset):
         # ── Sector / sub-industry codes ─────────────────────────────────
         sector_codes = np.array([self.sector_map.get(s, 0) for s in stock_ids])
         subind_codes = np.array([self.subind_map.get(s, 0) for s in stock_ids])
+        matrix_idx = np.array(
+            [self.stock_id_to_pos[sid] for sid in stock_ids],
+            dtype=np.int64,
+        )
 
         # ── Relation 0: Correlation edges ───────────────────────────────
         corr_matrix = compute_rolling_corr(
             self.returns, stock_ids, t_idx, cfg.corr_window,
         )
         corr_edges = build_correlation_edges(
-            corr_matrix, sector_codes, subind_codes, cfg, self.rng,
+            corr_matrix, sector_codes, subind_codes, cfg, rng,
         )
         data["stock", "correlation", "stock"].edge_index = corr_edges["edge_index"]
         data["stock", "correlation", "stock"].edge_attr = corr_edges["edge_attr"]
 
         # ── Relation 1: ETF co-holding edges ────────────────────────────
+        etf_holdings = None
+        if self.etf_holdings is not None:
+            etf_holdings = self.etf_holdings[matrix_idx]
+
         etf_edges = build_etf_cohold_edges(
-            self.etf_holdings, sector_codes, subind_codes, stock_ids, cfg,
+            etf_holdings, sector_codes, subind_codes, stock_ids, cfg,
         )
         data["stock", "etf_cohold", "stock"].edge_index = etf_edges["edge_index"]
         data["stock", "etf_cohold", "stock"].edge_attr = etf_edges["edge_attr"]
 
         # ── Relation 2: Supply-chain edges ──────────────────────────────
+        supply_chain_adj = None
+        if self.supply_chain_adj is not None:
+            supply_chain_adj = self.supply_chain_adj[np.ix_(matrix_idx, matrix_idx)]
+
         sc_edges = build_supply_chain_edges(
-            self.supply_chain_adj, sector_codes, subind_codes, stock_ids,
-            cfg, self.rng,
+            supply_chain_adj, sector_codes, subind_codes, stock_ids,
+            cfg, rng,
         )
         data["stock", "supply_chain", "stock"].edge_index = sc_edges["edge_index"]
         data["stock", "supply_chain", "stock"].edge_attr = sc_edges["edge_attr"]

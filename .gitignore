@@ -1,0 +1,40 @@
+# uv / virtualenv
+.venv/
+
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Test and tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# macOS
+.DS_Store
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# ML artifacts
+checkpoints/
+artifacts/
+runs/
+wandb/
+*.pt
+*.pth
+*.ckpt
+
+# Logs and local env files
+*.log
+.env
+.env.*

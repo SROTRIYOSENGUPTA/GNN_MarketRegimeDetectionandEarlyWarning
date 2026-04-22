@@ -1,0 +1,22 @@
+[project]
+name = "gnn-market-regime-detection-and-early-warning"
+version = "0.1.0"
+description = "Research workspace for GNN-based market regime detection, early warning, and correlation forecasting."
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "numpy",
+    "pandas",
+    "torch",
+    "torch-geometric",
+    "yfinance",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+]
+
+[tool.pytest.ini_options]
+# Pytest's capture plugin segfaults in this macOS/OneDrive workspace.
+addopts = "-p no:capture"

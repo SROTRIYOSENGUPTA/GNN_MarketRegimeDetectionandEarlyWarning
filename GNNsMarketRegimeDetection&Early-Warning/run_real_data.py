@@ -198,15 +198,19 @@ def fetch_real_data(
             close = close.fillna(method="ffill").fillna(method="bfill")
             stock_close_dict[ticker] = close
 
-            high = tk_data["High"].reindex(trading_dates).fillna(method="ffill").fillna(close)
-            low = tk_data["Low"].reindex(trading_dates).fillna(method="ffill").fillna(close)
-            vol = tk_data["Volume"].reindex(trading_dates).fillna(0)
+            high = tk_data["High"].reindex(trading_dates)
+            low = tk_data["Low"].reindex(trading_dates)
+            vol = tk_data["Volume"].reindex(trading_dates)
             if isinstance(high, pd.DataFrame):
                 high = high.squeeze()
             if isinstance(low, pd.DataFrame):
                 low = low.squeeze()
             if isinstance(vol, pd.DataFrame):
                 vol = vol.squeeze()
+
+            high = high.fillna(method="ffill").fillna(close)
+            low = low.fillna(method="ffill").fillna(close)
+            vol = vol.fillna(0)
 
             stock_high_dict[ticker] = high
             stock_low_dict[ticker] = low
@@ -219,6 +223,11 @@ def fetch_real_data(
 
     if verbose:
         print(f"  Valid stocks: {len(valid_tickers)}")
+
+    if len(valid_tickers) < 2:
+        raise ValueError(
+            "Need at least 2 valid stocks to build market-regime features and correlations."
+        )
 
     # ── Sector / sub-industry average returns ─────────────────────────────
     sector_avg_ret = {}
@@ -334,7 +343,8 @@ def fetch_real_data(
     spy_df = pd.DataFrame({"Close": spy_close}, index=trading_dates)
 
     if verbose:
-        n_real = sum(1 for c in f.columns if (f[c] != 0).any())
+        feature_tensor = np.stack(list(features.values()), axis=0) if features else np.zeros((0, 0, 0))
+        n_real = int((feature_tensor != 0).any(axis=(0, 1)).sum()) if feature_tensor.size > 0 else 0
         print(f"\n  Feature pipeline complete:")
         print(f"    Stocks      : {len(features)}")
         print(f"    Days        : {T}")

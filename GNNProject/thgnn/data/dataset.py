@@ -182,6 +182,15 @@ def build_graph_edges(
             type_list.append(etype)
             weight_list.append(rho)
 
+    if len(src_list) == 0:
+        return dict(
+            edge_index=torch.zeros(2, 0, dtype=torch.long),
+            edge_attr=torch.zeros(0, cfg.num_edge_attr, dtype=torch.float32),
+            edge_type=torch.zeros(0, dtype=torch.long),
+            edge_weight=torch.zeros(0, dtype=torch.float32),
+            baseline_z=torch.zeros(0, dtype=torch.float32),
+        )
+
     edge_index = torch.tensor([src_list, dst_list], dtype=torch.long)        # (2, E)
     edge_attr = torch.tensor(attr_list, dtype=torch.float32)                 # (E, 5)
     edge_type = torch.tensor(type_list, dtype=torch.long)                    # (E,)
@@ -232,31 +241,58 @@ class THGNNDataset(Dataset):
         self.sector_map = sector_map
         self.subind_map = subind_map
         self.returns = returns
-        self.rng = np.random.default_rng(cfg.seed)
 
-        # Determine eligible date indices for this split.
-        # Must have enough history for:
-        #   1. rolling z-score normalisation (rolling_zscore_window)
-        #   2. eligibility window (max_gap_days) to contain min_trading_days valid rows
-        #   3. the lookback sequence (seq_len)
-        # Conservatively: need z-score warm-up + gap tolerance before first usable day.
-        min_start = cfg.rolling_zscore_window - 1 + cfg.max_gap_days
-        if date_range is not None:
-            start, end = date_range
-            self.date_indices = [
-                i for i, d in enumerate(dates)
-                if start <= d <= end and i >= min_start
-            ]
-        else:
-            self.date_indices = list(range(min_start, len(dates)))
+        self.all_stock_ids = sorted(features.keys())
+        for sid in self.all_stock_ids:
+            if sid not in self.returns:
+                raise KeyError(f"Missing returns for stock_id={sid}")
+            if self.features[sid].shape[0] != len(self.dates):
+                raise ValueError(
+                    f"Feature length mismatch for stock_id={sid}: "
+                    f"{self.features[sid].shape[0]} vs {len(self.dates)} dates."
+                )
+            if self.returns[sid].shape[0] != len(self.dates):
+                raise ValueError(
+                    f"Return length mismatch for stock_id={sid}: "
+                    f"{self.returns[sid].shape[0]} vs {len(self.dates)} dates."
+                )
 
         # Pre-compute normalised features (rolling 60-day z-score)
         self.norm_features: Dict[int, np.ndarray] = {}
         for sid, feat in self.features.items():
             self.norm_features[sid] = rolling_zscore(feat, cfg.rolling_zscore_window)
 
-        # All stock ids
-        self.all_stock_ids = sorted(features.keys())
+        # Determine eligible target dates for this split.
+        # A valid target day must have:
+        #   1. enough warm-up / eligibility history
+        #   2. a full future forecast horizon available
+        #   3. if date_range is provided, that future horizon must stay inside the split
+        #
+        # Without this guard, the last `forecast_horizon` days of a split either
+        # get fake zero targets or leak future information across train/val splits.
+        min_start = cfg.rolling_zscore_window - 1 + cfg.max_gap_days
+        max_target = len(dates) - cfg.forecast_horizon - 1
+
+        if date_range is not None:
+            start, end = date_range
+            split_end_idx = max(
+                (i for i, d in enumerate(dates) if d <= end),
+                default=-1,
+            )
+            max_target = min(max_target, split_end_idx - cfg.forecast_horizon)
+            self.date_indices = [
+                i for i, d in enumerate(dates)
+                if start <= d <= end and min_start <= i <= max_target
+            ]
+        else:
+            self.date_indices = list(range(min_start, max_target + 1))
+
+        # Filter out dates where too few stocks are eligible to form a
+        # meaningful correlation graph / supervision target.
+        self.date_indices = [
+            i for i in self.date_indices
+            if len(self._eligible_stocks(i)) >= 2
+        ]
 
     # ── helpers ────────────────────────────────────────────────────────
     def _eligible_stocks(self, t_idx: int) -> List[int]:
@@ -326,7 +362,7 @@ class THGNNDataset(Dataset):
         ret_t = torch.from_numpy(np.nan_to_num(ret_matrix, 0.0))
         centered = ret_t - ret_t.mean(0, keepdim=True)
         cov = centered.T @ centered / max(h - 1, 1)
-        std = centered.pow(2).sum(0).sqrt().clamp(min=1e-8)
+        std = torch.sqrt(torch.diagonal(cov).clamp(min=1e-8))
         corr = cov / (std.unsqueeze(1) * std.unsqueeze(0))
         return corr.clamp(-1, 1).numpy()
 
@@ -372,9 +408,10 @@ class THGNNDataset(Dataset):
         sector_codes = np.array([self.sector_map.get(s, 0) for s in stock_ids])
         subind_codes = np.array([self.subind_map.get(s, 0) for s in stock_ids])
         corr_base = self._compute_rolling_corr(stock_ids, t_idx)     # (N, N)
+        rng = np.random.default_rng(cfg.seed + int(t_idx))
 
         edge_data = build_graph_edges(
-            corr_base, sector_codes, subind_codes, cfg, self.rng
+            corr_base, sector_codes, subind_codes, cfg, rng
         )
 
         # 4. Compute target: Δz = z_future − z_base  per edge
@@ -391,7 +428,8 @@ class THGNNDataset(Dataset):
                 dtype=torch.float32,
             )  # (E,)
         else:
-            # No future data available (e.g. end of dataset) — fill with 0
+            # Defensive fallback. Valid target dates are filtered in __init__,
+            # so this branch should be unreachable in normal use.
             target_z_resid = torch.zeros(E, dtype=torch.float32)
 
         # 5. Pack into PyG Data object
