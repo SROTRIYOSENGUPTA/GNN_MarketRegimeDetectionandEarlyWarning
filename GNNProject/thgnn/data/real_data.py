@@ -189,11 +189,18 @@ def fetch_real_data(
         vix_data = pd.DataFrame()
 
     spy_close = spy_data["Close"].dropna()
+    if isinstance(spy_close, pd.DataFrame):
+        spy_close = spy_close.squeeze()
+
     spy_ret = spy_close.pct_change().fillna(0)
+    if isinstance(spy_ret, pd.DataFrame):
+        spy_ret = spy_ret.squeeze()
     spy_vol_10 = spy_ret.rolling(10).std().fillna(0)
 
     # VIX close
     vix_close = vix_data["Close"].fillna(method="ffill").fillna(20.0) if len(vix_data) > 0 else pd.Series(20.0, index=spy_close.index)
+    if isinstance(vix_close, pd.DataFrame):
+        vix_close = vix_close.squeeze()
 
     # UMD factor proxy: SPY 12-month minus 1-month return
     spy_mom12 = spy_close.pct_change(252).fillna(0)
@@ -223,15 +230,28 @@ def fetch_real_data(
             else:
                 tk_data = raw
             close = tk_data["Close"].reindex(trading_dates)
+            if isinstance(close, pd.DataFrame):
+                close = close.squeeze()
             if close.dropna().shape[0] < T * 0.5:
                 if verbose:
                     print(f"  Skipping {ticker}: insufficient data ({close.dropna().shape[0]}/{T})")
                 continue
             close = close.fillna(method="ffill").fillna(method="bfill")
             stock_close_dict[ticker] = close
-            stock_high_dict[ticker] = tk_data["High"].reindex(trading_dates).fillna(method="ffill").fillna(close)
-            stock_low_dict[ticker] = tk_data["Low"].reindex(trading_dates).fillna(method="ffill").fillna(close)
-            stock_vol_dict[ticker] = tk_data["Volume"].reindex(trading_dates).fillna(0)
+
+            high = tk_data["High"].reindex(trading_dates)
+            low = tk_data["Low"].reindex(trading_dates)
+            vol = tk_data["Volume"].reindex(trading_dates)
+            if isinstance(high, pd.DataFrame):
+                high = high.squeeze()
+            if isinstance(low, pd.DataFrame):
+                low = low.squeeze()
+            if isinstance(vol, pd.DataFrame):
+                vol = vol.squeeze()
+
+            stock_high_dict[ticker] = high.fillna(method="ffill").fillna(close)
+            stock_low_dict[ticker] = low.fillna(method="ffill").fillna(close)
+            stock_vol_dict[ticker] = vol.fillna(0)
             all_returns_df[ticker] = close.pct_change().fillna(0)
             valid_tickers.append(ticker)
         except Exception as e:
@@ -240,6 +260,11 @@ def fetch_real_data(
 
     if verbose:
         print(f"Valid stocks: {len(valid_tickers)}")
+
+    if len(valid_tickers) < 2:
+        raise ValueError(
+            "Need at least 2 valid stocks to compute pairwise correlations."
+        )
 
     # ── Sector/sub-industry average returns ──────────────────────────────
     sector_avg_ret = {}
@@ -354,10 +379,12 @@ def fetch_real_data(
         sid_subind[sid] = si_code
 
     if verbose:
+        feature_tensor = np.stack(list(features.values()), axis=0) if features else np.zeros((0, 0, 0))
+        n_real = int((feature_tensor != 0).any(axis=(0, 1)).sum()) if feature_tensor.size > 0 else 0
         print(f"\nData pipeline complete:")
         print(f"  Stocks     : {len(features)}")
         print(f"  Days       : {T}")
-        print(f"  Features   : 37 ({sum(1 for c in f.columns if (f[c] != 0).any())} non-zero)")
+        print(f"  Features   : 37 ({n_real} non-zero)")
         print(f"  Date range : {dates_str[0]} → {dates_str[-1]}")
 
     return features, dates_str, sid_sector, sid_subind, returns_dict

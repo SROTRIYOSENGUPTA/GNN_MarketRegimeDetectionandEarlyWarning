@@ -50,7 +50,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.optim import AdamW
-from torch.optim.lr_scheduler import CosineAnnealingLR
 from torch_geometric.data import HeteroData
 
 import sys
@@ -207,6 +206,11 @@ def compute_metrics(
     # Macro F1 (per-class F1, averaged)
     f1_scores = []
     for c in range(num_classes):
+        support = (
+            (regime_labels_all == c).sum() + (regime_preds == c).sum()
+        ).item()
+        if support == 0:
+            continue
         tp = ((regime_preds == c) & (regime_labels_all == c)).sum().float()
         fp = ((regime_preds == c) & (regime_labels_all != c)).sum().float()
         fn = ((regime_preds != c) & (regime_labels_all == c)).sum().float()
@@ -214,7 +218,7 @@ def compute_metrics(
         recall = tp / (tp + fn + 1e-8)
         f1 = 2 * precision * recall / (precision + recall + 1e-8)
         f1_scores.append(f1.item())
-    metrics["regime_macro_f1"] = np.mean(f1_scores)
+    metrics["regime_macro_f1"] = float(np.mean(f1_scores)) if f1_scores else float("nan")
 
     # ── Transition metrics ──────────────────────────────────────────────
     trans_probs = torch.sigmoid(trans_logits_all)
@@ -243,38 +247,36 @@ def compute_metrics(
 
 def _compute_roc_auc(probs: np.ndarray, labels: np.ndarray) -> float:
     """
-    Compute ROC-AUC without sklearn.
+    Compute ROC-AUC without sklearn, with correct tie handling.
 
-    Uses the trapezoidal rule over sorted thresholds.
+    This uses the Mann-Whitney / rank-sum formulation, which is equivalent
+    to ROC-AUC and correctly assigns average ranks to tied probabilities.
     Returns NaN if only one class is present.
     """
+    probs = np.asarray(probs, dtype=np.float64)
+    labels = np.asarray(labels, dtype=np.int64)
+
     pos = labels.sum()
     neg = len(labels) - pos
     if pos == 0 or neg == 0:
         return float("nan")
 
-    # Sort by descending probability
-    order = np.argsort(-probs)
-    sorted_labels = labels[order]
+    order = np.argsort(probs, kind="mergesort")
+    sorted_probs = probs[order]
+    ranks = np.empty(len(probs), dtype=np.float64)
 
-    # Walk through sorted predictions
-    tp, fp = 0.0, 0.0
-    tpr_prev, fpr_prev = 0.0, 0.0
-    auc = 0.0
+    i = 0
+    while i < len(sorted_probs):
+        j = i + 1
+        while j < len(sorted_probs) and sorted_probs[j] == sorted_probs[i]:
+            j += 1
+        avg_rank = 0.5 * ((i + 1) + j)  # 1-based average rank over [i, j)
+        ranks[order[i:j]] = avg_rank
+        i = j
 
-    for i in range(len(sorted_labels)):
-        if sorted_labels[i] == 1:
-            tp += 1
-        else:
-            fp += 1
-        tpr = tp / pos
-        fpr = fp / neg
-        # Trapezoidal area
-        auc += 0.5 * (tpr + tpr_prev) * (fpr - fpr_prev)
-        tpr_prev = tpr
-        fpr_prev = fpr
-
-    return auc
+    pos_ranks = ranks[labels == 1].sum()
+    auc = (pos_ranks - pos * (pos + 1) / 2.0) / (pos * neg)
+    return float(auc)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -331,30 +333,40 @@ class Trainer:
         self.total_steps = steps_per_epoch * cfg.epochs
         self.warmup_steps = cfg.warmup_steps
 
-        # CosineAnnealingLR for post-warmup phase
-        self.scheduler = CosineAnnealingLR(
-            self.optimizer,
-            T_max=max(self.total_steps - self.warmup_steps, 1),
-            eta_min=cfg.lr_min,
-        )
+        self.cosine_steps = max(self.total_steps - self.warmup_steps, 1)
 
         self.global_step = 0
+
+        # Start from zero when warmup is enabled so the first optimizer step
+        # uses a small but non-zero LR after warmup adjustment.
+        if self.warmup_steps > 0:
+            for pg in self.optimizer.param_groups:
+                pg["lr"] = 0.0
 
     def _get_lr(self) -> float:
         """Get current learning rate."""
         return self.optimizer.param_groups[0]["lr"]
 
-    def _warmup_lr(self):
-        """Apply linear warmup if within warmup phase."""
-        if self.global_step < self.warmup_steps:
-            warmup_factor = self.global_step / max(self.warmup_steps, 1)
+    def _warmup_lr(self, step_num: int):
+        """Apply linear warmup for the upcoming optimizer step."""
+        if step_num <= self.warmup_steps:
+            warmup_factor = step_num / max(self.warmup_steps, 1)
             for pg in self.optimizer.param_groups:
                 pg["lr"] = self.cfg.lr * warmup_factor
 
     def _step_scheduler(self):
-        """Step LR scheduler (only after warmup)."""
-        if self.global_step >= self.warmup_steps:
-            self.scheduler.step()
+        """Apply the post-warmup cosine learning-rate schedule."""
+        if self.global_step > self.warmup_steps:
+            post_warmup_step = min(
+                self.global_step - self.warmup_steps,
+                self.cosine_steps,
+            )
+            cosine = 0.5 * (
+                1.0 + math.cos(math.pi * post_warmup_step / self.cosine_steps)
+            )
+            lr = self.cfg.lr_min + (self.cfg.lr - self.cfg.lr_min) * cosine
+            for pg in self.optimizer.param_groups:
+                pg["lr"] = lr
 
     # ── Training one epoch ──────────────────────────────────────────────
     def train_one_epoch(self) -> Dict[str, float]:
@@ -412,7 +424,8 @@ class Trainer:
                 )
 
                 # Warmup LR adjustment
-                self._warmup_lr()
+                if self.global_step < self.warmup_steps:
+                    self._warmup_lr(self.global_step + 1)
 
                 # Optimizer step
                 self.optimizer.step()
@@ -487,6 +500,9 @@ class Trainer:
             all_regime_labels.append(regime_labels.cpu())
             all_trans_logits.append(trans_logit.cpu())
             all_trans_labels.append(trans_labels.cpu())
+
+        if n_batches == 0:
+            return {}
 
         # Concatenate all predictions
         regime_logits_cat = torch.cat(all_regime_logits, dim=0)

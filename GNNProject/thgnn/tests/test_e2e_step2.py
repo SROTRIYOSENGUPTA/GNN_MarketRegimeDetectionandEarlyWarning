@@ -28,7 +28,7 @@ def generate_synthetic_data(n_stocks=20, n_days=200, n_features=37, seed=42):
     return features, dates, sector_map, subind_map, returns
 
 
-def main():
+def run_e2e_step2():
     print("=" * 64)
     print("  THGNN End-to-End Test — Step 2")
     print("  Dataset → TemporalEncoder → RelationalEncoder")
@@ -121,5 +121,9 @@ def main():
     print(f"{'=' * 64}")
 
 
+def test_e2e_step2():
+    run_e2e_step2()
+
+
 if __name__ == "__main__":
-    main()
+    run_e2e_step2()
