@@ -73,7 +73,6 @@ Shapes reference:
 """
 
 from __future__ import annotations
-
 import math
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -440,6 +439,8 @@ class RegimeDataset(Dataset):
         self.stock_id_to_pos = {
             sid: idx for idx, sid in enumerate(self.all_stock_ids)
         }
+        self._eligible_stock_cache: Dict[int, Tuple[int, ...]] = {}
+        self._snapshot_cache: Dict[Tuple[int, Tuple[int, ...]], HeteroData] = {}
 
         if len(self.regime_labels) != len(self.dates):
             raise ValueError(
@@ -518,8 +519,12 @@ class RegimeDataset(Dataset):
     def __len__(self) -> int:
         return len(self.date_indices)
 
-    def _get_eligible_stocks(self, t_idx: int) -> List[int]:
+    def _get_eligible_stocks(self, t_idx: int) -> Tuple[int, ...]:
         """Stocks with valid data at time t_idx."""
+        cached = self._eligible_stock_cache.get(t_idx)
+        if cached is not None:
+            return cached
+
         eligible = []
         for sid in self.all_stock_ids:
             feat = self.norm_features[sid]
@@ -527,7 +532,30 @@ class RegimeDataset(Dataset):
                 continue
             if not np.isnan(feat[t_idx, 0]):
                 eligible.append(sid)
-        return eligible
+        cached = tuple(eligible)
+        self._eligible_stock_cache[t_idx] = cached
+        return cached
+
+    def _get_snapshot(
+        self,
+        t_idx: int,
+        stock_ids: Tuple[int, ...],
+    ) -> HeteroData:
+        """
+        Reuse previously built daily snapshots across overlapping sequences.
+
+        Samples in adjacent windows share most of their constituent days, so
+        memoizing the CPU snapshot avoids rebuilding identical graph structure
+        on every __getitem__ call. The training pipeline now batches each
+        timestep on CPU and only moves the PyG Batch to the accelerator, so
+        the cached base object can be returned directly without mutation.
+        """
+        cache_key = (t_idx, stock_ids)
+        cached = self._snapshot_cache.get(cache_key)
+        if cached is None:
+            cached = self._build_snapshot(t_idx, list(stock_ids))
+            self._snapshot_cache[cache_key] = cached
+        return cached
 
     def _build_snapshot(self, t_idx: int, stock_ids: List[int]) -> HeteroData:
         """
@@ -635,7 +663,7 @@ class RegimeDataset(Dataset):
         for offset in range(cfg.seq_len - 1, -1, -1):
             # t goes from (t_target - 29) to t_target
             t_idx = t_target - offset
-            snapshot = self._build_snapshot(t_idx, stock_ids)
+            snapshot = self._get_snapshot(t_idx, stock_ids)
             snapshots.append(snapshot)
 
         assert len(snapshots) == cfg.seq_len, \

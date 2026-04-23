@@ -510,7 +510,7 @@ class DynamicRegimeGNN(nn.Module):
         """
         # Extract node features
         x = batched_graph["stock"].x                     # (B*N, 37)
-        batch_vec = batched_graph["stock"].batch          # (B*N,) — graph membership
+        batch_vec = batched_graph["stock"].batch.to(x.device)  # (B*N,) — graph membership
 
         # Stage 1: Node feature encoding
         h = self.node_encoder(x)                         # (B*N, 128)
@@ -549,12 +549,13 @@ class DynamicRegimeGNN(nn.Module):
         """
         T = len(snapshots)
         B = len(snapshots[0])
+        model_device = next(self.parameters()).device
 
         # Stage 1+2: Process each timestep through spatial encoder
         graph_embeds = []                                 # will be T × (B, 128)
         for t in range(T):
             # Batch B graphs at timestep t into a single PyG mega-graph
-            batched_t = Batch.from_data_list(snapshots[t])
+            batched_t = Batch.from_data_list(snapshots[t]).to(model_device)
             g_t = self.forward_snapshot(batched_t)        # (B, 128)
             graph_embeds.append(g_t)
 

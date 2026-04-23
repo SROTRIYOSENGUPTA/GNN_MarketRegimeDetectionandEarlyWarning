@@ -387,6 +387,72 @@ Therefore, the current experiment should be read as a feasibility result rather 
 - The early-warning branch remains insufficiently evaluated because the validation split does not contain the rare events that the branch is meant to detect.
 - The current codebase is therefore strongest as a validated research prototype: the pipeline runs correctly, but the empirical study is still incomplete.
 
+### 10.6 Proposed Full Experimental Protocol
+
+To move from a feasibility result to a course-quality empirical study, the project should adopt a fixed experimental protocol rather than a single short run. The key requirement is that both validation and test windows must contain non-trivial numbers of `Stress` days and positive transition events. Without this condition, the early-warning task cannot be evaluated meaningfully.
+
+The recommended primary split is:
+
+| Split | Date Range | Purpose |
+| --- | --- | --- |
+| Train | `2012-01-01` to `2018-12-31` | Fit model parameters |
+| Validation | `2019-01-01` to `2021-12-31` | Hyperparameter selection and threshold tuning |
+| Test | `2022-01-01` to `2024-06-30` | Final out-of-sample reporting |
+
+Before freezing this split, the label generator should be run once to verify that the validation and test periods both contain at least one `Stress` episode and a meaningful number of positive `transition_label = 1` samples. If one split is too sparse, the window boundaries should be adjusted before training begins, not after seeing model performance.
+
+The recommended training-and-selection procedure is:
+
+- train each configuration for a full schedule such as `20-50` epochs instead of a 1-epoch smoke test
+- use `3` random seeds, for example `42`, `52`, and `62`
+- select checkpoints on the validation set using regime macro-F1 as the primary score
+- use transition PR-AUC as a secondary tie-breaker because the early-warning task is imbalanced
+- evaluate the chosen checkpoint exactly once on the held-out test set
+- report mean and standard deviation across seeds
+
+The core metrics should be reported separately for the two tasks.
+
+For regime classification:
+
+- overall accuracy
+- macro-F1
+- balanced accuracy
+- per-class precision, recall, and F1
+- confusion matrix
+
+For early warning:
+
+- ROC-AUC
+- PR-AUC
+- precision, recall, and F1 at a threshold selected on validation data
+- number of predicted positive warnings
+- event-level lead time before the first day of each realized `Stress` episode
+
+The report should also include a small but defensible baseline suite:
+
+- majority-class regime predictor with always-negative transition prediction
+- non-graph temporal baseline using only market-level features such as `SPY`, `VIX`, realized volatility, and average correlation
+- stock-feature temporal baseline that pools stock features over names but removes graph edges
+- correlation-only Dynamic Regime GNN, using the same temporal head but removing proxy relation types
+
+In addition to baselines, the main model should be stress-tested with a focused ablation study:
+
+- remove `etf_cohold` edges
+- remove `supply_chain` edges
+- compare `LSTM` versus `Transformer` temporal encoders
+- compare sequence lengths such as `10`, `20`, and `30`
+- compare graph sparsity settings by varying `corr_top_k` and `corr_bot_k`
+
+Finally, the evaluation should include one robustness check beyond the single frozen split. A simple and appropriate choice is a rolling-origin evaluation with three folds, where each fold trains on all data up to a cutoff, validates on the following year, and tests on the year after that. This would show whether the model remains effective across different macro periods rather than only in one selected window.
+
+Under this protocol, a practical course-project run matrix would be:
+
+- 1 main model configuration x 3 seeds
+- 4 baselines x 3 seeds
+- 5 ablations x 3 seeds
+
+This totals `30` full training runs, which is large enough to support a meaningful empirical section while still remaining manageable on a modest compute budget if the curated 30-stock universe is retained.
+
 ## 11. Current Project Status
 
 This project should be understood as a research-engineering prototype with a working end-to-end pipeline. The strongest current outcomes are:
@@ -424,7 +490,7 @@ Several limitations remain.
 
 The most valuable next steps are:
 
-1. Run a more complete empirical evaluation with fixed train/validation/test windows.
+1. Execute the full experimental protocol described in Section 10.6 using fixed train/validation/test windows and multiple seeds.
 2. Add benchmark baselines such as non-graph temporal classifiers or simpler factor-based models.
 3. Replace proxy relation sources with real ETF-holdings and supply-chain datasets.
 4. Make the stock universe configurable while preserving a stable default smoke-test setup.

@@ -148,7 +148,12 @@ def move_snapshots_to_device(
     device: torch.device,
 ) -> List[List[HeteroData]]:
     """
-    Move a (T, B) grid of HeteroData snapshots to device.
+    Compatibility helper for older call sites.
+
+    The model now batches each timestep on CPU and moves the PyG Batch to the
+    target device inside its forward pass. Returning the original snapshot grid
+    here avoids mutating cached HeteroData objects and prevents redundant
+    per-snapshot device transfers.
 
     Parameters
     ----------
@@ -157,12 +162,9 @@ def move_snapshots_to_device(
 
     Returns
     -------
-    Same structure with all tensors on device.
+    The original snapshot grid.
     """
-    return [
-        [move_hetero_to_device(g, device) for g in timestep]
-        for timestep in snapshots
-    ]
+    return snapshots
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -396,9 +398,7 @@ class Trainer:
 
         for batch_idx, batch in enumerate(self.train_loader):
             # ── Unpack batch from regime_collate_fn ─────────────────────
-            snapshots = move_snapshots_to_device(
-                batch["snapshots"], self.device
-            )
+            snapshots = batch["snapshots"]
             regime_labels = batch["regime_label"].to(self.device)       # (B,)
             trans_labels = batch["transition_label"].to(self.device)     # (B,)
 
@@ -483,9 +483,7 @@ class Trainer:
         all_trans_labels = []
 
         for batch in loader:
-            snapshots = move_snapshots_to_device(
-                batch["snapshots"], self.device
-            )
+            snapshots = batch["snapshots"]
             regime_labels = batch["regime_label"].to(self.device)
             trans_labels = batch["transition_label"].to(self.device)
 

@@ -30,8 +30,12 @@ from __future__ import annotations
 
 import argparse
 from datetime import date, timedelta
+import hashlib
+import json
 import math
 from numbers import Integral
+from pathlib import Path
+import pickle
 import time
 import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -192,6 +196,65 @@ SP500_SAMPLE = {
 }
 
 SECTOR_CODES = {s: i for i, s in enumerate(SP500_SAMPLE.keys())}
+REAL_DATA_CACHE_VERSION = "v1"
+
+
+def _default_real_data_cache_dir() -> Path:
+    return Path(__file__).resolve().parents[2] / ".cache" / "market_regime_gnn" / "real_data"
+
+
+def _real_data_cache_key(start: str, end: str) -> str:
+    payload = {
+        "version": REAL_DATA_CACHE_VERSION,
+        "start": str(start),
+        "end": str(end),
+        "universe": SP500_SAMPLE,
+    }
+    digest = hashlib.sha256(
+        json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    return digest[:16]
+
+
+def _real_data_cache_path(
+    start: str,
+    end: str,
+    cache_dir: str | Path | None,
+) -> Path:
+    base_dir = _default_real_data_cache_dir() if cache_dir is None else Path(cache_dir)
+    return base_dir / (
+        f"real_data_{start}_{end}_{_real_data_cache_key(start, end)}.pkl"
+    )
+
+
+def _print_real_data_summary(payload, *, verbose: bool, prefix: str) -> None:
+    if not verbose:
+        return
+
+    features, dates_str, _, _, _, _, _, _, _ = payload
+    feature_tensor = (
+        np.stack(list(features.values()), axis=0)
+        if features
+        else np.zeros((0, 0, 0), dtype=np.float32)
+    )
+    n_real = (
+        int((feature_tensor != 0).any(axis=(0, 1)).sum())
+        if feature_tensor.size > 0
+        else 0
+    )
+    print(f"\n  {prefix}:")
+    print(f"    Stocks      : {len(features)}")
+    print(f"    Days        : {len(dates_str)}")
+    print(f"    Features    : 37 ({n_real} non-zero)")
+    print(f"    Date range  : {dates_str[0]} → {dates_str[-1]}")
+
+
+def _save_real_data_cache(path: Path, payload) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = path.with_name(path.name + ".tmp")
+    with tmp_path.open("wb") as fh:
+        pickle.dump(payload, fh, protocol=pickle.HIGHEST_PROTOCOL)
+    tmp_path.replace(path)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -228,7 +291,7 @@ def _atr(high: pd.Series, low: pd.Series, close: pd.Series, period: int = 14) ->
 # ═══════════════════════════════════════════════════════════════════════════
 # Step 1: Fetch real market data from Yahoo Finance
 # ═══════════════════════════════════════════════════════════════════════════
-def fetch_real_data(
+def _fetch_real_data_uncached(
     start: str = "2020-01-01",
     end: str = "2024-12-31",
     verbose: bool = True,
@@ -466,17 +529,59 @@ def fetch_real_data(
     # SPY DataFrame for label generation
     spy_df = pd.DataFrame({"Close": spy_close}, index=trading_dates)
 
-    if verbose:
-        feature_tensor = np.stack(list(features.values()), axis=0) if features else np.zeros((0, 0, 0))
-        n_real = int((feature_tensor != 0).any(axis=(0, 1)).sum()) if feature_tensor.size > 0 else 0
-        print(f"\n  Feature pipeline complete:")
-        print(f"    Stocks      : {len(features)}")
-        print(f"    Days        : {T}")
-        print(f"    Features    : 37 ({n_real} non-zero)")
-        print(f"    Date range  : {dates_str[0]} → {dates_str[-1]}")
+    payload = (
+        features,
+        dates_str,
+        sid_sector,
+        sid_subind,
+        returns_dict,
+        spy_df,
+        all_returns_df[valid_tickers],
+        valid_tickers,
+        ticker_sector,
+    )
+    _print_real_data_summary(payload, verbose=verbose, prefix="Feature pipeline complete")
+    return payload
 
-    return (features, dates_str, sid_sector, sid_subind, returns_dict,
-            spy_df, all_returns_df[valid_tickers], valid_tickers, ticker_sector)
+
+def fetch_real_data(
+    start: str = "2020-01-01",
+    end: str = "2024-12-31",
+    verbose: bool = True,
+    cache_dir: str | Path | None = None,
+    refresh_cache: bool = False,
+):
+    """
+    Fetch 30-stock real-market payload, using an on-disk cache by default.
+
+    The cached payload contains the fully materialized feature-engineering
+    output, so repeated experiments over the same date range can skip both
+    the Yahoo Finance download and the feature-construction step.
+    """
+    cache_path = _real_data_cache_path(str(start), str(end), cache_dir)
+
+    if not refresh_cache and cache_path.exists():
+        try:
+            with cache_path.open("rb") as fh:
+                payload = pickle.load(fh)
+            if verbose:
+                print(f"  Loading cached real-data payload from {cache_path}")
+            _print_real_data_summary(
+                payload,
+                verbose=verbose,
+                prefix="Cached feature payload",
+            )
+            return payload
+        except Exception as exc:
+            if verbose:
+                print(f"  Cache read failed at {cache_path}: {exc}")
+                print("  Rebuilding cache from source data...")
+
+    payload = _fetch_real_data_uncached(start=start, end=end, verbose=verbose)
+    _save_real_data_cache(cache_path, payload)
+    if verbose:
+        print(f"  Saved real-data cache to {cache_path}")
+    return payload
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -494,6 +599,8 @@ def main(
     seq_len: int = 30,
     rolling_zscore_window: int = 60,
     device: str = "cpu",
+    cache_dir: str | None = None,
+    refresh_cache: bool = False,
 ):
     try:
         from .data.hetero_dataset import RegimeDataset, build_regime_dataloader
@@ -564,7 +671,11 @@ def main(
 
     (features, dates, sector_map, subind_map, returns_dict,
      spy_df, returns_df, valid_tickers, ticker_sector) = fetch_real_data(
-        start=start, end=end, verbose=True,
+        start=start,
+        end=end,
+        verbose=True,
+        cache_dir=cache_dir,
+        refresh_cache=refresh_cache,
     )
 
     T = len(dates)
@@ -706,9 +817,8 @@ def main(
     print("  Step 6: Forward pass sanity check")
     print(f"{'─' * 74}")
 
-    sample_snapshots = move_snapshots_to_device(sample_batch["snapshots"], resolved_device)
     with torch.no_grad():
-        regime_logits, trans_logit = model(sample_snapshots)
+        regime_logits, trans_logit = model(sample_batch["snapshots"])
     regime_logits = regime_logits.cpu()
     trans_logit = trans_logit.cpu()
 
@@ -809,8 +919,7 @@ def main(
 
     with torch.no_grad():
         for batch in val_loader:
-            snapshots = move_snapshots_to_device(batch["snapshots"], resolved_device)
-            regime_logits, trans_logit = model(snapshots)
+            regime_logits, trans_logit = model(batch["snapshots"])
             regime_pred = regime_logits.argmax(dim=-1).cpu()
             trans_prob = torch.sigmoid(trans_logit).cpu()
 
@@ -895,6 +1004,16 @@ def build_arg_parser() -> argparse.ArgumentParser:
         default="cpu",
         help="Torch device to run on: cpu, cuda, cuda:N, or mps.",
     )
+    parser.add_argument(
+        "--cache-dir",
+        default=None,
+        help="Optional directory for cached fetched real-data payloads.",
+    )
+    parser.add_argument(
+        "--refresh-cache",
+        action="store_true",
+        help="Ignore any cached fetched real-data payload and rebuild it.",
+    )
     return parser
 
 
@@ -914,6 +1033,8 @@ def cli(argv: list[str] | None = None) -> int:
             seq_len=args.seq_len,
             rolling_zscore_window=args.rolling_zscore_window,
             device=args.device,
+            cache_dir=args.cache_dir,
+            refresh_cache=args.refresh_cache,
         )
     except CLIArgumentError as exc:
         parser.error(str(exc))
