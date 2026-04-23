@@ -6,7 +6,7 @@
 
 This project studies how to model the stock market as a dynamic heterogeneous graph for the task of market regime detection and stress early warning. Instead of treating stocks as independent time series, the project represents each trading day as a graph whose nodes are stocks and whose edges encode cross-asset relationships such as return correlation, ETF co-holding proxy, and supply-chain proxy. A temporal model is then applied to a rolling sequence of graph snapshots in order to predict both the current market regime and whether a market stress episode is likely to occur in the near future.
 
-The main output of the system is a dual prediction target: a four-class market regime label (`Bull`, `Crash`, `Liquidity`, `Stress`) and a binary transition label indicating whether `Stress` appears within the next 5-20 trading days. A preliminary real-data feasibility run on a curated 30-stock universe reached validation accuracy `0.8942` and macro-F1 `0.8388` for regime classification, showing that the end-to-end pipeline is operational on real market data. However, the same validation split contained no positive `Stress` or transition events, so the early-warning task is not yet meaningfully benchmarked. In addition to implementing the core modeling pipeline, this project improved the engineering quality of the repository by correcting split logic, stabilizing packaging and imports, hardening command-line behavior, and expanding regression-test coverage. The resulting codebase is a more reproducible and maintainable research prototype suitable for course submission and future extension.
+The main output of the system is a dual prediction target: a four-class market regime label (`Bull`, `Crash`, `Liquidity`, `Stress`) and a binary transition label indicating whether `Stress` appears within the next 5-20 trading days. A GPU experiment on an NVIDIA H200 node used a validation window containing real `Stress` and positive early-warning events. On this split, the best sparse-correlation run reached validation accuracy `0.6385`, regime macro-F1 `0.4513`, transition ROC-AUC `0.7922`, transition precision `0.5276`, and transition recall `0.4718`. A denser correlation graph under the same protocol performed worse, suggesting that additional correlation edges can add noise rather than signal in this small universe. In addition to implementing the core modeling pipeline, this project improved the engineering quality of the repository by correcting split logic, stabilizing packaging and imports, hardening command-line behavior, and expanding regression-test coverage. The resulting codebase is a more reproducible and maintainable research prototype suitable for course submission and future extension.
 
 ## 1. Introduction
 
@@ -277,181 +277,127 @@ uv build
 
 Observed validation status at the time of writing:
 
-- `uv run pytest -q` -> `44 passed`
+- `uv run pytest -q` -> `47 passed`
 - `uv build` -> source distribution and wheel built successfully
 
 These results do not constitute a financial-performance benchmark, but they do show that the codebase is installable, testable, and structurally consistent. This distinction is important: software validation establishes reproducibility of the implementation, while the next section evaluates the behavior of the model itself on real data.
 
 ## 10. Experimental Results
 
-The following results come from a real-data feasibility run of the Dynamic Regime GNN. They should be interpreted as preliminary evidence that the end-to-end pipeline trains successfully on real market data, not as a final benchmark study.
+The following experiments were run on a GPU node rather than as CPU smoke tests. The main goal was to evaluate the early-warning head on a validation window that actually contains `Stress` days and positive `transition_label` examples.
 
 ### 10.1 Experiment Setup
 
-Table 1 summarizes the main protocol choices for the reported run.
+The data payload was fetched once for `2018-01-01` through `2025-12-31` and cached locally. Supervised samples were then restricted to the split ranges below. The dataset constructor keeps the full 5-20 day transition horizon inside each split, so target dates near a split boundary are filtered out rather than allowed to leak information across train and validation periods.
 
 | Item | Value |
 | --- | --- |
-| Date range | `2022-01-01` to `2024-06-30` |
-| Training cutoff | `2023-12-31` |
-| Training epochs | `1` |
-| Device | `cpu` |
+| Train range | `2018-01-01` to `2021-12-31` |
+| Validation range | `2022-01-01` to `2024-12-31` |
+| Device | NVIDIA H200, `cuda` |
+| PyTorch | `2.11.0+cu130` |
+| Training epochs | `2` |
 | Batch size | `1` |
 | Gradient accumulation | `1` |
+| Learning rate | `5e-4` with `10` warmup steps |
 | Sequence length | `30` daily graph snapshots |
-| Correlation graph settings | `corr_top_k = 5`, `corr_bot_k = 3` |
+| Main correlation graph | `corr_top_k = 5`, `corr_bot_k = 3` |
+| Comparison correlation graph | `corr_top_k = 10`, `corr_bot_k = 5` |
 | Valid stocks | `30` |
-| Trading days | `625` |
-| Train / validation samples | `393 / 104` |
+| Train / validation samples | `900 / 733` |
 | Trainable parameters | `1,141,783` |
 
-The command used for this run was:
+The main run was executed with the same package entry points and internal training code as the CLI. The resulting experiment artifacts were saved to:
 
-```bash
-uv run python -m market_regime_gnn.run_real_data \
-  --start 2022-01-01 \
-  --end 2024-06-30 \
-  --train-cutoff 2023-12-31 \
-  --epochs 1 \
-  --batch-size 1 \
-  --grad-accum-steps 1 \
-  --corr-top-k 5 \
-  --corr-bot-k 3 \
-  --device cpu
+```text
+artifacts/gpu_h200_main_split2018to2024_cut2021_k5_3_seq30_e2.json
+artifacts/gpu_h200_densecorr_split2018to2024_cut2021_k10_5_seq30_e2.json
 ```
 
-### 10.2 Dataset Label Distribution
+### 10.2 Label Distribution
 
-Across the full 625-day dataset, the rule-based labels were distributed as follows:
+The chosen split deliberately includes rare-event labels in both training and validation. This makes the validation metrics more informative than the earlier CPU feasibility window, which contained no validation `Stress` or transition positives.
 
-| Label | Count | Share |
-| --- | ---: | ---: |
-| `Bull` | 306 | 49.0% |
-| `Crash` | 7 | 1.1% |
-| `Liquidity` | 279 | 44.6% |
-| `Stress` | 33 | 5.3% |
-| `transition_label = 1` | 86 | 13.8% |
-| `transition_label = 0` | 539 | 86.2% |
+| Split | Samples | Bull | Crash | Liquidity | Stress | `transition=1` |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Train | 900 | 538 | 18 | 227 | 117 | 179 |
+| Validation | 733 | 354 | 15 | 255 | 109 | 142 |
 
-This distribution confirms that the problem is class-imbalanced, especially for the rare `Crash` and `Stress` states.
+The validation set is still imbalanced, but it is now suitable for testing the early-warning objective: `109` validation targets are `Stress`, and `142` validation targets have a future stress event within the 5-20 day warning window.
 
-### 10.3 Validation Results
+### 10.3 Main GPU Result
 
-After one epoch, the model produced the following validation metrics:
+The best checkpoint by validation macro-F1 was epoch 2 of the sparse-correlation run.
 
 | Metric | Value |
 | --- | ---: |
-| Validation loss | 0.22498 |
-| Regime accuracy | 0.8942 |
-| Regime macro-F1 | 0.8388 |
-| Stress ROC-AUC | `nan` |
-| Transition precision | 0.0000 |
-| Transition recall | 0.0000 |
-| Training time | 208.6 s |
+| Validation loss | 1.6267 |
+| Regime accuracy | 0.6385 |
+| Regime macro-F1 | 0.4513 |
+| Transition accuracy | 0.8158 |
+| Transition precision | 0.5276 |
+| Transition recall | 0.4718 |
+| Transition ROC-AUC | 0.7922 |
+| Training time for 2 epochs | 311.1 s |
 
-The epoch summary reported by the training loop was:
+The per-epoch training summary was:
 
 ```text
-Epoch   1/1 | train 1.0524 (reg 0.7866, trans 0.2658) | val 0.2250 (acc 0.894, F1 0.839, AUC nan) | lr 1.00e-06 | 208.6s
+Epoch   1/2 | train 1.2249 (reg 0.6419, trans 0.5830) | val 1.6533 (acc 0.617, F1 0.425, AUC 0.828) | lr 2.53e-04 | 156.7s
+Epoch   2/2 | train 0.6678 (reg 0.3928, trans 0.2751) | val 1.6267 (acc 0.638, F1 0.451, AUC 0.792) | lr 1.00e-06 | 154.4s
 ```
 
-Per-class validation accuracy was:
+Per-class validation accuracy for the best checkpoint was:
 
 | Regime | Accuracy |
 | --- | ---: |
-| `Bull` | 0.9059 |
-| `Crash` | N/A |
-| `Liquidity` | 0.8421 |
-| `Stress` | N/A |
+| `Bull` | 0.8023 |
+| `Crash` | 0.0000 |
+| `Liquidity` | 0.5294 |
+| `Stress` | 0.4495 |
 
 The validation prediction counts were:
 
 | Regime | Predicted | True |
 | --- | ---: | ---: |
-| `Bull` | 80 | 85 |
-| `Crash` | 0 | 0 |
-| `Liquidity` | 24 | 19 |
-| `Stress` | 0 | 0 |
+| `Bull` | 387 | 354 |
+| `Crash` | 0 | 15 |
+| `Liquidity` | 267 | 255 |
+| `Stress` | 79 | 109 |
 
-For the early-warning head, the average predicted stress-transition probability on the validation split was `0.0047`, with standard deviation `0.0264` and range `[0.0000, 0.2069]`.
+For the early-warning head, the model predicted `127` positive warnings against `142` true positives. The average predicted stress-transition probability was `0.1753`, with standard deviation `0.3603` and range `[0.0004, 0.9999]`.
 
-### 10.4 Interpretation
+### 10.4 Graph Sparsity Comparison
 
-These results show that the Dynamic Regime GNN can train end-to-end on real data and can separate the dominant validation regimes reasonably well in this short run, especially between `Bull` and `Liquidity`. However, this experiment is not sufficient to validate the early-warning objective. The validation split for this particular window contains no positive `Stress` examples and no positive transition events, which makes `Stress` ROC-AUC undefined and leaves transition precision/recall uninformative.
+A second GPU run used a denser correlation graph with `corr_top_k = 10` and `corr_bot_k = 5`, keeping the same data split, model architecture, optimizer, seed, and number of epochs.
 
-Therefore, the current experiment should be read as a feasibility result rather than as a conclusive empirical evaluation. A stronger study would require longer or better-balanced out-of-sample windows, repeated runs, and comparisons against non-graph baselines.
+| Configuration | Val Acc | Val Macro-F1 | Transition Precision | Transition Recall | Transition ROC-AUC |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Sparse correlation, `5/3` | 0.6385 | 0.4513 | 0.5276 | 0.4718 | 0.7922 |
+| Dense correlation, `10/5` | 0.5975 | 0.4068 | 0.4276 | 0.4366 | 0.7608 |
 
-### 10.5 Key Takeaways
+The denser graph predicted more stress-warning positives (`145` versus `127`) but had lower precision, lower recall, lower regime macro-F1, and lower transition ROC-AUC. In this small 30-stock universe, adding more correlation edges appears to introduce noisy neighbors faster than it adds useful information.
 
-- The regime-classification branch is already capable of learning useful decision boundaries on real data for the dominant market states in the chosen validation window.
-- The early-warning branch remains insufficiently evaluated because the validation split does not contain the rare events that the branch is meant to detect.
-- The current codebase is therefore strongest as a validated research prototype: the pipeline runs correctly, but the empirical study is still incomplete.
+### 10.5 Interpretation
 
-### 10.6 Proposed Full Experimental Protocol
+The GPU results change the empirical story of the project. The pipeline is no longer only shown to run on real data; it is also evaluated on a validation period with meaningful stress events. The early-warning head produces non-trivial scores and reaches transition ROC-AUC near `0.79`, which is a useful sign that the dynamic graph representation contains forward-looking stress information.
 
-To move from a feasibility result to a course-quality empirical study, the project should adopt a fixed experimental protocol rather than a single short run. The key requirement is that both validation and test windows must contain non-trivial numbers of `Stress` days and positive transition events. Without this condition, the early-warning task cannot be evaluated meaningfully.
+At the same time, the regime-classification task remains difficult. `Bull` and `Liquidity` are detected more reliably than the rare regimes, while `Crash` is never predicted in this run. This is expected given the small number of `Crash` examples (`18` in training and `15` in validation), but it means the model is not yet a reliable four-regime classifier.
 
-The recommended primary split is:
+The two-epoch trajectory also shows a task tradeoff. Regime macro-F1 improves from epoch 1 to epoch 2, while transition ROC-AUC decreases from `0.828` to `0.792`. A stronger training protocol should therefore select checkpoints with an explicit multi-task criterion rather than relying only on the final epoch.
 
-| Split | Date Range | Purpose |
-| --- | --- | --- |
-| Train | `2012-01-01` to `2018-12-31` | Fit model parameters |
-| Validation | `2019-01-01` to `2021-12-31` | Hyperparameter selection and threshold tuning |
-| Test | `2022-01-01` to `2024-06-30` | Final out-of-sample reporting |
+### 10.6 Remaining Experimental Work
 
-Before freezing this split, the label generator should be run once to verify that the validation and test periods both contain at least one `Stress` episode and a meaningful number of positive `transition_label = 1` samples. If one split is too sparse, the window boundaries should be adjusted before training begins, not after seeing model performance.
+These GPU runs are a stronger empirical result than the earlier CPU feasibility test, but they are still not a full benchmark study. The most important missing pieces are:
 
-The recommended training-and-selection procedure is:
+- multiple random seeds with mean and standard deviation reporting
+- a held-out test period separate from validation
+- non-graph baselines using market-level and pooled stock-level features
+- threshold selection for transition precision, recall, and F1 on validation data
+- PR-AUC for the imbalanced early-warning task
+- broader ablations over sequence length, temporal encoder type, and proxy relation types
 
-- train each configuration for a full schedule such as `20-50` epochs instead of a 1-epoch smoke test
-- use `3` random seeds, for example `42`, `52`, and `62`
-- select checkpoints on the validation set using regime macro-F1 as the primary score
-- use transition PR-AUC as a secondary tie-breaker because the early-warning task is imbalanced
-- evaluate the chosen checkpoint exactly once on the held-out test set
-- report mean and standard deviation across seeds
-
-The core metrics should be reported separately for the two tasks.
-
-For regime classification:
-
-- overall accuracy
-- macro-F1
-- balanced accuracy
-- per-class precision, recall, and F1
-- confusion matrix
-
-For early warning:
-
-- ROC-AUC
-- PR-AUC
-- precision, recall, and F1 at a threshold selected on validation data
-- number of predicted positive warnings
-- event-level lead time before the first day of each realized `Stress` episode
-
-The report should also include a small but defensible baseline suite:
-
-- majority-class regime predictor with always-negative transition prediction
-- non-graph temporal baseline using only market-level features such as `SPY`, `VIX`, realized volatility, and average correlation
-- stock-feature temporal baseline that pools stock features over names but removes graph edges
-- correlation-only Dynamic Regime GNN, using the same temporal head but removing proxy relation types
-
-In addition to baselines, the main model should be stress-tested with a focused ablation study:
-
-- remove `etf_cohold` edges
-- remove `supply_chain` edges
-- compare `LSTM` versus `Transformer` temporal encoders
-- compare sequence lengths such as `10`, `20`, and `30`
-- compare graph sparsity settings by varying `corr_top_k` and `corr_bot_k`
-
-Finally, the evaluation should include one robustness check beyond the single frozen split. A simple and appropriate choice is a rolling-origin evaluation with three folds, where each fold trains on all data up to a cutoff, validates on the following year, and tests on the year after that. This would show whether the model remains effective across different macro periods rather than only in one selected window.
-
-Under this protocol, a practical course-project run matrix would be:
-
-- 1 main model configuration x 3 seeds
-- 4 baselines x 3 seeds
-- 5 ablations x 3 seeds
-
-This totals `30` full training runs, which is large enough to support a meaningful empirical section while still remaining manageable on a modest compute budget if the curated 30-stock universe is retained.
+A practical next-stage protocol would train the main model and baselines across at least three seeds, choose checkpoints on validation macro-F1 with transition PR-AUC as a secondary criterion, and evaluate the selected checkpoints once on a held-out test window. A rolling-origin evaluation would also be valuable because it would show whether the model remains stable across different macro regimes rather than only on the `2022-2024` validation period.
 
 ## 11. Current Project Status
 
@@ -460,9 +406,11 @@ This project should be understood as a research-engineering prototype with a wor
 - a coherent graph-based formulation of market regime detection
 - an explicit early-warning target for future stress events
 - a working real-data pipeline using temporal heterogeneous graphs
+- GPU validation results on a split with real `Stress` and positive early-warning labels
+- a small graph-sparsity comparison showing that denser correlation graphs are not automatically better
 - a substantially improved engineering foundation for reproducibility and maintainability
 
-What the project does not yet provide is a full benchmark-style empirical study with fixed frozen datasets, extensive baseline comparisons, and ablation tables. That is the most important missing component from a pure research-evaluation perspective.
+What the project does not yet provide is a full benchmark-style empirical study with a held-out test set, multiple random seeds, extensive baseline comparisons, and broader ablation tables. That is the most important missing component from a pure research-evaluation perspective.
 
 ## 12. Limitations
 
@@ -483,8 +431,8 @@ Several limitations remain.
 ### 12.3 Evaluation Limitations
 
 - The automated tests focus on software correctness and smoke-level behavior.
-- Long real-data experiments are not yet deeply automated.
-- The report does not include a full quantitative comparison against standard baselines.
+- The GPU experiments are single-seed pilot runs rather than a full multi-seed benchmark.
+- The report includes one graph-sparsity comparison but does not include a full quantitative comparison against standard baselines.
 
 ## 13. Future Work
 
@@ -494,11 +442,11 @@ The most valuable next steps are:
 2. Add benchmark baselines such as non-graph temporal classifiers or simpler factor-based models.
 3. Replace proxy relation sources with real ETF-holdings and supply-chain datasets.
 4. Make the stock universe configurable while preserving a stable default smoke-test setup.
-5. Add experiment tracking, saved configurations, and artifact outputs for real-data runs.
+5. Turn the current JSON experiment artifacts into a more systematic experiment-tracking workflow.
 6. Expand tests around the full training and evaluation loop of the regime branch.
 
 ## 14. Conclusion
 
 This project demonstrates how a dynamic heterogeneous graph neural network can be used to model market structure for regime detection and early warning. The central contribution is the Dynamic Regime GNN pipeline, which combines stock-level features, multi-relational graph construction, temporal modeling, and dual-task prediction. From a software-engineering perspective, the repository has also been improved significantly through packaging fixes, split-logic corrections, CLI hardening, and broader regression testing.
 
-For a course project, this submission offers both a meaningful modeling idea and a working implementation. Its primary strength is the coherent integration of graph structure and temporal context for systemic market analysis. Its primary remaining weakness is the lack of a deeper quantitative benchmark study. Even so, the project provides a strong base for continued experimentation and further research.
+For a course project, this submission offers both a meaningful modeling idea and a working implementation. Its primary strength is the coherent integration of graph structure and temporal context for systemic market analysis, now supported by GPU experiments on a validation window with real stress events. Its primary remaining weakness is the lack of a deeper quantitative benchmark study. Even so, the project provides a strong base for continued experimentation and further research.
