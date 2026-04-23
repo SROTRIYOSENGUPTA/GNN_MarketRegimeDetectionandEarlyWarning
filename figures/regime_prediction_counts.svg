@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="480" viewBox="0 0 940 480" role="img">
+<style>
+  text { font-family: 'Aptos', 'Helvetica Neue', Arial, sans-serif; fill: #1f2933; }
+  .title { font-size: 22px; font-weight: 700; }
+  .subtitle { font-size: 13px; fill: #64748b; }
+  .axis { stroke: #334155; stroke-width: 1.2; }
+  .grid { stroke: #d8dee9; stroke-width: 1; }
+  .tick { font-size: 12px; fill: #475569; }
+  .label { font-size: 12px; fill: #334155; }
+  .legend { font-size: 13px; fill: #334155; }
+  .value { font-size: 11px; fill: #1f2933; }
+</style>
+<rect width="940" height="480" rx="18" fill="#fbfaf6"/>
+<text class="title" x="76" y="38">Validation Regime Predictions vs. Ground Truth</text>
+<text class="subtitle" x="76" y="60">The sparse model captures Bull and Liquidity best, under-predicts Stress, and misses Crash.</text>
+<line class="grid" x1="76" y1="388.0" x2="904" y2="388.0"/>
+<text class="tick" x="64" y="392.0" text-anchor="end">0</text>
+<line class="grid" x1="76" y1="327.6" x2="904" y2="327.6"/>
+<text class="tick" x="64" y="331.6" text-anchor="end">84</text>
+<line class="grid" x1="76" y1="267.2" x2="904" y2="267.2"/>
+<text class="tick" x="64" y="271.2" text-anchor="end">168</text>
+<line class="grid" x1="76" y1="206.8" x2="904" y2="206.8"/>
+<text class="tick" x="64" y="210.8" text-anchor="end">252</text>
+<line class="grid" x1="76" y1="146.4" x2="904" y2="146.4"/>
+<text class="tick" x="64" y="150.4" text-anchor="end">336</text>
+<line class="grid" x1="76" y1="86.0" x2="904" y2="86.0"/>
+<text class="tick" x="64" y="90.0" text-anchor="end">420</text>
+<line class="axis" x1="76" y1="86" x2="76" y2="388"/>
+<line class="axis" x1="76" y1="388" x2="904" y2="388"/>
+<rect x="113.3" y="109.7" width="57.0" height="278.3" rx="4" fill="#0f766e"/>
+<text class="value" x="141.7" y="103.7" text-anchor="middle">387</text>
+<rect x="320.3" y="388.0" width="57.0" height="0.0" rx="4" fill="#0f766e"/>
+<text class="value" x="348.7" y="382.0" text-anchor="middle">0</text>
+<rect x="527.3" y="196.0" width="57.0" height="192.0" rx="4" fill="#0f766e"/>
+<text class="value" x="555.7" y="190.0" text-anchor="middle">267</text>
+<rect x="734.3" y="331.2" width="57.0" height="56.8" rx="4" fill="#0f766e"/>
+<text class="value" x="762.7" y="325.2" text-anchor="middle">79</text>
+<rect x="179.5" y="133.5" width="57.0" height="254.5" rx="4" fill="#be123c"/>
+<text class="value" x="208.0" y="127.5" text-anchor="middle">354</text>
+<rect x="386.5" y="377.2" width="57.0" height="10.8" rx="4" fill="#be123c"/>
+<text class="value" x="415.0" y="371.2" text-anchor="middle">15</text>
+<rect x="593.5" y="204.6" width="57.0" height="183.4" rx="4" fill="#be123c"/>
+<text class="value" x="622.0" y="198.6" text-anchor="middle">255</text>
+<rect x="800.5" y="309.6" width="57.0" height="78.4" rx="4" fill="#be123c"/>
+<text class="value" x="829.0" y="303.6" text-anchor="middle">109</text>
+<text class="tick" x="179.5" y="414" text-anchor="middle">Bull</text>
+<text class="tick" x="386.5" y="414" text-anchor="middle">Crash</text>
+<text class="tick" x="593.5" y="414" text-anchor="middle">Liquidity</text>
+<text class="tick" x="800.5" y="414" text-anchor="middle">Stress</text>
+<rect x="76" y="439" width="14" height="14" rx="3" fill="#0f766e"/>
+<text class="legend" x="98" y="450">Predicted</text>
+<rect x="262" y="439" width="14" height="14" rx="3" fill="#be123c"/>
+<text class="legend" x="284" y="450">True</text>
+</svg>

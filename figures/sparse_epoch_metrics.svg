@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="440" viewBox="0 0 900 440" role="img">
+<style>
+  text { font-family: 'Aptos', 'Helvetica Neue', Arial, sans-serif; fill: #1f2933; }
+  .title { font-size: 22px; font-weight: 700; }
+  .subtitle { font-size: 13px; fill: #64748b; }
+  .axis { stroke: #334155; stroke-width: 1.2; }
+  .grid { stroke: #d8dee9; stroke-width: 1; }
+  .tick { font-size: 12px; fill: #475569; }
+  .label { font-size: 12px; fill: #334155; }
+  .legend { font-size: 13px; fill: #334155; }
+  .value { font-size: 11px; fill: #1f2933; }
+</style>
+<rect width="900" height="440" rx="18" fill="#fbfaf6"/>
+<text class="title" x="76" y="38">Sparse Graph Validation Metrics by Epoch</text>
+<text class="subtitle" x="76" y="60">Regime macro-F1 improves in epoch 2 while transition ROC-AUC peaks earlier.</text>
+<line class="grid" x1="76" y1="360.0" x2="864" y2="360.0"/>
+<text class="tick" x="64" y="364.0" text-anchor="end">0.00</text>
+<line class="grid" x1="76" y1="305.2" x2="864" y2="305.2"/>
+<text class="tick" x="64" y="309.2" text-anchor="end">0.20</text>
+<line class="grid" x1="76" y1="250.4" x2="864" y2="250.4"/>
+<text class="tick" x="64" y="254.4" text-anchor="end">0.40</text>
+<line class="grid" x1="76" y1="195.6" x2="864" y2="195.6"/>
+<text class="tick" x="64" y="199.6" text-anchor="end">0.60</text>
+<line class="grid" x1="76" y1="140.8" x2="864" y2="140.8"/>
+<text class="tick" x="64" y="144.8" text-anchor="end">0.80</text>
+<line class="grid" x1="76" y1="86.0" x2="864" y2="86.0"/>
+<text class="tick" x="64" y="90.0" text-anchor="end">1.00</text>
+<line class="axis" x1="76" y1="86" x2="76" y2="360"/>
+<line class="axis" x1="76" y1="360" x2="864" y2="360"/>
+<text class="tick" x="76.0" y="388" text-anchor="middle">Epoch 1</text>
+<text class="tick" x="864.0" y="388" text-anchor="middle">Epoch 2</text>
+<polyline points="76.0,191.0 864.0,185.1" fill="none" stroke="#2563eb" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="76.0" cy="191.0" r="5" fill="#2563eb" stroke="#ffffff" stroke-width="2"/>
+<circle cx="864.0" cy="185.1" r="5" fill="#2563eb" stroke="#ffffff" stroke-width="2"/>
+<text class="value" x="76.0" y="181.0" text-anchor="middle">0.62</text>
+<text class="value" x="864.0" y="175.1" text-anchor="middle">0.64</text>
+<polyline points="76.0,243.6 864.0,236.4" fill="none" stroke="#0f766e" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="76.0" cy="243.6" r="5" fill="#0f766e" stroke="#ffffff" stroke-width="2"/>
+<circle cx="864.0" cy="236.4" r="5" fill="#0f766e" stroke="#ffffff" stroke-width="2"/>
+<text class="value" x="76.0" y="233.6" text-anchor="middle">0.42</text>
+<text class="value" x="864.0" y="226.4" text-anchor="middle">0.45</text>
+<polyline points="76.0,133.2 864.0,142.9" fill="none" stroke="#be123c" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="76.0" cy="133.2" r="5" fill="#be123c" stroke="#ffffff" stroke-width="2"/>
+<circle cx="864.0" cy="142.9" r="5" fill="#be123c" stroke="#ffffff" stroke-width="2"/>
+<text class="value" x="76.0" y="123.2" text-anchor="middle">0.83</text>
+<text class="value" x="864.0" y="132.9" text-anchor="middle">0.79</text>
+<line x1="76" y1="407" x2="94" y2="407" stroke="#2563eb" stroke-width="3.2"/>
+<text class="legend" x="102" y="412">Val accuracy</text>
+<line x1="269" y1="407" x2="287" y2="407" stroke="#0f766e" stroke-width="3.2"/>
+<text class="legend" x="295" y="412">Val macro-F1</text>
+<line x1="462" y1="407" x2="480" y2="407" stroke="#be123c" stroke-width="3.2"/>
+<text class="legend" x="488" y="412">Transition ROC-AUC</text>
+</svg>

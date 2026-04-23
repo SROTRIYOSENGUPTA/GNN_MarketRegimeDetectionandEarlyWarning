@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="480" viewBox="0 0 940 480" role="img">
+<style>
+  text { font-family: 'Aptos', 'Helvetica Neue', Arial, sans-serif; fill: #1f2933; }
+  .title { font-size: 22px; font-weight: 700; }
+  .subtitle { font-size: 13px; fill: #64748b; }
+  .axis { stroke: #334155; stroke-width: 1.2; }
+  .grid { stroke: #d8dee9; stroke-width: 1; }
+  .tick { font-size: 12px; fill: #475569; }
+  .label { font-size: 12px; fill: #334155; }
+  .legend { font-size: 13px; fill: #334155; }
+  .value { font-size: 11px; fill: #1f2933; }
+</style>
+<rect width="940" height="480" rx="18" fill="#fbfaf6"/>
+<text class="title" x="76" y="38">Sparse vs. Dense Correlation Graphs</text>
+<text class="subtitle" x="76" y="60">Increasing correlation neighbors lowers both regime and early-warning metrics in this run.</text>
+<line class="grid" x1="76" y1="388.0" x2="904" y2="388.0"/>
+<text class="tick" x="64" y="392.0" text-anchor="end">0.00</text>
+<line class="grid" x1="76" y1="327.6" x2="904" y2="327.6"/>
+<text class="tick" x="64" y="331.6" text-anchor="end">0.20</text>
+<line class="grid" x1="76" y1="267.2" x2="904" y2="267.2"/>
+<text class="tick" x="64" y="271.2" text-anchor="end">0.40</text>
+<line class="grid" x1="76" y1="206.8" x2="904" y2="206.8"/>
+<text class="tick" x="64" y="210.8" text-anchor="end">0.60</text>
+<line class="grid" x1="76" y1="146.4" x2="904" y2="146.4"/>
+<text class="tick" x="64" y="150.4" text-anchor="end">0.80</text>
+<line class="grid" x1="76" y1="86.0" x2="904" y2="86.0"/>
+<text class="tick" x="64" y="90.0" text-anchor="end">1.00</text>
+<line class="axis" x1="76" y1="86" x2="76" y2="388"/>
+<line class="axis" x1="76" y1="388" x2="904" y2="388"/>
+<rect x="105.8" y="195.2" width="45.6" height="192.8" rx="4" fill="#2563eb"/>
+<text class="value" x="128.6" y="189.2" text-anchor="middle">0.64</text>
+<rect x="271.4" y="251.7" width="45.6" height="136.3" rx="4" fill="#2563eb"/>
+<text class="value" x="294.2" y="245.7" text-anchor="middle">0.45</text>
+<rect x="437.0" y="228.7" width="45.6" height="159.3" rx="4" fill="#2563eb"/>
+<text class="value" x="459.8" y="222.7" text-anchor="middle">0.53</text>
+<rect x="602.6" y="245.5" width="45.6" height="142.5" rx="4" fill="#2563eb"/>
+<text class="value" x="625.4" y="239.5" text-anchor="middle">0.47</text>
+<rect x="768.2" y="148.7" width="45.6" height="239.3" rx="4" fill="#2563eb"/>
+<text class="value" x="791.0" y="142.7" text-anchor="middle">0.79</text>
+<rect x="158.8" y="207.5" width="45.6" height="180.5" rx="4" fill="#d97706"/>
+<text class="value" x="181.6" y="201.5" text-anchor="middle">0.60</text>
+<rect x="324.4" y="265.1" width="45.6" height="122.9" rx="4" fill="#d97706"/>
+<text class="value" x="347.2" y="259.1" text-anchor="middle">0.41</text>
+<rect x="490.0" y="258.9" width="45.6" height="129.1" rx="4" fill="#d97706"/>
+<text class="value" x="512.8" y="252.9" text-anchor="middle">0.43</text>
+<rect x="655.6" y="256.1" width="45.6" height="131.9" rx="4" fill="#d97706"/>
+<text class="value" x="678.4" y="250.1" text-anchor="middle">0.44</text>
+<rect x="821.2" y="158.2" width="45.6" height="229.8" rx="4" fill="#d97706"/>
+<text class="value" x="844.0" y="152.2" text-anchor="middle">0.76</text>
+<text class="tick" x="158.8" y="414" text-anchor="middle">Val Acc</text>
+<text class="tick" x="324.4" y="414" text-anchor="middle">Macro-F1</text>
+<text class="tick" x="490.0" y="414" text-anchor="middle">Precision</text>
+<text class="tick" x="655.6" y="414" text-anchor="middle">Recall</text>
+<text class="tick" x="821.2" y="414" text-anchor="middle">ROC-AUC</text>
+<rect x="76" y="439" width="14" height="14" rx="3" fill="#2563eb"/>
+<text class="legend" x="98" y="450">Sparse 5/3</text>
+<rect x="266" y="439" width="14" height="14" rx="3" fill="#d97706"/>
+<text class="legend" x="288" y="450">Dense 10/5</text>
+</svg>

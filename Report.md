@@ -323,6 +323,10 @@ The chosen split deliberately includes rare-event labels in both training and va
 | Train | 900 | 538 | 18 | 227 | 117 | 179 |
 | Validation | 733 | 354 | 15 | 255 | 109 | 142 |
 
+![Train and validation label distribution](figures/label_distribution.svg)
+
+Figure 1 visualizes the same label counts and highlights why this split is more useful for early-warning evaluation than a validation period with no stress events.
+
 The validation set is still imbalanced, but it is now suitable for testing the early-warning objective: `109` validation targets are `Stress`, and `142` validation targets have a future stress event within the 5-20 day warning window.
 
 ### 10.3 Main GPU Result
@@ -347,6 +351,10 @@ Epoch   1/2 | train 1.2249 (reg 0.6419, trans 0.5830) | val 1.6533 (acc 0.617, F
 Epoch   2/2 | train 0.6678 (reg 0.3928, trans 0.2751) | val 1.6267 (acc 0.638, F1 0.451, AUC 0.792) | lr 1.00e-06 | 154.4s
 ```
 
+![Sparse graph validation metrics by epoch](figures/sparse_epoch_metrics.svg)
+
+Figure 2 shows the short-run multi-task tradeoff: regime accuracy and macro-F1 improve in the second epoch, while transition ROC-AUC is highest after the first epoch.
+
 Per-class validation accuracy for the best checkpoint was:
 
 | Regime | Accuracy |
@@ -365,6 +373,10 @@ The validation prediction counts were:
 | `Liquidity` | 267 | 255 |
 | `Stress` | 79 | 109 |
 
+![Validation regime predictions versus true counts](figures/regime_prediction_counts.svg)
+
+Figure 3 makes the rare-class issue visible: the model predicts no `Crash` examples and under-predicts `Stress`, even though it captures many `Bull` and `Liquidity` days.
+
 For the early-warning head, the model predicted `127` positive warnings against `142` true positives. The average predicted stress-transition probability was `0.1753`, with standard deviation `0.3603` and range `[0.0004, 0.9999]`.
 
 ### 10.4 Graph Sparsity Comparison
@@ -375,6 +387,10 @@ A second GPU run used a denser correlation graph with `corr_top_k = 10` and `cor
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Sparse correlation, `5/3` | 0.6385 | 0.4513 | 0.5276 | 0.4718 | 0.7922 |
 | Dense correlation, `10/5` | 0.5975 | 0.4068 | 0.4276 | 0.4366 | 0.7608 |
+
+![Sparse versus dense graph metric comparison](figures/graph_sparsity_metrics.svg)
+
+Figure 4 summarizes the graph-sparsity comparison. The sparse graph is better across all reported metrics in this two-epoch single-seed run.
 
 The denser graph predicted more stress-warning positives (`145` versus `127`) but had lower precision, lower recall, lower regime macro-F1, and lower transition ROC-AUC. In this small 30-stock universe, adding more correlation edges appears to introduce noisy neighbors faster than it adds useful information.
 
