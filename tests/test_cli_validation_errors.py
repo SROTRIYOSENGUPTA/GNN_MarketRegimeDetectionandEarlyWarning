@@ -26,14 +26,6 @@ def test_market_regime_cli_reports_validation_errors_without_traceback():
     assert "Traceback" not in result.stderr
 
 
-def test_thgnn_cli_reports_validation_errors_without_traceback():
-    result = _run_module("GNNProject.thgnn.run_real_data", "--n-stocks", "1")
-    assert result.returncode == 2
-    assert "error: n_stocks must be an integer >= 2" in result.stderr
-    assert "usage:" in result.stderr
-    assert "Traceback" not in result.stderr
-
-
 def test_market_regime_cli_propagates_runtime_value_error(monkeypatch):
     from market_regime_gnn import run_real_data as regime_run_real_data
 
@@ -46,15 +38,3 @@ def test_market_regime_cli_propagates_runtime_value_error(monkeypatch):
 
     with pytest.raises(ValueError, match="runtime boom"):
         regime_run_real_data.cli([])
-
-
-def test_thgnn_cli_propagates_runtime_value_error(monkeypatch):
-    from GNNProject.thgnn import run_real_data as thgnn_run_real_data
-
-    def boom(*args, **kwargs):
-        raise ValueError("runtime boom")
-
-    monkeypatch.setattr(thgnn_run_real_data, "main", boom)
-
-    with pytest.raises(ValueError, match="runtime boom"):
-        thgnn_run_real_data.cli([])

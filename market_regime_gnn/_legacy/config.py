@@ -31,7 +31,7 @@ class RegimeConfig:
 
     # ── Universe ─────────────────────────────────────────────────────────
     num_stocks: int = 500               # S&P 500 constituents (max)
-    num_features: int = 37              # per-stock daily feature dim (same as THGNN)
+    num_features: int = 37              # per-stock daily feature dim
 
     # ── Edge Types (3 distinct relation classes) ─────────────────────────
     num_relations: int = 3              # correlation / etf_cohold / supply_chain

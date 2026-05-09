@@ -8,11 +8,10 @@ import torch
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
 
-from GNNProject.thgnn.run_real_data import resolve_device as resolve_thgnn_device
 from market_regime_gnn.run_real_data import resolve_device as resolve_regime_device
 
 
-RESOLVERS = [resolve_regime_device, resolve_thgnn_device]
+RESOLVERS = [resolve_regime_device]
 
 
 @pytest.mark.parametrize("resolver", RESOLVERS)

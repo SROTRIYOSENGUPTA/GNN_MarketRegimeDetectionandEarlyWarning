@@ -9,14 +9,6 @@ FILES_WITH_SCRIPT_FALLBACKS = [
     "GNNsMarketRegimeDetection&Early-Warning/models/dynamic_regime_gnn.py",
     "GNNsMarketRegimeDetection&Early-Warning/train.py",
     "GNNsMarketRegimeDetection&Early-Warning/run_real_data.py",
-    "GNNProject/thgnn/data/dataset.py",
-    "GNNProject/thgnn/losses/loss.py",
-    "GNNProject/thgnn/models/expert_heads.py",
-    "GNNProject/thgnn/models/relational_encoder.py",
-    "GNNProject/thgnn/models/temporal_encoder.py",
-    "GNNProject/thgnn/models/thgnn.py",
-    "GNNProject/thgnn/train.py",
-    "GNNProject/thgnn/run_real_data.py",
 ]
 
 

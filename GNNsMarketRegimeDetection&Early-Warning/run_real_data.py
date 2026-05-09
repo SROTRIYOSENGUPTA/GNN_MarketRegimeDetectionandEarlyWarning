@@ -12,7 +12,7 @@ Pipeline:
 ─────────
     1. Fetch a curated 30-stock universe + SPY + ^VIX from Yahoo Finance
        (2020–2024 by default)
-    2. Construct 37-feature matrix per stock (same as THGNN paper)
+    2. Construct 37-feature matrix per stock
     3. Generate regime labels (Bull/Crash/Liquidity/Stress) + transition labels
     4. Build heterogeneous edges:
          - Correlation: rolling 30-day ρ > 0.5
