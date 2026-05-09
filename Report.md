@@ -2,6 +2,8 @@
 
 ## Dynamic Regime GNN for Market Regime Detection and Early Warning
 
+Author: Srotriyo Sengupta and Yifan Zhang
+
 ## Abstract
 
 This project studies how to model the stock market as a dynamic heterogeneous graph for the task of market regime detection and stress early warning. Instead of treating stocks as independent time series, the project represents each trading day as a graph whose nodes are stocks and whose edges encode cross-asset relationships such as return correlation, ETF co-holding proxy, and supply-chain proxy. A temporal model is then applied to a rolling sequence of graph snapshots in order to predict both the current market regime and whether a market stress episode is likely to occur in the near future.

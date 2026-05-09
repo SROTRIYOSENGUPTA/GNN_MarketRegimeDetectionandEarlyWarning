@@ -39,3 +39,5 @@ wandb/
 *.log
 .env
 .env.*
+
+*.xlsx
