@@ -213,7 +213,7 @@ The repository originally behaved mostly like a collection of scripts. To make i
 - packaging metadata was added and validated in `pyproject.toml`
 - a stable `market_regime_gnn` wrapper package was introduced
 - the package now bundles a vendored `market_regime_gnn._legacy` implementation so editable installs and built wheels behave consistently
-- the obsolete `GNNProject` code path was removed so packaging, documentation, and tests now focus on the market-regime detection project
+- packaging, documentation, and tests are scoped to the market-regime detection project
 
 This matters because a course project should be runnable outside the exact original directory layout.
 
