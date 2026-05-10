@@ -10,6 +10,7 @@ readme = "README.md"
 requires-python = ">=3.11,<3.12"
 dependencies = [
     "numpy",
+    "openpyxl>=3.1.5",
     "pandas",
     "torch",
     "torch-geometric",

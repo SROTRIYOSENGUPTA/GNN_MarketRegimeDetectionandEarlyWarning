@@ -8,7 +8,7 @@ Author: Srotriyo Sengupta and Yifan Zhang
 
 This project studies how to model the stock market as a dynamic heterogeneous graph for the task of market regime detection and stress early warning. Instead of treating stocks as independent time series, the project represents each trading day as a graph whose nodes are stocks and whose edges encode cross-asset relationships such as return correlation, ETF co-holding proxy, and supply-chain proxy. A temporal model is then applied to a rolling sequence of graph snapshots in order to predict both the current market regime and whether a market stress episode is likely to occur in the near future.
 
-The main output of the system is a dual prediction target: a four-class market regime label (`Bull`, `Crash`, `Liquidity`, `Stress`) and a binary transition label indicating whether `Stress` appears within the next 5-20 trading days. A GPU experiment on an NVIDIA H200 node used a validation window containing real `Stress` and positive early-warning events. On this split, the best sparse-correlation run reached validation accuracy `0.6385`, regime macro-F1 `0.4513`, transition ROC-AUC `0.7922`, transition precision `0.5276`, and transition recall `0.4718`. A denser correlation graph under the same protocol performed worse, suggesting that additional correlation edges can add noise rather than signal in this small universe. In addition to implementing the core modeling pipeline, this project improved the engineering quality of the repository by correcting split logic, stabilizing packaging and imports, hardening command-line behavior, and expanding regression-test coverage. The resulting codebase is a more reproducible and maintainable research prototype suitable for course submission and future extension.
+The main output of the system is a dual prediction target: a four-class market regime label (`Bull`, `Crash`, `Liquidity`, `Stress`) and a binary transition label indicating whether `Stress` appears within the next 5-20 trading days. A GPU experiment on an NVIDIA H200 node used a validation window containing real `Stress` and positive early-warning events. On this split, the best sparse-correlation run reached validation accuracy `0.6385`, regime macro-F1 `0.4513`, transition ROC-AUC `0.7922`, transition precision `0.5276`, and transition recall `0.4718`. A denser correlation graph under the same protocol performed worse, suggesting that additional correlation edges can add noise rather than signal in this small universe. A separate audit of `sp500_prices 1.xlsx` shows that the available full-universe workbook contains 500 tickers, 1.83 million daily price-volume rows, and supplier, customer, and institutional-holder metadata that can support richer graph edges in future runs. A capped 500-stock H200 pilot verified that the workbook can drive the graph pipeline end to end, completing a 10-epoch run in `00:08:44`. That pilot began to recover some `Stress` and transition-positive examples after more epochs, but it still underfit the full-universe validation split. In addition to implementing the core modeling pipeline, this project improved the engineering quality of the repository by correcting split logic, stabilizing packaging and imports, hardening command-line behavior, and expanding regression-test coverage. The resulting codebase is a more reproducible and maintainable research prototype suitable for course submission and future extension.
 
 ## 1. Introduction
 
@@ -23,10 +23,11 @@ The final system is therefore more similar to a market-monitoring and risk-warni
 
 ### 1.1 Project Contributions
 
-This submission makes three concrete contributions:
+This submission makes four concrete contributions:
 
 - It formulates market regime analysis as a multi-relational dynamic graph-learning problem rather than as a collection of independent stock time series.
 - It implements a full end-to-end Dynamic Regime GNN pipeline, from data download and rule-based label construction to graph generation, temporal modeling, and dual-task prediction.
+- It audits a full S&P 500 workbook with price-volume, supplier/customer, and holder metadata as the natural extension path beyond the curated training universe.
 - It improves the repository as software by fixing data-split logic, stabilizing packaging, hardening the CLI, and expanding automated regression coverage.
 
 ## 2. Problem Statement
@@ -64,6 +65,8 @@ The real-data pipeline downloads market data from Yahoo Finance. The current imp
 - `^VIX` as a volatility proxy
 
 The curated stock universe spans 10 GICS sectors. This design keeps the project computationally manageable while preserving cross-sector diversity.
+
+The submitted data materials also include a full S&P 500 workbook, `sp500_prices 1.xlsx`, with daily price and volume rows plus relational metadata. That file is useful for checking whether the graph formulation can scale beyond the curated 30-stock run. The current GPU experiments still use the curated universe, but the workbook provides direct evidence that the data design can be extended to a broader 500-stock setting.
 
 ### 3.2 Feature Representation
 
@@ -298,6 +301,7 @@ The data payload was fetched once for `2018-01-01` through `2025-12-31` and cach
 | Train range | `2018-01-01` to `2021-12-31` |
 | Validation range | `2022-01-01` to `2024-12-31` |
 | Device | NVIDIA H200, `cuda` |
+| GPU allocation | `salloc --partition=ailab --nodes=1 --ntasks=1 --mem=140G --gres=gpu:h200:1 --time=0:59:00` |
 | PyTorch | `2.11.0+cu130` |
 | Training epochs | `2` |
 | Batch size | `1` |
@@ -317,7 +321,67 @@ artifacts/gpu_h200_main_split2018to2024_cut2021_k5_3_seq30_e2.json
 artifacts/gpu_h200_densecorr_split2018to2024_cut2021_k10_5_seq30_e2.json
 ```
 
-### 10.2 Label Distribution
+### 10.2 Full S&P 500 Workbook Audit
+
+The local `sp500_prices 1.xlsx` workbook was inspected separately from the GPU training run. It contains two sheets that together form a complete 500-stock daily panel with relational fields that can replace several of the current proxy graph relations.
+
+| Workbook statistic | Value |
+| --- | ---: |
+| Sheets | `2` |
+| Price / volume rows | `1,826,500` |
+| Date range | `2015-01-01` to `2024-12-31` |
+| Unique dates | `3,653` |
+| Unique stock tickers | `500` |
+| Tickers with full date coverage | `500` |
+| Median dates per ticker | `3,653` |
+| Non-null price observations | `1,716,943` |
+| Non-null volume observations | `1,716,943` |
+
+The same workbook includes graph-relevant relationship metadata:
+
+| Relation field | Coverage / count |
+| --- | ---: |
+| Tickers with supplier lists | `491 / 500` |
+| Raw supplier edges | `2,353` |
+| Unique supplier counterparties | `1,161` |
+| Tickers with customer lists | `466 / 500` |
+| Raw customer edges | `2,078` |
+| Unique customer counterparties | `1,144` |
+| Tickers with top-20 holder lists | `500 / 500` |
+| Unique holders | `689` |
+| Holder-sharing stock pairs | `123,556` |
+
+These audit results are important because they show that the project is not limited to synthetic relationship proxies in principle. The workbook contains explicit supplier/customer lists and institutional-holder data that can be used to construct production-network and co-ownership edges. The current implementation uses proxy `etf_cohold` and `supply_chain` edges for reproducible end-to-end training, but this full-universe file provides the natural next data source for scaling the graph construction.
+
+After the audit, capped H200 pilots were run directly from the workbook. The final run used all `500` tickers, holder-sharing edges for the co-ownership relation, supplier/customer links for the supply-chain relation, a shortened `seq_len = 10`, and capped train/validation samples so that the job could verify end-to-end feasibility quickly.
+
+| Workbook H200 pilot item | Value |
+| --- | ---: |
+| Slurm job ID | `7944025` |
+| Requested allocation | `1` H200, `140G`, `2:00:00` |
+| Actual Slurm elapsed time | `00:08:44` |
+| Training-loop time | `375.6 s` |
+| Stocks / dates | `500 / 2,557` |
+| Train / validation samples | `240 / 160` |
+| Epochs | `10` |
+| Sequence length | `10` |
+| Correlation graph | `corr_top_k = 3`, `corr_bot_k = 1` |
+| Holder memberships | `9,998` |
+| Supplier/customer edges inside universe | `1,062` |
+
+The first epoch took `188.4 s` because it also populated the graph snapshot cache. Later epochs were much faster, around `21 s` each. For the same capped setup, a rough planning estimate is therefore about `2.5` minutes of data preparation, `3.1` minutes for the first epoch, and `0.35` minutes for each additional epoch.
+
+The 10-epoch pilot produced the following validation metrics:
+
+| Checkpoint | Val Acc | Val Macro-F1 | Transition Precision | Transition Recall | Transition ROC-AUC |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Epoch 1 | 0.2563 | 0.2233 | 0.0000 | 0.0000 | 0.6985 |
+| Epoch 9, best macro-F1 | 0.3750 | 0.3656 | 0.7273 | 0.2991 | 0.5068 |
+| Epoch 10, final | 0.3625 | 0.3556 | 0.7391 | 0.3178 | 0.5068 |
+
+The validation labels in this capped pilot were much harder than the curated 30-stock run: `70 / 160` validation samples were `Stress`, and `107 / 160` had `transition_label = 1`. By the final epoch, the model predicted `21` `Stress` days against `70` true `Stress` labels and `46` positive transition warnings against `107` true positives. This is an improvement over the first epoch, which predicted no positive transition warnings, but it should still be interpreted as a scalability and data-integration result rather than a competitive predictive result. The full-universe graph can be built and trained on GPU, but it needs a longer training protocol, better sampling, and threshold calibration before the early-warning head is useful at 500-stock scale.
+
+### 10.3 Label Distribution
 
 The chosen split deliberately includes rare-event labels in both training and validation. This makes the validation metrics more informative than the earlier CPU feasibility window, which contained no validation `Stress` or transition positives.
 
@@ -332,7 +396,7 @@ Figure 1 visualizes the same label counts and highlights why this split is more 
 
 The validation set is still imbalanced, but it is now suitable for testing the early-warning objective: `109` validation targets are `Stress`, and `142` validation targets have a future stress event within the 5-20 day warning window.
 
-### 10.3 Main GPU Result
+### 10.4 Main GPU Result
 
 The best checkpoint by validation macro-F1 was epoch 2 of the sparse-correlation run.
 
@@ -382,7 +446,7 @@ Figure 3 makes the rare-class issue visible: the model predicts no `Crash` examp
 
 For the early-warning head, the model predicted `127` positive warnings against `142` true positives. The average predicted stress-transition probability was `0.1753`, with standard deviation `0.3603` and range `[0.0004, 0.9999]`.
 
-### 10.4 Graph Sparsity Comparison
+### 10.5 Graph Sparsity Comparison
 
 A second GPU run used a denser correlation graph with `corr_top_k = 10` and `corr_bot_k = 5`, keeping the same data split, model architecture, optimizer, seed, and number of epochs.
 
@@ -397,7 +461,7 @@ Figure 4 summarizes the graph-sparsity comparison. The sparse graph is better ac
 
 The denser graph predicted more stress-warning positives (`145` versus `127`) but had lower precision, lower recall, lower regime macro-F1, and lower transition ROC-AUC. In this small 30-stock universe, adding more correlation edges appears to introduce noisy neighbors faster than it adds useful information.
 
-### 10.5 Interpretation
+### 10.6 Interpretation
 
 The GPU results change the empirical story of the project. The pipeline is no longer only shown to run on real data; it is also evaluated on a validation period with meaningful stress events. The early-warning head produces non-trivial scores and reaches transition ROC-AUC near `0.79`, which is a useful sign that the dynamic graph representation contains forward-looking stress information.
 
@@ -405,7 +469,7 @@ At the same time, the regime-classification task remains difficult. `Bull` and `
 
 The two-epoch trajectory also shows a task tradeoff. Regime macro-F1 improves from epoch 1 to epoch 2, while transition ROC-AUC decreases from `0.828` to `0.792`. A stronger training protocol should therefore select checkpoints with an explicit multi-task criterion rather than relying only on the final epoch.
 
-### 10.6 Remaining Experimental Work
+### 10.7 Remaining Experimental Work
 
 These GPU runs are a stronger empirical result than the earlier CPU feasibility test, but they are still not a full benchmark study. The most important missing pieces are:
 
@@ -426,6 +490,8 @@ This project should be understood as a research-engineering prototype with a wor
 - an explicit early-warning target for future stress events
 - a working real-data pipeline using temporal heterogeneous graphs
 - GPU validation results on a split with real `Stress` and positive early-warning labels
+- a full S&P 500 workbook audit showing complete 500-ticker date coverage and direct relationship metadata
+- a completed 500-stock H200 pilot showing that workbook-derived holder and supplier/customer relations can run end to end
 - a small graph-sparsity comparison showing that denser correlation graphs are not automatically better
 - a substantially improved engineering foundation for reproducibility and maintainability
 
@@ -439,7 +505,7 @@ Several limitations remain.
 
 - Real-data runs depend on Yahoo Finance availability and possible upstream revisions.
 - The stock universe is currently a fixed curated 30-stock sample rather than a fully configurable universe.
-- ETF co-holding and supply-chain relations are still proxy-based unless external datasets are supplied.
+- ETF co-holding and supply-chain relations are still proxy-based in the training code, although the full S&P 500 workbook contains direct holder and supplier/customer fields for future integration.
 
 ### 12.2 Modeling Limitations
 
@@ -451,15 +517,16 @@ Several limitations remain.
 
 - The automated tests focus on software correctness and smoke-level behavior.
 - The GPU experiments are single-seed pilot runs rather than a full multi-seed benchmark.
+- The 500-stock workbook run is capped to 10 epochs and sampled train/validation windows, so it demonstrates feasibility rather than final predictive performance.
 - The report includes one graph-sparsity comparison but does not include a full quantitative comparison against standard baselines.
 
 ## 13. Future Work
 
 The most valuable next steps are:
 
-1. Execute the full experimental protocol described in Section 10.6 using fixed train/validation/test windows and multiple seeds.
+1. Execute the full experimental protocol described in Section 10.7 using fixed train/validation/test windows and multiple seeds.
 2. Add benchmark baselines such as non-graph temporal classifiers or simpler factor-based models.
-3. Replace proxy relation sources with real ETF-holdings and supply-chain datasets.
+3. Replace proxy relation sources with the workbook's holder and supplier/customer metadata.
 4. Make the stock universe configurable while preserving a stable default smoke-test setup.
 5. Turn the current JSON experiment artifacts into a more systematic experiment-tracking workflow.
 6. Expand tests around the full training and evaluation loop of the regime branch.
