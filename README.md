@@ -9,6 +9,8 @@ The project models the equity market as a sequence of heterogeneous graphs and p
 
 The installable Python package is exposed as `market_regime_gnn`. The legacy source layout remains under `GNNsMarketRegimeDetection&Early-Warning/` for script compatibility.
 
+![Final project poster](figures/final_project_poster.svg)
+
 ## What The Main Project Does
 
 The main idea is to turn the stock market into a dynamic multi-relational graph:

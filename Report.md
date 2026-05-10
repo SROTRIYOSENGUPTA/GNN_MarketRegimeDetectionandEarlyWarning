@@ -4,6 +4,8 @@ Srotriyo Sengupta and Yifan Zhang
 
 ECE538 Project Report
 
+![Final project poster](figures/final_project_poster.svg)
+
 ## Abstract
 
 This project studies market regime detection as a dynamic heterogeneous graph learning problem. Each trading day is represented as a graph whose nodes are stocks and whose relation types encode rolling return correlation, co-ownership, and supply-chain structure. A temporal graph model consumes a window of daily graph snapshots and jointly predicts the current market regime and whether a future stress regime will appear within a 5-20 trading-day warning horizon.
