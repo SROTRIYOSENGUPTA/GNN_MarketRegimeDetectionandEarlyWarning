@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="560" viewBox="0 0 940 560" role="img" aria-labelledby="title desc">
+<title id="title">S&amp;P 500 Experiment Summary</title>
+<desc id="desc">Summary of the capped H200 experiment on the S&amp;P 500 workbook, showing dataset scale, validation metrics across checkpoints, and final prediction coverage.</desc>
+<style>
+  text { font-family: 'Aptos', 'Helvetica Neue', Arial, sans-serif; fill: #1f2933; }
+  .title { font-size: 22px; font-weight: 700; }
+  .subtitle { font-size: 13px; fill: #64748b; }
+  .panel-title { font-size: 14px; font-weight: 700; fill: #334155; }
+  .axis { stroke: #334155; stroke-width: 1.2; }
+  .grid { stroke: #d8dee9; stroke-width: 1; }
+  .tick { font-size: 12px; fill: #475569; }
+  .label { font-size: 12px; fill: #334155; }
+  .legend { font-size: 12px; fill: #334155; }
+  .value { font-size: 11px; fill: #1f2933; }
+  .card-label { font-size: 11px; fill: #64748b; }
+  .card-value { font-size: 18px; font-weight: 700; fill: #0f172a; }
+</style>
+<rect width="940" height="560" rx="18" fill="#fbfaf6"/>
+
+<text class="title" x="76" y="38">S&amp;P 500 Experiment Summary</text>
+<text class="subtitle" x="76" y="60">Capped H200 run over the S&amp;P 500 workbook with direct holder and supplier/customer relations.</text>
+
+<rect x="76" y="82" width="174" height="64" rx="8" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="card-label" x="96" y="107">Tickers</text>
+<text class="card-value" x="96" y="132">500</text>
+
+<rect x="266" y="82" width="174" height="64" rx="8" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="card-label" x="286" y="107">Price-volume rows</text>
+<text class="card-value" x="286" y="132">1.83M</text>
+
+<rect x="456" y="82" width="174" height="64" rx="8" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="card-label" x="476" y="107">Holder memberships</text>
+<text class="card-value" x="476" y="132">9,998</text>
+
+<rect x="646" y="82" width="218" height="64" rx="8" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="card-label" x="666" y="107">Supplier/customer edges</text>
+<text class="card-value" x="666" y="132">1,062</text>
+
+<text class="panel-title" x="76" y="180">Validation Metrics Across Checkpoints</text>
+<text class="subtitle" x="76" y="199">Epoch 9 maximizes macro-F1; epoch 10 is the final checkpoint.</text>
+
+<line class="grid" x1="84" y1="428" x2="548" y2="428"/>
+<text class="tick" x="72" y="432" text-anchor="end">0.00</text>
+<line class="grid" x1="84" y1="380" x2="548" y2="380"/>
+<text class="tick" x="72" y="384" text-anchor="end">0.20</text>
+<line class="grid" x1="84" y1="332" x2="548" y2="332"/>
+<text class="tick" x="72" y="336" text-anchor="end">0.40</text>
+<line class="grid" x1="84" y1="284" x2="548" y2="284"/>
+<text class="tick" x="72" y="288" text-anchor="end">0.60</text>
+<line class="grid" x1="84" y1="236" x2="548" y2="236"/>
+<text class="tick" x="72" y="240" text-anchor="end">0.80</text>
+<line class="grid" x1="84" y1="188" x2="548" y2="188"/>
+<text class="tick" x="72" y="192" text-anchor="end">1.00</text>
+<line class="axis" x1="84" y1="188" x2="84" y2="428"/>
+<line class="axis" x1="84" y1="428" x2="548" y2="428"/>
+
+<text class="tick" x="150" y="451" text-anchor="middle">Epoch 1</text>
+<text class="tick" x="316" y="451" text-anchor="middle">Epoch 9</text>
+<text class="tick" x="482" y="451" text-anchor="middle">Epoch 10</text>
+
+<polyline points="150,366.5 316,338.0 482,341.0" fill="none" stroke="#2563eb" stroke-width="2.6"/>
+<circle cx="150" cy="366.5" r="4" fill="#2563eb"/>
+<circle cx="316" cy="338.0" r="4" fill="#2563eb"/>
+<circle cx="482" cy="341.0" r="4" fill="#2563eb"/>
+
+<polyline points="150,374.4 316,340.3 482,342.7" fill="none" stroke="#16a34a" stroke-width="2.6"/>
+<circle cx="150" cy="374.4" r="4" fill="#16a34a"/>
+<circle cx="316" cy="340.3" r="4" fill="#16a34a"/>
+<circle cx="482" cy="342.7" r="4" fill="#16a34a"/>
+
+<polyline points="150,428.0 316,253.5 482,250.6" fill="none" stroke="#d97706" stroke-width="2.6"/>
+<circle cx="150" cy="428.0" r="4" fill="#d97706"/>
+<circle cx="316" cy="253.5" r="4" fill="#d97706"/>
+<circle cx="482" cy="250.6" r="4" fill="#d97706"/>
+
+<polyline points="150,428.0 316,356.2 482,351.7" fill="none" stroke="#0891b2" stroke-width="2.6"/>
+<circle cx="150" cy="428.0" r="4" fill="#0891b2"/>
+<circle cx="316" cy="356.2" r="4" fill="#0891b2"/>
+<circle cx="482" cy="351.7" r="4" fill="#0891b2"/>
+
+<polyline points="150,260.4 316,306.4 482,306.4" fill="none" stroke="#dc2626" stroke-width="2.6"/>
+<circle cx="150" cy="260.4" r="4" fill="#dc2626"/>
+<circle cx="316" cy="306.4" r="4" fill="#dc2626"/>
+<circle cx="482" cy="306.4" r="4" fill="#dc2626"/>
+
+<rect x="84" y="478" width="12" height="12" rx="3" fill="#2563eb"/>
+<text class="legend" x="102" y="488">Acc</text>
+<rect x="154" y="478" width="12" height="12" rx="3" fill="#16a34a"/>
+<text class="legend" x="172" y="488">Macro-F1</text>
+<rect x="260" y="478" width="12" height="12" rx="3" fill="#d97706"/>
+<text class="legend" x="278" y="488">Precision</text>
+<rect x="370" y="478" width="12" height="12" rx="3" fill="#0891b2"/>
+<text class="legend" x="388" y="488">Recall</text>
+<rect x="462" y="478" width="12" height="12" rx="3" fill="#dc2626"/>
+<text class="legend" x="480" y="488">ROC-AUC</text>
+
+<text class="panel-title" x="620" y="180">Final Prediction Coverage</text>
+<text class="subtitle" x="620" y="199">Epoch 10 predictions versus validation labels.</text>
+
+<text class="label" x="620" y="242">Stress regime</text>
+<rect x="620" y="256" width="220" height="14" rx="4" fill="#e2e8f0"/>
+<rect x="620" y="256" width="128.3" height="14" rx="4" fill="#94a3b8"/>
+<text class="value" x="852" y="268">true 70</text>
+<rect x="620" y="282" width="220" height="14" rx="4" fill="#e2e8f0"/>
+<rect x="620" y="282" width="38.5" height="14" rx="4" fill="#2563eb"/>
+<text class="value" x="852" y="294">pred 21</text>
+
+<text class="label" x="620" y="346">Transition positive</text>
+<rect x="620" y="360" width="220" height="14" rx="4" fill="#e2e8f0"/>
+<rect x="620" y="360" width="196.2" height="14" rx="4" fill="#94a3b8"/>
+<text class="value" x="852" y="372">true 107</text>
+<rect x="620" y="386" width="220" height="14" rx="4" fill="#e2e8f0"/>
+<rect x="620" y="386" width="84.3" height="14" rx="4" fill="#d97706"/>
+<text class="value" x="852" y="398">pred 46</text>
+
+<rect x="620" y="444" width="12" height="12" rx="3" fill="#94a3b8"/>
+<text class="legend" x="638" y="454">Validation label count</text>
+<rect x="620" y="470" width="12" height="12" rx="3" fill="#2563eb"/>
+<text class="legend" x="638" y="480">Predicted Stress count</text>
+<rect x="620" y="496" width="12" height="12" rx="3" fill="#d97706"/>
+<text class="legend" x="638" y="506">Predicted transition-positive count</text>
+</svg>
