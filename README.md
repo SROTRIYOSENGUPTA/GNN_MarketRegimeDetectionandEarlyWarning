@@ -7,7 +7,7 @@ The project models the equity market as a sequence of heterogeneous graphs and p
 - the current market regime: `Bull`, `Crash`, `Liquidity`, `Stress`
 - whether a `Stress` regime is likely to appear in the next `5-20` trading days
 
-The installable Python package is exposed as `market_regime_gnn`. The legacy source layout remains under `GNNsMarketRegimeDetection&Early-Warning/` for script compatibility.
+Read the full project report: [Report.md](./Report.md).
 
 ![Final project poster](figures/final_project_poster.svg)
 
@@ -154,6 +154,8 @@ This creates a local `.venv`, installs runtime and test dependencies from the lo
 If you prefer not to activate the environment manually, run commands through `uv run`.
 
 ## Python API Notes
+
+The installable Python package is exposed as `market_regime_gnn`. The legacy source layout remains under `GNNsMarketRegimeDetection&Early-Warning/` for script compatibility.
 
 The regime-detection project has an import-friendly wrapper package:
 
