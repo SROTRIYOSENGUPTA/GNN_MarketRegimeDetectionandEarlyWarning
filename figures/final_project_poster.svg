@@ -44,6 +44,7 @@
       .bar-label { fill: #334155; font-size: 12px; font-weight: 700; }
       .bar-value { fill: #0f172a; font-size: 12px; font-weight: 780; }
       .legend { fill: #334155; font-size: 12.5px; font-weight: 650; }
+      .link { fill: #075985; font-size: 11.5px; font-weight: 740; text-decoration: underline; }
       .line { fill: none; stroke-width: 2.8; stroke-linejoin: round; stroke-linecap: round; }
     </style>
   </defs>
@@ -357,5 +358,8 @@
   </g>
 
   <text class="tiny" x="60" y="1468">Dynamic Regime GNN | final project poster | aligned with Report.md results and artifacts</text>
+  <a href="https://github.com/SROTRIYOSENGUPTA/GNN_MarketRegimeDetectionandEarlyWarning">
+    <text class="link" x="1200" y="1468" text-anchor="middle">github.com/SROTRIYOSENGUPTA/GNN_MarketRegimeDetectionandEarlyWarning</text>
+  </a>
   <text class="tiny" x="2340" y="1468" text-anchor="end">30-stock benchmark + 500-stock S&amp;P 500 experiment</text>
 </svg>
