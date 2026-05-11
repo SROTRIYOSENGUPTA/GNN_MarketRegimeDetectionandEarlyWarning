@@ -11,6 +11,23 @@ Read the full project report: [Report.md](./Report.md).
 
 ![Final project poster](figures/final_project_poster.svg)
 
+
+## New results
+
+A cross-sectional 5-day forward return rank classification task evaluates
+the heterogeneous-graph approach with statistical rigor. Across 5 random
+seeds and 3 walk-forward train cutoffs, the dynamic heterogeneous GNN
+using real Bloomberg supplier/customer/holder edges significantly
+outperforms non-Bloomberg ablations (p < .001 vs no-graph). See
+[RESULTS.md](./RESULTS.md) for the full evaluation, statistical tests,
+and figures.
+
+- Pipelines: `scripts/run_xsec_rank.py`, `scripts/run_per_stock.py`, `scripts/run_baselines.py`
+- Raw experiment outputs: `results/`
+- Figures: `figures/v2/`
+- Reproduce all tables/figures: `python scripts/analyze_results.py --figures`
+
+
 ## What The Main Project Does
 
 The main idea is to turn the stock market into a dynamic multi-relational graph:
