@@ -288,7 +288,8 @@ and offers limited discriminative signal in isolation.
 
 ### 5.6 Walk-Forward Robustness (n=3 per cutoff)
 
-[insert Figure: figures/v2/fig3_walk_forward.png]
+<img width="1400" height="800" alt="image" src="https://github.com/user-attachments/assets/38b59df9-8556-4d9e-a3ee-52caa8290e2b" />
+
 
 | Train cutoff | BBG | NoGraph | Δ | p |
 | --- | --- | --- | --- | --- |
