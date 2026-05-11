@@ -260,7 +260,8 @@ class-weighted cross-entropy, AdamW, cosine LR schedule.
 
 ### 5.4 Main Ablation (n=5 seeds)
 
-[insert Figure: figures/v2/fig1_main_ablation.png — main ablation bar chart]
+<img width="1400" height="800" alt="image" src="https://github.com/user-attachments/assets/4cd672c3-56c6-4f27-9602-cfbb13479a9e" />
+
 
 | Config | Per-date macro-F1 (mean ± std) | vs Bloomberg |
 | --- | --- | --- |
