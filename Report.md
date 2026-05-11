@@ -276,7 +276,8 @@ economic relationships rather than from generic graph topology.
 
 ### 5.5 Edge Decomposition (n=3 seeds)
 
-[insert Figure: figures/v2/fig2_edge_decomposition.png]
+<img width="1600" height="800" alt="image" src="https://github.com/user-attachments/assets/231fbc09-9b7b-435b-b0f0-c9a8b4cc4dd8" />
+
 
 Supplier/customer edges alone reach 0.3673 ± 0.0010 — 96% of the full
 Bloomberg gain over no-graph — and are significant against no-graph at
