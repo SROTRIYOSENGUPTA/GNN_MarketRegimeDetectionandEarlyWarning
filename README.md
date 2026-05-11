@@ -200,6 +200,40 @@ uv build
 
 The generated wheel includes the bundled `market_regime_gnn._legacy` package, so isolated installs do not need the repository checkout path to resolve the main regime-detection prototype.
 
+## Data Access
+
+The main 500-stock experiments require a Bloomberg-sourced workbook
+(`sp500_prices 1.xlsx`) that is **not included in this repository** because
+it is proprietary licensed data through a Hedge Fund's license. Specifically:
+
+- The file is licensed market data sourced via Bloomberg Terminal and the
+  Bloomberg Data License program.
+- It contains daily price/volume time series for ~500 S&P 500 constituents
+  from 2015–2024, plus reference metadata (Top Suppliers, Top Customers,
+  Top 20 institutional Holders) per ticker.
+- Redistribution to third parties is prohibited under the Bloomberg
+  terms of use.
+
+You can potentially recreate an equivalent workbook if you have equivalent access
+with two sheets containing the following columns:
+
+| Column | Description |
+| --- | --- |
+| `date` | Trading day (datetime) |
+| `ticker` | Bloomberg ticker (e.g. `AAPL UW`) |
+| `px_last` | Daily close price |
+| `px_volume` | Daily volume |
+| `Ticker` | (metadata row only) Same Bloomberg ticker |
+| `Top Suppliers` | Comma-separated supplier tickers (e.g. `FLEX US Equity, ...`) |
+| `Top Customers` | Comma-separated customer tickers |
+| `Top 20 Holders` | Comma-separated institutional holder names |
+
+Place the file at the path expected by the entry-point scripts:
+
+```bash
+# default location used by scripts/
+./sp500_prices\ 1.xlsx
+
 ## How To Run
 
 Because the main project directory contains `&`, quote that path in shell commands.
