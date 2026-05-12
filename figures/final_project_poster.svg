@@ -72,7 +72,7 @@
       .link { fill: #075985; font-size: 11.5px; font-weight: 740; text-decoration: underline; }
       .line { fill: none; stroke-width: 2.8; stroke-linejoin: round; stroke-linecap: round; }
       .star { fill: #b91c1c; font-size: 14px; font-weight: 820; }
-      .lock-icon { fill: #92400e; font-size: 16px; font-weight: 820; }
+      .lock-icon { fill: #92400e; font-size: 20px; font-weight: 820; }
     </style>
   </defs>
 
@@ -106,40 +106,40 @@
 
   <!-- ===== HERO: SETTING C CROSS-SECTIONAL RANK (FULL WIDTH) ===== -->
   <g transform="translate(60,220)">
-    <rect x="0" y="8" width="2280" height="282" rx="22" fill="#10b981" opacity="0.18"/>
-    <rect class="panel-hero" x="0" y="0" width="2280" height="282" rx="22"/>
+    <rect x="0" y="8" width="2280" height="290" rx="22" fill="#10b981" opacity="0.18"/>
+    <rect class="panel-hero" x="0" y="0" width="2280" height="290" rx="22"/>
     <text class="eyebrow-hero" x="32" y="38">Setting C &#8901; Cross-Sectional Rank &#8901; New Headline Results</text>
-    <text class="section-hero" x="32" y="76">Real Bloomberg Edges Significantly Outperform Every Ablation</text>
-    <text class="body-data" x="32" y="104" fill="#065f46">Target: rank-quantile of forward 5-day return per stock per date (Down / Neutral / Up). n=5 seeds, paired t-tests.</text>
+    <text class="section-hero" x="32" y="78">Real Bloomberg Edges Significantly Outperform Every Ablation</text>
+    <text class="body-data" x="32" y="106" fill="#065f46">Target: rank-quantile of forward 5-day return per stock per date (Down / Neutral / Up). n=5 seeds, paired t-tests.</text>
 
-    <!-- Hero metric block -->
-    <g transform="translate(40,128)">
-      <rect x="0" y="0" width="280" height="124" rx="16" fill="#ffffff" stroke="#10b981" stroke-width="2"/>
-      <text class="metric-big" x="22" y="74">0.370</text>
-      <text class="metric-label-hero" x="22" y="98">Bloomberg per-date macro-F1</text>
-      <text class="tiny" x="22" y="116">mean &#177; 0.004 across 5 seeds</text>
+    <!-- Hero big metric block -->
+    <g transform="translate(32,130)">
+      <rect x="0" y="0" width="290" height="124" rx="16" fill="#ffffff" stroke="#10b981" stroke-width="2"/>
+      <text class="metric-big" x="20" y="76">0.370</text>
+      <text class="metric-label-hero" x="20" y="100">Bloomberg macro-F1</text>
+      <text class="tiny" x="20" y="118">mean &#177; 0.004 (5 seeds)</text>
     </g>
 
-    <!-- Three significance blocks -->
-    <g transform="translate(340,128)">
-      <rect x="0" y="0" width="260" height="124" rx="16" fill="#ffffff" stroke="#86efac"/>
-      <text class="metric-mid" x="20" y="54">+0.018</text>
-      <text class="metric-label-hero" x="20" y="76">&#916; vs no-graph LSTM</text>
+    <!-- Three significance blocks (wider for legibility) -->
+    <g transform="translate(342,130)">
+      <rect x="0" y="0" width="288" height="124" rx="16" fill="#ffffff" stroke="#86efac"/>
+      <text class="metric-mid" x="20" y="52">+0.018</text>
+      <text class="metric-label-hero" x="20" y="76">vs no-graph LSTM</text>
       <text class="metric-pval" x="20" y="106">p &lt; .001</text>
 
-      <rect x="276" y="0" width="260" height="124" rx="16" fill="#ffffff" stroke="#86efac"/>
-      <text class="metric-mid" x="296" y="54">+0.020</text>
-      <text class="metric-label-hero" x="296" y="76">&#916; vs correlation-only graph</text>
-      <text class="metric-pval" x="296" y="106">p &lt; .01</text>
+      <rect x="304" y="0" width="288" height="124" rx="16" fill="#ffffff" stroke="#86efac"/>
+      <text class="metric-mid" x="324" y="52">+0.020</text>
+      <text class="metric-label-hero" x="324" y="76">vs correlation-only</text>
+      <text class="metric-pval" x="324" y="106">p &lt; .01</text>
 
-      <rect x="552" y="0" width="260" height="124" rx="16" fill="#ffffff" stroke="#86efac"/>
-      <text class="metric-mid" x="572" y="54">+0.015</text>
-      <text class="metric-label-hero" x="572" y="76">&#916; vs sector/synthetic proxy</text>
-      <text class="metric-pval" x="572" y="106">p &lt; .05</text>
+      <rect x="608" y="0" width="288" height="124" rx="16" fill="#ffffff" stroke="#86efac"/>
+      <text class="metric-mid" x="628" y="52">+0.015</text>
+      <text class="metric-label-hero" x="628" y="76">vs sector/synthetic proxy</text>
+      <text class="metric-pval" x="628" y="106">p &lt; .05</text>
     </g>
 
-    <!-- Inline bar chart of 4 configs -->
-    <g transform="translate(1240,138)">
+    <!-- Inline bar chart (4 configs) -->
+    <g transform="translate(1310,148)">
       <line class="axis" x1="0" y1="100" x2="540" y2="100"/>
       <line class="gridline" x1="0" y1="50" x2="540" y2="50"/>
       <line class="gridline" x1="0" y1="0" x2="540" y2="0"/>
@@ -149,12 +149,10 @@
       <text class="tiny" x="-8" y="4" text-anchor="end">.37</text>
       <text class="tiny" x="546" y="104">random</text>
 
-      <!-- bloomberg 0.370 = top (0); range .33-.37 = 100px -->
       <rect x="40" y="0" width="80" height="100" rx="6" fill="#10b981" stroke="#047857" stroke-width="1.5"/>
       <text class="bar-value-hero" x="80" y="20" text-anchor="middle">.370</text>
       <text class="bar-label" x="80" y="120" text-anchor="middle">Bloomberg</text>
 
-      <!-- proxy 0.355 = 0.025 above 0.33 = 100-62.5=37.5 -->
       <rect x="160" y="37" width="80" height="63" rx="6" fill="#94a3b8" stroke="#475569"/>
       <text class="bar-value" x="200" y="30" text-anchor="middle">.355</text>
       <text class="bar-label" x="200" y="120" text-anchor="middle">Proxy</text>
@@ -168,83 +166,71 @@
       <text class="bar-label" x="440" y="120" text-anchor="middle">No-graph</text>
     </g>
 
-    <!-- Three findings -->
-    <g transform="translate(40,260)">
-      <text class="body" x="0" y="0" font-weight="700" fill="#064e3b">&#9733; Real Bloomberg edges beat all alternatives (p &lt; .001 vs no-graph)</text>
-      <text class="body" x="640" y="0" font-weight="700" fill="#064e3b">&#9733; Supplier/customer edges alone reproduce 96% of the gain</text>
-      <text class="body" x="1340" y="0" font-weight="700" fill="#064e3b">&#9733; Effect stable across 3 walk-forward train cutoffs (2021/2022/2023)</text>
-    </g>
+    <!-- Three star findings -->
+    <text class="body" x="44" y="278" font-weight="700" fill="#064e3b">&#9733; Real Bloomberg edges beat every alternative (p &lt; .001 vs no-graph LSTM)</text>
+    <text class="body" x="850" y="278" font-weight="700" fill="#064e3b">&#9733; Supplier/customer edges reproduce 96% of the gain alone</text>
+    <text class="body" x="1610" y="278" font-weight="700" fill="#064e3b">&#9733; Effect stable across walk-forward cutoffs 2021 / 2022 / 2023</text>
   </g>
 
   <!-- ===== BLOOMBERG DATASET PANEL (FULL WIDTH) ===== -->
-  <g transform="translate(60,520)">
-    <rect x="0" y="8" width="2280" height="180" rx="22" fill="#d97706" opacity="0.18"/>
-    <rect class="panel-data" x="0" y="0" width="2280" height="180" rx="22"/>
+  <g transform="translate(60,528)">
+    <rect x="0" y="8" width="2280" height="200" rx="22" fill="#d97706" opacity="0.18"/>
+    <rect class="panel-data" x="0" y="0" width="2280" height="200" rx="22"/>
     <text class="eyebrow-data" x="32" y="38">Dataset &#8901; Novel &amp; Proprietary</text>
     <text class="section-data" x="32" y="74">Bloomberg-Sourced S&amp;P 500 Workbook with Direct Economic Relations</text>
     <text class="body-data" x="32" y="102">Obtained through an industry partnership with a hedge fund &#8212; not a publicly available academic dataset. Combines daily price/volume with rare reference metadata that ordinarily requires Bloomberg Terminal entitlements.</text>
 
-    <g transform="translate(32,116)">
-      <rect x="0" y="0" width="174" height="52" rx="12" fill="#ffffff" stroke="#d97706" stroke-width="1.5"/>
-      <text class="metric-data" x="14" y="36">500</text>
-      <text class="metric-label-data" x="92" y="22">tickers</text>
-      <text class="tiny" x="92" y="40">full S&amp;P 500</text>
+    <!-- 4 stat cards, each 350 wide × 60 tall, stacked metric+label cleanly -->
+    <g transform="translate(32,126)">
+      <rect x="0" y="0" width="350" height="62" rx="14" fill="#ffffff" stroke="#d97706" stroke-width="1.5"/>
+      <text class="metric-data" x="20" y="42">500</text>
+      <text class="metric-label-data" x="142" y="28">tickers</text>
+      <text class="tiny" x="142" y="48">full S&amp;P 500 universe</text>
 
-      <rect x="186" y="0" width="184" height="52" rx="12" fill="#ffffff" stroke="#d97706" stroke-width="1.5"/>
-      <text class="metric-data" x="200" y="36">1.83M</text>
-      <text class="metric-label-data" x="294" y="22">px/vol rows</text>
-      <text class="tiny" x="294" y="40">daily 2015&#8211;2024</text>
+      <rect x="366" y="0" width="350" height="62" rx="14" fill="#ffffff" stroke="#d97706" stroke-width="1.5"/>
+      <text class="metric-data" x="386" y="42">1.83M</text>
+      <text class="metric-label-data" x="528" y="28">daily px / volume rows</text>
+      <text class="tiny" x="528" y="48">Jan 2015 &#8594; Dec 2024</text>
 
-      <rect x="382" y="0" width="174" height="52" rx="12" fill="#ffffff" stroke="#d97706" stroke-width="1.5"/>
-      <text class="metric-data" x="396" y="36">10 yr</text>
-      <text class="metric-label-data" x="472" y="22">history</text>
-      <text class="tiny" x="472" y="40">includes COVID, 2022</text>
+      <rect x="732" y="0" width="350" height="62" rx="14" fill="#ffffff" stroke="#d97706" stroke-width="1.5"/>
+      <text class="metric-data" x="752" y="42">1,062</text>
+      <text class="metric-label-data" x="888" y="28">supply-chain edges</text>
+      <text class="tiny" x="888" y="48">supplier + customer (directed)</text>
 
-      <rect x="568" y="0" width="184" height="52" rx="12" fill="#ffffff" stroke="#d97706" stroke-width="1.5"/>
-      <text class="metric-data" x="582" y="36">1,062</text>
-      <text class="metric-label-data" x="676" y="22">supply edges</text>
-      <text class="tiny" x="676" y="40">supplier + customer</text>
+      <rect x="1098" y="0" width="350" height="62" rx="14" fill="#ffffff" stroke="#d97706" stroke-width="1.5"/>
+      <text class="metric-data" x="1118" y="42">~72k</text>
+      <text class="metric-label-data" x="1240" y="28">holder pairs</text>
+      <text class="tiny" x="1240" y="48">Top-20 institutional holders, Jac &#8805; 0.4</text>
 
-      <rect x="764" y="0" width="174" height="52" rx="12" fill="#ffffff" stroke="#d97706" stroke-width="1.5"/>
-      <text class="metric-data" x="778" y="36">72k</text>
-      <text class="metric-label-data" x="844" y="22">holder pairs</text>
-      <text class="tiny" x="844" y="40">Jaccard &#8805; 0.4</text>
-
-      <rect x="950" y="0" width="184" height="52" rx="12" fill="#ffffff" stroke="#d97706" stroke-width="1.5"/>
-      <text class="metric-data" x="964" y="36">2,772</text>
-      <text class="metric-label-data" x="1062" y="22">train samples</text>
-      <text class="tiny" x="1062" y="40">12&#215; the original</text>
-
-      <!-- Confidentiality callout -->
-      <rect x="1170" y="0" width="1078" height="52" rx="12" fill="#fde68a" stroke="#92400e" stroke-width="1.5"/>
-      <text class="lock-icon" x="1188" y="24">&#128274;</text>
-      <text class="body-data" x="1218" y="22" font-weight="700" fill="#78350f">Proprietary data &#8212; not redistributable on this repository</text>
-      <text class="tiny" x="1218" y="42" fill="#78350f">Source: Bloomberg Terminal + Data License, accessed via hedge-fund partnership; gitignored. README documents the schema for partners with their own license.</text>
+      <!-- Confidentiality callout (right side) -->
+      <rect x="1464" y="0" width="752" height="62" rx="14" fill="#fde68a" stroke="#92400e" stroke-width="1.5"/>
+      <text class="lock-icon" x="1484" y="38">&#128274;</text>
+      <text class="body-data" x="1516" y="28" font-weight="800" fill="#78350f">Proprietary data &#8212; not redistributable</text>
+      <text class="tiny" x="1516" y="50" fill="#78350f">Source: Bloomberg Terminal + Data License; accessed via hedge-fund partnership; gitignored in repo.</text>
     </g>
   </g>
 
   <!-- ===== BOTTOM 3 COLUMNS ===== -->
 
   <!-- Left col: Problem -->
-  <g transform="translate(60,720)">
-    <rect class="panel" x="0" y="0" width="700" height="220" rx="20" filter="url(#softShadow)"/>
+  <g transform="translate(60,748)">
+    <rect class="panel" x="0" y="0" width="700" height="200" rx="20" filter="url(#softShadow)"/>
     <text class="eyebrow" x="28" y="34">Problem</text>
     <text class="section" x="28" y="64">Market Regimes as Dynamic Graphs</text>
-    <text class="body" x="28" y="96">Financial stress is relational: stocks co-move through sector exposure,</text>
-    <text class="body" x="28" y="118">ownership, and supply-chain links. The model reads a sequence of daily</text>
-    <text class="body" x="28" y="140">heterogeneous graphs rather than isolated stock time series.</text>
-    <rect class="panel-soft" x="28" y="160" width="304" height="44" rx="12"/>
-    <text class="body2" x="46" y="187">Regime: Bull, Crash, Liquidity, Stress</text>
-    <rect class="panel-soft" x="354" y="160" width="318" height="44" rx="12"/>
-    <text class="body2" x="372" y="187">Early warning: Stress in t+5..t+20</text>
+    <text class="body" x="28" y="96">Financial stress is relational: stocks co-move through</text>
+    <text class="body" x="28" y="118">sector exposure, ownership, and supply-chain links.</text>
+    <rect class="panel-soft" x="28" y="138" width="304" height="44" rx="12"/>
+    <text class="body2" x="46" y="165">Regime: Bull, Crash, Liquidity, Stress</text>
+    <rect class="panel-soft" x="354" y="138" width="318" height="44" rx="12"/>
+    <text class="body2" x="372" y="165">Early warning: Stress in t+5..t+20</text>
   </g>
 
   <!-- Left col: Model -->
-  <g transform="translate(60,956)">
-    <rect class="panel" x="0" y="0" width="700" height="440" rx="20" filter="url(#softShadow)"/>
+  <g transform="translate(60,964)">
+    <rect class="panel" x="0" y="0" width="700" height="432" rx="20" filter="url(#softShadow)"/>
     <text class="eyebrow" x="28" y="34">Model</text>
     <text class="section" x="28" y="64">Dynamic Regime GNN</text>
-    <g transform="translate(36,90)">
+    <g transform="translate(36,88)">
       <rect class="chip" x="0" y="0" width="112" height="42" rx="14"/>
       <text class="chip-text" x="56" y="27" text-anchor="middle">Graph seq</text>
       <line x1="122" y1="21" x2="170" y2="21" stroke="#64748b" stroke-width="3"/>
@@ -261,13 +247,13 @@
       <text class="chip-text" x="606" y="27" text-anchor="middle">LSTM</text>
     </g>
 
-    <g transform="translate(32,156)">
+    <g transform="translate(32,154)">
       <rect class="blue" x="0" y="0" width="300" height="118" rx="16"/>
       <text class="subhead" x="18" y="30">Node encoder</text>
       <text class="code" x="18" y="60">37 -&gt; 128</text>
       <text class="body2" x="18" y="88">stock features become node embeddings</text>
     </g>
-    <g transform="translate(368,156)">
+    <g transform="translate(368,154)">
       <rect class="green" x="0" y="0" width="300" height="118" rx="16"/>
       <text class="subhead" x="18" y="30">Spatial encoder</text>
       <text class="code" x="18" y="60">2-layer R-GCN, hidden=128</text>
@@ -288,12 +274,12 @@
   </g>
 
   <!-- Middle col: Setting A intro -->
-  <g transform="translate(800,720)">
-    <rect class="panel" x="0" y="0" width="700" height="220" rx="20" filter="url(#softShadow)"/>
+  <g transform="translate(800,748)">
+    <rect class="panel" x="0" y="0" width="700" height="200" rx="20" filter="url(#softShadow)"/>
     <text class="eyebrow" x="28" y="34">Setting A</text>
     <text class="section" x="28" y="64">30-Stock Curated Benchmark</text>
-    <text class="body2" x="28" y="94">Yahoo Finance data, SPY and VIX market context, train 2018-2021, val 2022-2024.</text>
-    <g transform="translate(28,110)">
+    <text class="body2" x="28" y="92">Yahoo Finance, SPY + VIX context, train 2018-2021, val 2022-2024.</text>
+    <g transform="translate(28,108)">
       <rect class="blue" x="0" y="0" width="148" height="70" rx="14"/>
       <text class="metric2" x="18" y="42">30</text>
       <text class="metric-label" x="18" y="61">stocks</text>
@@ -307,16 +293,15 @@
       <text class="metric2" x="510" y="42">30</text>
       <text class="metric-label" x="510" y="61">seq len</text>
     </g>
-    <text class="code" x="28" y="206">sparse graph: corr_top_k=5; dense comparison: 10/5</text>
   </g>
 
   <!-- Middle col: Setting A Results -->
-  <g transform="translate(800,956)">
-    <rect class="panel" x="0" y="0" width="700" height="440" rx="20" filter="url(#softShadow)"/>
+  <g transform="translate(800,964)">
+    <rect class="panel" x="0" y="0" width="700" height="432" rx="20" filter="url(#softShadow)"/>
     <text class="eyebrow" x="28" y="34">Setting A Results</text>
     <text class="section" x="28" y="64">Sparse Graph Performs Best</text>
     <text class="body2" x="28" y="92">Best checkpoint: epoch 2, sparse correlation graph.</text>
-    <g transform="translate(28,114)">
+    <g transform="translate(28,112)">
       <rect class="green" x="0" y="0" width="200" height="78" rx="15"/>
       <text class="metric" x="18" y="48">0.6385</text>
       <text class="metric-label" x="18" y="68">val accuracy</text>
@@ -327,7 +312,7 @@
       <text class="metric" x="470" y="48">0.7922</text>
       <text class="metric-label" x="470" y="68">transition AUC</text>
     </g>
-    <g transform="translate(42,234)">
+    <g transform="translate(42,232)">
       <line class="axis" x1="0" y1="118" x2="610" y2="118"/>
       <line class="axis" x1="0" y1="20" x2="0" y2="118"/>
       <line class="gridline" x1="0" y1="69" x2="610" y2="69"/>
@@ -361,13 +346,13 @@
     </g>
   </g>
 
-  <!-- Right col: Setting B -->
-  <g transform="translate(1540,720)">
-    <rect class="panel" x="0" y="0" width="800" height="220" rx="20" filter="url(#softShadow)"/>
+  <!-- Right col: Setting B intro -->
+  <g transform="translate(1540,748)">
+    <rect class="panel" x="0" y="0" width="800" height="200" rx="20" filter="url(#softShadow)"/>
     <text class="eyebrow" x="28" y="34">Setting B</text>
     <text class="section" x="28" y="64">500-Stock S&amp;P 500 Experiment</text>
-    <text class="body2" x="28" y="94">Workbook-driven graph using the Bloomberg dataset above.</text>
-    <g transform="translate(28,110)">
+    <text class="body2" x="28" y="92">Workbook-driven graph using the Bloomberg dataset above.</text>
+    <g transform="translate(28,108)">
       <rect class="green" x="0" y="0" width="168" height="70" rx="14"/>
       <text class="metric2" x="18" y="42">500</text>
       <text class="metric-label" x="18" y="61">tickers</text>
@@ -381,17 +366,16 @@
       <text class="metric2" x="590" y="42">00:08:44</text>
       <text class="metric-label" x="590" y="61">H200 elapsed</text>
     </g>
-    <text class="code" x="28" y="206">seq_len=10, corr_top_k=3, epochs=10; train/val=240/160</text>
   </g>
 
   <!-- Right col: Setting B Results -->
-  <g transform="translate(1540,956)">
-    <rect class="panel" x="0" y="0" width="800" height="440" rx="20" filter="url(#softShadow)"/>
+  <g transform="translate(1540,964)">
+    <rect class="panel" x="0" y="0" width="800" height="432" rx="20" filter="url(#softShadow)"/>
     <text class="eyebrow" x="28" y="34">Setting B Results</text>
     <text class="section" x="28" y="64">Validation Metrics Across 10 Epochs</text>
     <text class="body2" x="28" y="92">Epoch 9 gives the best macro-F1; epoch 10 is the final checkpoint.</text>
 
-    <g transform="translate(52,124)">
+    <g transform="translate(52,120)">
       <line class="gridline" x1="0" y1="238" x2="690" y2="238"/>
       <line class="gridline" x1="0" y1="190.4" x2="690" y2="190.4"/>
       <line class="gridline" x1="0" y1="142.8" x2="690" y2="142.8"/>
@@ -420,7 +404,7 @@
       <text class="tiny" x="690.0" y="266" text-anchor="middle">10</text>
     </g>
 
-    <g transform="translate(54,406)">
+    <g transform="translate(54,400)">
       <rect x="0" y="-10" width="12" height="12" rx="3" fill="#2563eb"/>
       <text class="legend" x="18" y="1">Acc</text>
       <rect x="72" y="-10" width="12" height="12" rx="3" fill="#16a34a"/>
