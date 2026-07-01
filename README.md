@@ -327,4 +327,4 @@ The following issues were addressed while updating this repository:
 
 ## One-Sentence Summary
 
-This repository is a financial GNN research workspace centered on dynamic heterogeneous graphs for market regime detection and early warning.
+This repository is a financial GNN research workspace which is centered on dynamic heterogeneous graphs for market regime detection and early warning.
