@@ -9,9 +9,12 @@ description = "Research workspace for GNN-based market regime detection and earl
 readme = "README.md"
 requires-python = ">=3.11,<3.12"
 dependencies = [
+    "cvxpy",
+    "matplotlib",
     "numpy",
     "openpyxl>=3.1.5",
     "pandas",
+    "scikit-learn",
     "torch",
     "torch-geometric",
     "yfinance",

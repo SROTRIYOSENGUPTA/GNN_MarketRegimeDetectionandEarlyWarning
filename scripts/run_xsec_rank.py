@@ -180,13 +180,28 @@ def build_features(close, volume, n_sectors=11):
     return feats, rets, sector_assign
 
 
-def build_xsec_labels(close, horizon=5, low_q=0.20, high_q=0.80):
-    """y[t, i] ∈ {0=Down, 1=Neutral, 2=Up} based on rank of forward `horizon`-day return."""
+def forward_returns(close, horizon=5):
+    """(T, N) continuous forward `horizon`-day return. Last `horizon` rows are NaN."""
     arr = close.to_numpy(dtype=np.float64)
     T, N = arr.shape
+    fwd = np.full((T, N), np.nan, dtype=np.float64)
+    fwd[: T - horizon] = arr[horizon:] / arr[:-horizon] - 1.0
+    return fwd
+
+
+def _softmax(x, axis=-1):
+    x = x - np.max(x, axis=axis, keepdims=True)
+    e = np.exp(x)
+    return e / np.sum(e, axis=axis, keepdims=True)
+
+
+def build_xsec_labels(close, horizon=5, low_q=0.20, high_q=0.80):
+    """y[t, i] ∈ {0=Down, 1=Neutral, 2=Up} based on rank of forward `horizon`-day return."""
+    fwd = forward_returns(close, horizon=horizon)
+    T, N = fwd.shape
     labels = np.full((T, N), -1, dtype=np.int64)
     for t in range(T - horizon):
-        fwd_ret = arr[t + horizon] / arr[t] - 1.0
+        fwd_ret = fwd[t]
         if not np.isfinite(fwd_ret).any():
             continue
         valid = np.isfinite(fwd_ret)
@@ -281,6 +296,10 @@ def main():
     p.add_argument("--weight-decay", type=float, default=1e-4)
     p.add_argument("--holder-threshold", type=float, default=0.4)
     p.add_argument("--device", default="cuda")
+    p.add_argument("--save-predictions", default=None,
+                    help="If set, dump per-(date,ticker) validation softmax probs, "
+                         "realized forward returns, and full return history to this "
+                         ".npz path, for downstream portfolio backtesting.")
     args = p.parse_args()
 
     torch.manual_seed(args.seed); np.random.seed(args.seed)
@@ -443,6 +462,27 @@ def main():
     }
     Path(args.output).write_text(json.dumps(result, indent=2))
     print(f"wrote {args.output}", flush=True)
+
+    if args.save_predictions:
+        print(f"[{time.strftime('%H:%M:%S')}] saving predictions to {args.save_predictions}", flush=True)
+        probs = _softmax(vl, axis=-1)              # (n_val, N, 3), from the final epoch's eval pass
+        fwd_ret_full = forward_returns(close, horizon=5)
+        val_fwd_ret = fwd_ret_full[val_t]           # (n_val, N)
+        val_dates = close.index[val_t].strftime("%Y-%m-%d").to_numpy()
+        out_path = Path(args.save_predictions)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        np.savez_compressed(
+            out_path,
+            edge_mode=args.edge_mode,
+            seed=args.seed,
+            tickers=np.array(tickers, dtype=object),
+            val_dates=val_dates,
+            val_probs=probs.astype(np.float32),
+            val_fwd_ret=val_fwd_ret.astype(np.float32),
+            rets_hist=rets_arr,
+            hist_dates=close.index.strftime("%Y-%m-%d").to_numpy(),
+        )
+        print(f"wrote {out_path}", flush=True)
 
 
 if __name__ == "__main__":
