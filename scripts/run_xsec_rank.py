@@ -150,18 +150,24 @@ def correlation_edges_topk(rets_window, top_k=10):
 
 
 # ─── features with stock-level variety ────────────────────────────────────────
-def load_sector_assign(sector_file, tickers):
-    """Map tickers -> integer sector ids from a CSV with `ticker`,`sector` columns.
+def load_sector_assign(sector_file, tickers, column="sector"):
+    """Map tickers -> integer group ids from a CSV with `ticker` + `column`.
 
-    Tickers absent from the file (or with a blank sector) fall into a single
+    `column` selects the granularity level: sector (11 groups),
+    gics_industry_group (25), gics_industry (67), gics_sub_industry (124).
+
+    Tickers absent from the file (or with a blank value) fall into a single
     shared "Unknown" bucket rather than being dropped, so the node set is
-    unchanged. Returns (sector_assign, n_sectors, coverage_fraction).
+    unchanged. Returns (assign, n_groups, coverage_fraction).
     """
     df = pd.read_csv(sector_file)
+    if column not in df.columns:
+        raise SystemExit(f"--sector-file {sector_file} has no column {column!r}; "
+                         f"available: {list(df.columns)}")
     lookup = {
-        str(r["ticker"]): str(r["sector"])
+        str(r["ticker"]): str(r[column])
         for _, r in df.iterrows()
-        if isinstance(r.get("sector"), str) and str(r["sector"]).strip()
+        if isinstance(r.get(column), str) and str(r[column]).strip()
     }
     names = sorted({lookup[t] for t in tickers if t in lookup})
     name_to_id = {nm: i for i, nm in enumerate(names)}
@@ -327,6 +333,11 @@ def main():
                          "alphabetical-modulo assignment: the sector one-hot features "
                          "become noise and --edge-mode proxy degenerates into a random "
                          "block graph instead of a sector graph.")
+    p.add_argument("--graph-sector-column", default=None,
+                    help="If set, build the proxy sector graph at THIS granularity "
+                         "(e.g. gics_sub_industry) while node one-hot features stay at "
+                         "the `sector` level. Decouples graph granularity from feature "
+                         "dimensionality so the two effects aren't confounded.")
     p.add_argument("--save-predictions", default=None,
                     help="If set, dump per-(date,ticker) validation softmax probs, "
                          "realized forward returns, and full return history to this "
@@ -354,6 +365,19 @@ def main():
               "(one-hots are noise, proxy edges are random, not sector-based)", flush=True)
     feats, rets, sector_assign = build_features(
         close, volume, n_sectors=n_sectors, sector_assign=sector_assign)
+
+    # Graph granularity is decoupled from feature granularity: the one-hot
+    # features always stay at the `sector` level (so feat_dim is constant across
+    # granularity arms), while the proxy graph can be built at a finer level.
+    graph_assign = sector_assign
+    if args.graph_sector_column:
+        if not args.sector_file:
+            raise SystemExit("--graph-sector-column requires --sector-file")
+        graph_assign, n_groups, gcov = load_sector_assign(
+            args.sector_file, tickers, column=args.graph_sector_column)
+        print(f"  graph groups from {args.graph_sector_column!r}: "
+              f"{n_groups - 1} distinct + unknown, coverage {gcov:.1%}", flush=True)
+
     feat_arr = np.stack([feats[tk] for tk in tickers], axis=1)
     feat_dim = feat_arr.shape[2]
     rets_arr = rets.to_numpy().astype(np.float32)
@@ -371,7 +395,7 @@ def main():
         supply_adj = build_supply_chain(meta, tickers)
         use_graph = True; n_relations = 3
     elif args.edge_mode == "proxy":
-        holder_adj = build_proxy_holder(tickers, sector_assign, seed=args.seed)
+        holder_adj = build_proxy_holder(tickers, graph_assign, seed=args.seed)
         supply_adj = build_proxy_supply(tickers, n_edges=int(build_supply_chain(meta, tickers).sum()), seed=args.seed)
         use_graph = True; n_relations = 3
     elif args.edge_mode == "corronly":
