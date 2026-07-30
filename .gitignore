@@ -41,3 +41,8 @@ wandb/
 .env.*
 
 *.xlsx
+
+# Licensed classification data — regenerate with scripts/build_sector_file.py
+# GICS is proprietary to S&P Dow Jones Indices / MSCI; do not redistribute publicly.
+data_sectors_gics.csv
+gics_500.csv
