@@ -150,16 +150,41 @@ def correlation_edges_topk(rets_window, top_k=10):
 
 
 # ─── features with stock-level variety ────────────────────────────────────────
-def build_features(close, volume, n_sectors=11):
+def load_sector_assign(sector_file, tickers):
+    """Map tickers -> integer sector ids from a CSV with `ticker`,`sector` columns.
+
+    Tickers absent from the file (or with a blank sector) fall into a single
+    shared "Unknown" bucket rather than being dropped, so the node set is
+    unchanged. Returns (sector_assign, n_sectors, coverage_fraction).
+    """
+    df = pd.read_csv(sector_file)
+    lookup = {
+        str(r["ticker"]): str(r["sector"])
+        for _, r in df.iterrows()
+        if isinstance(r.get("sector"), str) and str(r["sector"]).strip()
+    }
+    names = sorted({lookup[t] for t in tickers if t in lookup})
+    name_to_id = {nm: i for i, nm in enumerate(names)}
+    unknown_id = len(names)
+    assign = np.array([name_to_id.get(lookup.get(t, ""), unknown_id) for t in tickers], dtype=np.int64)
+    n_covered = int((assign != unknown_id).sum())
+    return assign, len(names) + 1, n_covered / max(len(tickers), 1)
+
+
+def build_features(close, volume, n_sectors=11, sector_assign=None):
     rets = close.pct_change(fill_method=None).replace([np.inf, -np.inf], np.nan).fillna(0.0)
     market_ret = rets.mean(axis=1)
     market_vol_20 = market_ret.rolling(20).std().fillna(0.0)
     log_close = np.log1p(close.clip(lower=0.01))
     log_vol = np.log1p(volume.clip(lower=0.0))
     feats = {}
-    # Random sector assignment (since workbook lacks GICS) — deterministic by ticker order
     n = close.shape[1]
-    sector_assign = np.arange(n) % n_sectors
+    if sector_assign is None:
+        # WARNING: placeholder only. This is alphabetical-order modulo, NOT real
+        # sectors — the one-hots are noise and `--edge-mode proxy` degenerates
+        # into a random block graph rather than a sector graph. Pass
+        # --sector-file to use real sector labels.
+        sector_assign = np.arange(n) % n_sectors
     for ix, tk in enumerate(close.columns):
         cs = close[tk]; rs = rets[tk]
         df = pd.DataFrame(index=close.index)
@@ -296,6 +321,12 @@ def main():
     p.add_argument("--weight-decay", type=float, default=1e-4)
     p.add_argument("--holder-threshold", type=float, default=0.4)
     p.add_argument("--device", default="cuda")
+    p.add_argument("--sector-file", default=None,
+                    help="CSV with `ticker`,`sector` columns giving real sector labels. "
+                         "Without it the pipeline falls back to a PLACEHOLDER "
+                         "alphabetical-modulo assignment: the sector one-hot features "
+                         "become noise and --edge-mode proxy degenerates into a random "
+                         "block graph instead of a sector graph.")
     p.add_argument("--save-predictions", default=None,
                     help="If set, dump per-(date,ticker) validation softmax probs, "
                          "realized forward returns, and full return history to this "
@@ -313,7 +344,16 @@ def main():
     print(f"  {N} tickers, {len(close)} dates", flush=True)
 
     print(f"[{time.strftime('%H:%M:%S')}] features…", flush=True)
-    feats, rets, sector_assign = build_features(close, volume, n_sectors=11)
+    if args.sector_file:
+        sector_assign, n_sectors, cov = load_sector_assign(args.sector_file, tickers)
+        print(f"  real sectors: {n_sectors - 1} distinct + unknown bucket, "
+              f"coverage {cov:.1%}", flush=True)
+    else:
+        sector_assign, n_sectors = None, 11
+        print("  WARNING: no --sector-file; using PLACEHOLDER modulo sectors "
+              "(one-hots are noise, proxy edges are random, not sector-based)", flush=True)
+    feats, rets, sector_assign = build_features(
+        close, volume, n_sectors=n_sectors, sector_assign=sector_assign)
     feat_arr = np.stack([feats[tk] for tk in tickers], axis=1)
     feat_dim = feat_arr.shape[2]
     rets_arr = rets.to_numpy().astype(np.float32)
