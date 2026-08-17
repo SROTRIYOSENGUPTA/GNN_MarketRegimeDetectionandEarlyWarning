@@ -11,6 +11,14 @@ Read the full project report: [Report.md](./Report.md).
 
 ![Final project poster](figures/final_project_poster.svg)
 
+## Project Status
+
+- **Original scope (ECE538 course project):** everything described in this
+  README and in [Report.md](./Report.md) / [RESULTS.md](./RESULTS.md),
+  frozen at git tag [`v1.0-ece538-submission`](../../releases/tag/v1.0-ece538-submission).
+- **Post-submission extensions:** tracked in [CHANGELOG.md](./CHANGELOG.md).
+  Compare the current state to the submitted baseline with
+  `git diff v1.0-ece538-submission..main`.
 
 ## New results
 

@@ -13,37 +13,66 @@ git diff v1.0-ece538-submission..main
 
 ## [Unreleased]
 
-### Added
-- Markowitz mean-variance portfolio construction layer
-  (`market_regime_gnn/portfolio/mean_variance.py`) on top of the
-  cross-sectional rank model's predictions — covariance estimation, convex
-  shrinkage of the return signal, and a mean-variance optimizer (closed-form
-  unconstrained, `cvxpy`-backed for gross-exposure / dollar-neutral /
-  long-short direction constraints).
-- `--save-predictions` flag on `scripts/run_xsec_rank.py` to persist
-  per-(date, ticker) softmax probabilities and realized forward returns,
-  needed for backtesting (previously discarded after computing aggregate
-  metrics).
-- `scripts/run_mpt_backtest.py`: walk-forward portfolio backtest evaluating
-  six configurations (GNN-derived vs. sample covariance, Bloomberg vs.
-  no-graph return signal, mean-variance vs. equal-weight sizing, and an
-  equal-weight-universe benchmark), reporting Sharpe, Sortino, max drawdown,
-  and turnover net of transaction costs.
-- `scripts/analyze_results.py`: new `mpt_backtest()` table/figure
-  (`figures/v2/fig4_mpt_backtest.png`, `RESULTS_MPT.md`), reusing the
-  existing `paired_t`/`stats` helpers.
-- Added missing `cvxpy`, `scikit-learn`, and `matplotlib` to
-  `pyproject.toml` — the latter two were already imported by existing
-  scripts (`run_xsec_rank.py`, `analyze_results.py --figures`) but were
-  never declared as dependencies.
+### Corrected — findings that changed after re-testing
+
+- **Fake sector labels.** `run_xsec_rank.py` assigned sectors as
+  `np.arange(n) % 11` (alphabetical ticker order modulo 11). Two
+  consequences: 11 of 22 node features were noise, and the `proxy` ablation
+  arm was a *random block graph* rather than a sector graph. RESULTS.md's
+  headline — that the gain was "specifically attributable to real economic
+  relationships" — rested on beating random edges. Against a real sector
+  partition the premium is not significant (t=0.82). Fixed via
+  `--sector-file` with real GICS labels.
+- **Monotone granularity gradient — retracted.** Did not replicate on 10
+  disjoint seeds. The robust result is a *step*: sector-level grouping is
+  too coarse, anything finer is better (+0.018 tail-F1, p<.001), and the
+  benefit saturates by ~25 groups.
+- **Portfolio nulls — superseded.** An n=5 "no significant difference" was
+  underpowered, not neutral. On 383 rebalances the graph signals
+  significantly *underperform* no-graph (Δ=−0.94 Sharpe, p<.01).
+
+### Added — portfolio layer (Markowitz MPT)
+
+- `market_regime_gnn/portfolio/mean_variance.py`: covariance estimation,
+  convex signal shrinkage (Michaud 1989), mean-variance optimiser with
+  gross-exposure / dollar-neutral / direction constraints and a
+  transaction-cost-aware turnover penalty.
+- `scripts/run_mpt_backtest.py`: walk-forward backtest over six portfolio
+  configurations reporting Sharpe, Sortino, drawdown and turnover net of
+  costs.
+- `--save-predictions` on `run_xsec_rank.py` to persist per-(date, ticker)
+  probabilities and realised forward returns.
+
+### Added — robustness and mechanism analysis
+
+- **Recency diagnostic** (`scripts/analyze_recency.py`): the static
+  supply-chain snapshot's look-ahead does not explain the results — the
+  advantage is *smallest* where contamination is worst.
+- **Period sweep** (`results/periods/`): 7 non-overlapping evaluation
+  windows. Graph structure improves macro-F1 in 7/7 (t=+11.67); long-short
+  spread is worse in 6/7 (p<.05).
+- **Seed sweep** (`results/seedsweep/`): 10 disjoint seeds × 4 GICS levels.
+- **Per-class analysis** (`scripts/analyze_per_class.py`): the mechanism.
+  The graph advantage sits almost entirely in the *Neutral* class — 60% of
+  the mass, which a quintile portfolio never trades — while tail accuracy
+  is flat-to-worse.
+- **Weight attribution** (`scripts/analyze_weight_attribution.py`): tested
+  and rejected the signal-smoothing and portfolio-concentration hypotheses.
+
+### Added — data and tooling
+
+- `scripts/fetch_sectors.py`, `scripts/build_sector_file.py`: GICS sector
+  file construction (Bloomberg primary, yfinance crosswalk fallback).
+  The GICS data itself is gitignored — proprietary to S&P/MSCI.
+- Declared previously-missing dependencies: `cvxpy`, `scikit-learn`,
+  `matplotlib` (the latter two were already imported by existing scripts).
 - Tests: `tests/test_mean_variance.py`, `tests/test_mpt_backtest_smoke.py`.
 
-### Why
-Classification metrics (macro-F1) don't say whether the Bloomberg-edge
-advantage documented in RESULTS.md is economically meaningful once you're
-allocating capital rather than scoring predictions. This adds that
-evaluation layer. See the mean-variance module's docstring for the
-Michaud (1989) "error maximization" rationale behind the shrinkage knob.
+### Changed
+
+- `RESULTS.md` rewritten around the corrected findings, with a claim-status
+  table distinguishing robust / supported / retracted / robustly-false, and
+  a revision note explaining what changed and why.
 
 ## [v1.0-ece538-submission] — course submission baseline
 
@@ -55,8 +84,6 @@ Everything through this point was completed as the ECE538 project
   `GNNsMarketRegimeDetection&Early-Warning/`).
 - 30-stock Yahoo Finance benchmark (Setting A) and 500-stock Bloomberg
   workbook pilot (Setting B) — see `Report.md`.
-- Cross-sectional 5-day forward-return-rank ablation isolating real
-  Bloomberg supplier/customer/holder edges from proxy and synthetic edges
-  — see `RESULTS.md`.
+- Cross-sectional 5-day forward-return-rank ablation — see `RESULTS.md`.
 - Diagnosis and writeup of label leakage in the original regime/transition
   task, and of a training-sample-balance bug (`results/legacy_market_regime/`).
