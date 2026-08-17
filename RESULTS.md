@@ -20,6 +20,8 @@ All numbers are reproducible from the raw JSON in [`results/`](results/):
 - `scripts/analyze_realsector.py` — Finding 1 (main ablation, real vs fake sectors)
 - `scripts/analyze_granularity.py` — Findings 2–3 (granularity, decomposition)
 - `scripts/analyze_recency.py` — Finding 5 (look-ahead diagnostic)
+- `scripts/analyze_per_class.py` — Finding 7 (mechanism)
+- `scripts/analyze_fama_macbeth.py` — Finding 9 (control regressions)
 - `scripts/analyze_results.py` — original tables, walk-forward, MPT backtest
 
 ---
@@ -27,32 +29,38 @@ All numbers are reproducible from the raw JSON in [`results/`](results/):
 ## TL;DR
 
 > On cross-sectional 5-day forward return rank prediction (3-class, 500
-> stocks, 2015–2024), graph structure over meaningful economic groupings
-> improves per-date macro-F1 over a no-graph baseline (*p* < .001, n=5
-> seeds). However, the improvement is **not** specific to proprietary
-> supply-chain relationships: a graph built from **free GICS sub-industry
-> labels (0.378 ± 0.003) outperforms the Bloomberg supplier/customer graph
-> (0.372 ± 0.005) on all 5 seeds** (*p* < .10). Across the GICS hierarchy,
-> performance rises monotonically with partition fineness — sector (11
-> groups) → sub-industry (124 groups) — while edge count *falls* 7×, so
-> grouping precision, not connectivity, is the driver. Correlation-only
-> graphs and institutional-holder graphs do not beat no-graph at all. A
-> recency diagnostic shows the static supply-chain snapshot's look-ahead
-> bias does not explain these results. **But none of this transfers to
-> portfolios.** On an adequately powered out-of-sample window (383
-> rebalances), mean-variance portfolios built on the graph signals
-> significantly *underperform* an identical no-graph portfolio
-> (sub-industry Δ = −0.94 Sharpe, *p* < .01), gross of transaction costs.
-> Per-class analysis explains why: the graph models' accuracy gain sits
-> almost entirely in the **Neutral** class — 60% of the mass, which a
-> quintile long-short book never trades — while tail accuracy is
-> flat-to-worse and the realised long-short spread falls from 9.7 bp to
-> 6.0 bp per rebalance.
+> stocks, 2015–2024), graph structure over economic groupings improves
+> per-date macro-F1 robustly — in **7 of 7 non-overlapping evaluation
+> windows** (*t* = +11.67). Partition granularity matters and behaves as a
+> **step, not a gradient**: moving from sector-level grouping to any finer
+> partition improves tail-F1 by ≈0.018 (*p* < .001, replicated on 10
+> disjoint seeds), after which the benefit saturates by roughly 25 groups.
+> The improvement is **not** specific to proprietary data — a free GICS
+> graph is statistically indistinguishable from one built on Bloomberg
+> supplier/customer and holder relationships (Δ = +0.003, n.s.).
+> Correlation-only and holder-only graphs add nothing. A recency
+> diagnostic shows the static supply-chain snapshot's look-ahead does not
+> explain any of it.
+>
+> **None of this becomes portfolio performance.** On an adequately powered
+> window (383 rebalances) mean-variance portfolios built on the graph
+> signals significantly *underperform* an identical no-graph portfolio
+> (Δ = −0.94 Sharpe, *p* < .01), gross of transaction costs, and realised
+> long-short spread is worse in 6 of 7 windows (*p* < .05). Two analyses
+> explain why. Per-class F1 shows the accuracy gain sits almost entirely
+> in the **Neutral** class — 60% of the mass, which a quintile long-short
+> book never trades — while tail accuracy is flat-to-worse. Fama-MacBeth
+> regressions show the residual return-predictive content does not survive
+> controls for momentum, short-term reversal, volatility and industry
+> fixed effects (23% of univariate magnitude retained, pooled *t* = +0.64),
+> and is identified almost entirely *between* industries rather than
+> within them.
 
-**One-line version:** *partition granularity, not relationship specificity,
-drives graph-based cross-sectional return predictability — the best
-partition is free, and none of it is tradeable, because macro-F1 rewards
-the part of the distribution portfolios cannot touch.*
+**One-line version:** *graph structure reliably improves a standard
+classification metric, but the improvement lives in the part of the return
+distribution portfolios cannot trade and is largely subsumed by industry
+momentum — so macro-F1 is a misleading objective for cross-sectional
+equity models.*
 
 ---
 
@@ -455,7 +463,62 @@ informative**; only the multi-window aggregate is.
 
 ---
 
-## 11. Revised headline claim
+## 11. Finding 9 — the signal does not survive standard controls
+
+Fama-MacBeth cross-sectional regressions at each rebalance date
+(`results/attribution/fama_macbeth.txt`,
+`scripts/analyze_fama_macbeth.py`):
+
+```
+fwd_ret[i,t] = a_t + b_t · signal[i,t] + momentum + reversal + volatility
+               + industry FE + e[i,t]
+```
+
+Coefficients averaged across dates, Newey-West standard errors (lag 5, for
+the overlapping 5-day horizon). 707 regressions over the same 7
+non-overlapping windows, 3 seeds each. Coefficient on the standardised
+signal, in bp per 5-day period:
+
+| Window | Signal alone | + controls + industry FE |
+|---|---|---|
+| 2016Q4–2017 | 4.81 (t = +2.57) | 2.75 (t = +1.54) |
+| 2017Q4–2018 | 2.45 (t = +0.88) | −0.09 (t = −0.04) |
+| 2018Q4–2019 | 3.48 (t = +0.95) | 2.08 (t = +0.93) |
+| 2019Q4–2020 | 9.10 (t = +2.54) | 2.06 (t = +0.83) |
+| 2020Q4–2021 | −1.25 (t = −0.16) | −1.81 (t = −0.33) |
+| 2021Q4–2022 | −5.78 (t = −0.87) | −3.50 (t = −0.95) |
+| 2022Q4–2024 | 5.30 (t = +2.78) | 2.05 (t = +2.15) |
+| **Pooled** | **2.88 (t = +1.74)** | **0.67 (t = +0.64)** |
+
+**Even uncontrolled, return-predictive content is weak**: pooled *t* =
++1.74, significant in 3 of 7 windows and negative in 2. The robust 7/7
+macro-F1 improvement (Finding 8) therefore does **not** correspond to
+robust return prediction — exactly what the Neutral-class mechanism
+(Finding 7) predicts.
+
+**After controls the signal retains 23% of its univariate magnitude and is
+not significant** (*t* = +0.64); only 1 of 7 windows survives.
+
+Because the industry fixed effect is implemented as within-sector
+demeaning, this also localises the signal: its predictive content is
+largely **between** industries, not within them. That completes the
+mechanism. Graph message passing ranks whole peer groups well — which
+registers as macro-F1, concentrated in the Neutral class — but does not
+separate stocks *inside* a group, which is what a quintile book requires;
+and group-level prediction is in turn largely subsumed by industry
+momentum.
+
+**Limitation, stated plainly.** Size and book-to-market are not controlled
+for; both need data this project does not have (Bloomberg
+`CUR_MKT_CAP` / `PX_TO_BOOK_RATIO`, or CRSP/Compustat via WRDS). Note the
+direction of that gap: the signal already fails against a *partial* control
+set, so additional controls can only reduce it further, not restore it.
+The conclusion is robust to the missing data; obtaining it would improve
+presentation, not the finding.
+
+---
+
+## 12. Revised headline claim
 
 > On a cross-sectional 5-day forward return rank task for S&P 500
 > constituents (2015–2024), graph neural networks over economically
@@ -474,7 +537,12 @@ informative**; only the multi-window aggregate is.
 > cause: the graph models' accuracy gain is concentrated in the Neutral
 > class, which a quintile long-short book never trades, while tail
 > accuracy is flat-to-worse and the realised long-short spread falls from
-> 9.7 bp to 6.0 bp per rebalance.
+> 9.7 bp to 6.0 bp per rebalance. Fama-MacBeth regressions complete the
+> picture: the signal's residual return-predictive content does not
+> survive controls for momentum, short-term reversal, volatility and
+> industry fixed effects (retaining 23% of its univariate magnitude,
+> pooled *t* = +0.64), and is identified almost entirely *between*
+> industries rather than within them.
 
 **Practitioner summary: a free sub-industry classification is at least as
 good as paid supply-chain relationship data for ranking — but neither
@@ -484,7 +552,7 @@ models on tail metrics, not macro-F1.**
 
 ---
 
-## 12. Summary of claim status
+## 13. Summary of claim status
 
 Every surviving claim below has been replicated on either disjoint seeds
 or independent time periods. Claims that failed replication are listed so
@@ -500,6 +568,7 @@ the record is auditable.
 | Monotone granularity gradient | did not replicate on disjoint seeds | **Retracted** |
 | Graph signals improve tradeable long-short spread | worse in 6/7 windows, *p* < .05 | **Robustly false** |
 | Look-ahead from the static snapshot explains the results | advantage smallest where contamination worst | **Rejected** |
+| Signal is distinct from momentum / reversal / industry effects | retains 23% of magnitude, *t* = +0.64 pooled | **Not supported** |
 
 Mechanism hypotheses tested and rejected: transaction costs (explain ~10%
 of the portfolio shortfall), signal smoothing (non-monotonic, within
