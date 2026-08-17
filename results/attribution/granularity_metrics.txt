@@ -1,0 +1,22 @@
+============================================================================================
+ GRANULARITY GRADIENT ACROSS THREE METRICS (n=5 seeds, standard OOS)
+============================================================================================
+
+  partition                       macro-F1           tail-F1       LS spread
+  ------------------------------------------------------------------------
+  sector (11)                0.3737±0.0055     0.2489±0.0054      9.79±4.99 
+  industry_group (25)        0.3719±0.0074     0.2458±0.0068     15.95±5.94 
+  industry (67)              0.3746±0.0022     0.2536±0.0077     14.42±4.72 
+  sub-industry (124)         0.3756±0.0021     0.2586±0.0045     14.72±2.74 
+  no-graph                   0.3525±0.0013     0.2310±0.0090      2.52±1.70 
+
+  Paired tests vs SECTOR (the coarsest partition):
+    industry_group (25)   macro-F1 -0.0018 (t=-0.43 pn.s.)   tail-F1 -0.0032 (t=-0.89 pn.s.)   spread +6.1660bp (t=+1.84 p<.20)
+    industry (67)         macro-F1 +0.0009 (t=+0.42 pn.s.)   tail-F1 +0.0047 (t=+0.98 pn.s.)   spread +4.6368bp (t=+10.82 p<.001)
+    sub-industry (124)    macro-F1 +0.0019 (t=+0.65 pn.s.)   tail-F1 +0.0096 (t=+3.42 p<.05)   spread +4.9275bp (t=+2.42 p<.10)
+
+  Paired tests vs NO-GRAPH:
+    sector (11)           macro-F1 +0.0212 (p<.01)   tail-F1 +0.0179 (p<.01)   spread +7.2715bp (p<.05)
+    industry_group (25)   macro-F1 +0.0194 (p<.01)   tail-F1 +0.0148 (p<.05)   spread +13.4376bp (p<.05)
+    industry (67)         macro-F1 +0.0222 (p<.001)   tail-F1 +0.0226 (p<.01)   spread +11.9083bp (p<.01)
+    sub-industry (124)    macro-F1 +0.0231 (p<.001)   tail-F1 +0.0276 (p<.01)   spread +12.1991bp (p<.01)
