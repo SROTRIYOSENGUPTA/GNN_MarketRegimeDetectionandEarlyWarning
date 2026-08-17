@@ -150,16 +150,47 @@ def correlation_edges_topk(rets_window, top_k=10):
 
 
 # ─── features with stock-level variety ────────────────────────────────────────
-def build_features(close, volume, n_sectors=11):
+def load_sector_assign(sector_file, tickers, column="sector"):
+    """Map tickers -> integer group ids from a CSV with `ticker` + `column`.
+
+    `column` selects the granularity level: sector (11 groups),
+    gics_industry_group (25), gics_industry (67), gics_sub_industry (124).
+
+    Tickers absent from the file (or with a blank value) fall into a single
+    shared "Unknown" bucket rather than being dropped, so the node set is
+    unchanged. Returns (assign, n_groups, coverage_fraction).
+    """
+    df = pd.read_csv(sector_file)
+    if column not in df.columns:
+        raise SystemExit(f"--sector-file {sector_file} has no column {column!r}; "
+                         f"available: {list(df.columns)}")
+    lookup = {
+        str(r["ticker"]): str(r[column])
+        for _, r in df.iterrows()
+        if isinstance(r.get(column), str) and str(r[column]).strip()
+    }
+    names = sorted({lookup[t] for t in tickers if t in lookup})
+    name_to_id = {nm: i for i, nm in enumerate(names)}
+    unknown_id = len(names)
+    assign = np.array([name_to_id.get(lookup.get(t, ""), unknown_id) for t in tickers], dtype=np.int64)
+    n_covered = int((assign != unknown_id).sum())
+    return assign, len(names) + 1, n_covered / max(len(tickers), 1)
+
+
+def build_features(close, volume, n_sectors=11, sector_assign=None):
     rets = close.pct_change(fill_method=None).replace([np.inf, -np.inf], np.nan).fillna(0.0)
     market_ret = rets.mean(axis=1)
     market_vol_20 = market_ret.rolling(20).std().fillna(0.0)
     log_close = np.log1p(close.clip(lower=0.01))
     log_vol = np.log1p(volume.clip(lower=0.0))
     feats = {}
-    # Random sector assignment (since workbook lacks GICS) — deterministic by ticker order
     n = close.shape[1]
-    sector_assign = np.arange(n) % n_sectors
+    if sector_assign is None:
+        # WARNING: placeholder only. This is alphabetical-order modulo, NOT real
+        # sectors — the one-hots are noise and `--edge-mode proxy` degenerates
+        # into a random block graph rather than a sector graph. Pass
+        # --sector-file to use real sector labels.
+        sector_assign = np.arange(n) % n_sectors
     for ix, tk in enumerate(close.columns):
         cs = close[tk]; rs = rets[tk]
         df = pd.DataFrame(index=close.index)
@@ -180,13 +211,28 @@ def build_features(close, volume, n_sectors=11):
     return feats, rets, sector_assign
 
 
-def build_xsec_labels(close, horizon=5, low_q=0.20, high_q=0.80):
-    """y[t, i] ∈ {0=Down, 1=Neutral, 2=Up} based on rank of forward `horizon`-day return."""
+def forward_returns(close, horizon=5):
+    """(T, N) continuous forward `horizon`-day return. Last `horizon` rows are NaN."""
     arr = close.to_numpy(dtype=np.float64)
     T, N = arr.shape
+    fwd = np.full((T, N), np.nan, dtype=np.float64)
+    fwd[: T - horizon] = arr[horizon:] / arr[:-horizon] - 1.0
+    return fwd
+
+
+def _softmax(x, axis=-1):
+    x = x - np.max(x, axis=axis, keepdims=True)
+    e = np.exp(x)
+    return e / np.sum(e, axis=axis, keepdims=True)
+
+
+def build_xsec_labels(close, horizon=5, low_q=0.20, high_q=0.80):
+    """y[t, i] ∈ {0=Down, 1=Neutral, 2=Up} based on rank of forward `horizon`-day return."""
+    fwd = forward_returns(close, horizon=horizon)
+    T, N = fwd.shape
     labels = np.full((T, N), -1, dtype=np.int64)
     for t in range(T - horizon):
-        fwd_ret = arr[t + horizon] / arr[t] - 1.0
+        fwd_ret = fwd[t]
         if not np.isfinite(fwd_ret).any():
             continue
         valid = np.isfinite(fwd_ret)
@@ -281,6 +327,21 @@ def main():
     p.add_argument("--weight-decay", type=float, default=1e-4)
     p.add_argument("--holder-threshold", type=float, default=0.4)
     p.add_argument("--device", default="cuda")
+    p.add_argument("--sector-file", default=None,
+                    help="CSV with `ticker`,`sector` columns giving real sector labels. "
+                         "Without it the pipeline falls back to a PLACEHOLDER "
+                         "alphabetical-modulo assignment: the sector one-hot features "
+                         "become noise and --edge-mode proxy degenerates into a random "
+                         "block graph instead of a sector graph.")
+    p.add_argument("--graph-sector-column", default=None,
+                    help="If set, build the proxy sector graph at THIS granularity "
+                         "(e.g. gics_sub_industry) while node one-hot features stay at "
+                         "the `sector` level. Decouples graph granularity from feature "
+                         "dimensionality so the two effects aren't confounded.")
+    p.add_argument("--save-predictions", default=None,
+                    help="If set, dump per-(date,ticker) validation softmax probs, "
+                         "realized forward returns, and full return history to this "
+                         ".npz path, for downstream portfolio backtesting.")
     args = p.parse_args()
 
     torch.manual_seed(args.seed); np.random.seed(args.seed)
@@ -294,7 +355,29 @@ def main():
     print(f"  {N} tickers, {len(close)} dates", flush=True)
 
     print(f"[{time.strftime('%H:%M:%S')}] features…", flush=True)
-    feats, rets, sector_assign = build_features(close, volume, n_sectors=11)
+    if args.sector_file:
+        sector_assign, n_sectors, cov = load_sector_assign(args.sector_file, tickers)
+        print(f"  real sectors: {n_sectors - 1} distinct + unknown bucket, "
+              f"coverage {cov:.1%}", flush=True)
+    else:
+        sector_assign, n_sectors = None, 11
+        print("  WARNING: no --sector-file; using PLACEHOLDER modulo sectors "
+              "(one-hots are noise, proxy edges are random, not sector-based)", flush=True)
+    feats, rets, sector_assign = build_features(
+        close, volume, n_sectors=n_sectors, sector_assign=sector_assign)
+
+    # Graph granularity is decoupled from feature granularity: the one-hot
+    # features always stay at the `sector` level (so feat_dim is constant across
+    # granularity arms), while the proxy graph can be built at a finer level.
+    graph_assign = sector_assign
+    if args.graph_sector_column:
+        if not args.sector_file:
+            raise SystemExit("--graph-sector-column requires --sector-file")
+        graph_assign, n_groups, gcov = load_sector_assign(
+            args.sector_file, tickers, column=args.graph_sector_column)
+        print(f"  graph groups from {args.graph_sector_column!r}: "
+              f"{n_groups - 1} distinct + unknown, coverage {gcov:.1%}", flush=True)
+
     feat_arr = np.stack([feats[tk] for tk in tickers], axis=1)
     feat_dim = feat_arr.shape[2]
     rets_arr = rets.to_numpy().astype(np.float32)
@@ -312,7 +395,7 @@ def main():
         supply_adj = build_supply_chain(meta, tickers)
         use_graph = True; n_relations = 3
     elif args.edge_mode == "proxy":
-        holder_adj = build_proxy_holder(tickers, sector_assign, seed=args.seed)
+        holder_adj = build_proxy_holder(tickers, graph_assign, seed=args.seed)
         supply_adj = build_proxy_supply(tickers, n_edges=int(build_supply_chain(meta, tickers).sum()), seed=args.seed)
         use_graph = True; n_relations = 3
     elif args.edge_mode == "corronly":
@@ -443,6 +526,27 @@ def main():
     }
     Path(args.output).write_text(json.dumps(result, indent=2))
     print(f"wrote {args.output}", flush=True)
+
+    if args.save_predictions:
+        print(f"[{time.strftime('%H:%M:%S')}] saving predictions to {args.save_predictions}", flush=True)
+        probs = _softmax(vl, axis=-1)              # (n_val, N, 3), from the final epoch's eval pass
+        fwd_ret_full = forward_returns(close, horizon=5)
+        val_fwd_ret = fwd_ret_full[val_t]           # (n_val, N)
+        val_dates = close.index[val_t].strftime("%Y-%m-%d").to_numpy()
+        out_path = Path(args.save_predictions)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        np.savez_compressed(
+            out_path,
+            edge_mode=args.edge_mode,
+            seed=args.seed,
+            tickers=np.array(tickers, dtype=object),
+            val_dates=val_dates,
+            val_probs=probs.astype(np.float32),
+            val_fwd_ret=val_fwd_ret.astype(np.float32),
+            rets_hist=rets_arr,
+            hist_dates=close.index.strftime("%Y-%m-%d").to_numpy(),
+        )
+        print(f"wrote {out_path}", flush=True)
 
 
 if __name__ == "__main__":

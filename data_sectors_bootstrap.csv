@@ -1,0 +1,501 @@
+ticker,yf_ticker,sector,industry
+A UN,A,Healthcare,Diagnostics & Research
+AAPL UW,AAPL,Technology,Consumer Electronics
+ABBV UN,ABBV,Healthcare,Drug Manufacturers - General
+ABNB UW,ABNB,Consumer Cyclical,Travel Services
+ABT UN,ABT,Healthcare,Medical Devices
+ACGL UW,ACGL,Financial Services,Insurance - Diversified
+ACN UN,ACN,Technology,Information Technology Services
+ADBE UW,ADBE,Technology,Software - Application
+ADI UW,ADI,Technology,Semiconductors
+ADM UN,ADM,Consumer Defensive,Farm Products
+ADP UW,ADP,Technology,Software - Application
+ADSK UW,ADSK,Technology,Software - Application
+AEE UN,AEE,Utilities,Utilities - Regulated Electric
+AEP UW,AEP,Utilities,Utilities - Regulated Electric
+AES UN,AES,Utilities,Utilities - Diversified
+AFL UN,AFL,Financial Services,Insurance - Life
+AIG UN,AIG,Financial Services,Insurance - Diversified
+AIZ UN,AIZ,Financial Services,Insurance - Property & Casualty
+AJG UN,AJG,Financial Services,Insurance Brokers
+AKAM UW,AKAM,Technology,Software - Infrastructure
+ALB UN,ALB,Basic Materials,Specialty Chemicals
+ALGN UW,ALGN,Healthcare,Medical Instruments & Supplies
+ALL UN,ALL,Financial Services,Insurance - Property & Casualty
+ALLE UN,ALLE,Industrials,Security & Protection Services
+AMAT UW,AMAT,Technology,Semiconductor Equipment & Materials
+AMCR UN,AMCR,Consumer Cyclical,Packaging & Containers
+AMD UW,AMD,Technology,Semiconductors
+AME UN,AME,Industrials,Specialty Industrial Machinery
+AMGN UW,AMGN,Healthcare,Drug Manufacturers - General
+AMP UN,AMP,Financial Services,Asset Management
+AMT UN,AMT,Real Estate,REIT - Specialty
+AMZN UW,AMZN,Consumer Cyclical,Internet Retail
+ANET UN,ANET,Technology,Computer Hardware
+ANSS UW,ANSS,,
+AON UN,AON,Financial Services,Insurance Brokers
+AOS UN,AOS,Industrials,Specialty Industrial Machinery
+APA UW,APA,Energy,Oil & Gas E&P
+APD UN,APD,Basic Materials,Specialty Chemicals
+APH UN,APH,Technology,Electronic Components
+APO UN,APO,Financial Services,Asset Management
+APTV UN,APTV,Consumer Cyclical,Auto Parts
+ARE UN,ARE,Real Estate,REIT - Office
+ATO UN,ATO,Utilities,Utilities - Regulated Gas
+AVB UN,AVB,Real Estate,REIT - Residential
+AVGO UW,AVGO,Technology,Semiconductors
+AVY UN,AVY,Consumer Cyclical,Packaging & Containers
+AWK UN,AWK,Utilities,Utilities - Regulated Water
+AXON UW,AXON,Industrials,Aerospace & Defense
+AXP UN,AXP,Financial Services,Credit Services
+AZO UN,AZO,Consumer Cyclical,Auto Parts
+BA UN,BA,Industrials,Aerospace & Defense
+BAC UN,BAC,Financial Services,Banks - Diversified
+BALL UN,BALL,Consumer Cyclical,Packaging & Containers
+BAX UN,BAX,Healthcare,Medical Instruments & Supplies
+BBY UN,BBY,Consumer Cyclical,Specialty Retail
+BDX UN,BDX,Healthcare,Medical Instruments & Supplies
+BEN UN,BEN,Financial Services,Asset Management
+BF/B UN,BF-B,Consumer Defensive,Beverages - Wineries & Distilleries
+BG UN,BG,Consumer Defensive,Farm Products
+BIIB UW,BIIB,Healthcare,Drug Manufacturers - General
+BK UN,BK,,
+BKNG UW,BKNG,Consumer Cyclical,Travel Services
+BKR UW,BKR,Energy,Oil & Gas Equipment & Services
+BLDR UN,BLDR,Industrials,Building Products & Equipment
+BLK UN,BLK,Financial Services,Asset Management
+BMY UN,BMY,Healthcare,Drug Manufacturers - General
+BR UN,BR,Technology,Information Technology Services
+BRK/B UN,BRK-B,Financial Services,Insurance - Diversified
+BRO UN,BRO,Financial Services,Insurance Brokers
+BSX UN,BSX,Healthcare,Medical Devices
+BWA UN,BWA,Consumer Cyclical,Auto Parts
+BX UN,BX,Financial Services,Asset Management
+BXP UN,BXP,Real Estate,REIT - Office
+C UN,C,Financial Services,Banks - Diversified
+CAG UN,CAG,Consumer Defensive,Packaged Foods
+CAH UN,CAH,Healthcare,Medical Distribution
+CARR UN,CARR,Industrials,Building Products & Equipment
+CAT UN,CAT,Industrials,Farm & Heavy Construction Machinery
+CB UN,CB,Financial Services,Insurance - Property & Casualty
+CBOE UF,,,
+CBRE UN,CBRE,Real Estate,Real Estate Services
+CCI UN,CCI,Real Estate,REIT - Specialty
+CCL UN,CCL,Consumer Cyclical,Travel Services
+CDNS UW,CDNS,Technology,Software - Application
+CDW UW,CDW,Technology,Information Technology Services
+CE UN,CE,Basic Materials,Chemicals
+CEG UW,CEG,Utilities,Utilities - Independent Power Producers
+CF UN,CF,Basic Materials,Agricultural Inputs
+CFG UN,CFG,Financial Services,Banks - Regional
+CHD UN,CHD,Consumer Defensive,Household & Personal Products
+CHRW UW,CHRW,Industrials,Integrated Freight & Logistics
+CHTR UW,CHTR,Communication Services,Telecom Services
+CI UN,CI,Healthcare,Healthcare Plans
+CINF UW,CINF,Financial Services,Insurance - Property & Casualty
+CL UN,CL,Consumer Defensive,Household & Personal Products
+CLX UN,CLX,Consumer Defensive,Household & Personal Products
+CMCSA UW,CMCSA,Communication Services,Telecom Services
+CME UW,CME,Financial Services,Financial Data & Stock Exchanges
+CMG UN,CMG,Consumer Cyclical,Restaurants
+CMI UN,CMI,Industrials,Specialty Industrial Machinery
+CMS UN,CMS,Utilities,Utilities - Regulated Electric
+CNC UN,CNC,Healthcare,Healthcare Plans
+CNP UN,CNP,Utilities,Utilities - Regulated Electric
+COF UN,COF,Financial Services,Credit Services
+COO UW,COO,Healthcare,Medical Instruments & Supplies
+COP UN,COP,Energy,Oil & Gas E&P
+COR UN,COR,Healthcare,Medical Distribution
+COST UW,COST,Consumer Defensive,Discount Stores
+CPAY UN,CPAY,Technology,Software - Infrastructure
+CPB UW,CPB,Consumer Defensive,Packaged Foods
+CPRT UW,CPRT,Industrials,Specialty Business Services
+CPT UN,CPT,Real Estate,REIT - Residential
+CRL UN,CRL,Healthcare,Diagnostics & Research
+CRM UN,CRM,Technology,Software - Application
+CRWD UW,CRWD,Technology,Software - Infrastructure
+CSCO UW,CSCO,Technology,Communication Equipment
+CSGP UW,CSGP,Real Estate,Real Estate Services
+CSX UW,CSX,Industrials,Railroads
+CTAS UW,CTAS,Industrials,Specialty Business Services
+CTRA UN,CTRA,,
+CTSH UW,CTSH,Technology,Information Technology Services
+CTVA UN,CTVA,Basic Materials,Agricultural Inputs
+CVS UN,CVS,Healthcare,Healthcare Plans
+CVX UN,CVX,Energy,Oil & Gas Integrated
+CZR UW,CZR,Consumer Cyclical,Resorts & Casinos
+D UN,D,Utilities,Utilities - Regulated Electric
+DAL UN,DAL,Industrials,Airlines
+DAY UN,DAY,,
+DD UN,DD,Basic Materials,Specialty Chemicals
+DE UN,DE,Industrials,Farm & Heavy Construction Machinery
+DECK UN,DECK,Consumer Cyclical,Footwear & Accessories
+DELL UN,DELL,Technology,Computer Hardware
+DFS UN,DFS,,
+DG UN,DG,Consumer Defensive,Discount Stores
+DGX UN,DGX,Healthcare,Diagnostics & Research
+DHI UN,DHI,Consumer Cyclical,Residential Construction
+DHR UN,DHR,Healthcare,Diagnostics & Research
+DIS UN,DIS,Communication Services,Entertainment
+DLR UN,DLR,Real Estate,REIT - Specialty
+DLTR UW,DLTR,Consumer Defensive,Discount Stores
+DOC UN,DOC,Real Estate,REIT - Healthcare Facilities
+DOV UN,DOV,Industrials,Specialty Industrial Machinery
+DOW UN,DOW,Basic Materials,Chemicals
+DPZ UN,DPZ,Consumer Cyclical,Restaurants
+DRI UN,DRI,Consumer Cyclical,Restaurants
+DTE UN,DTE,Utilities,Utilities - Regulated Electric
+DUK UN,DUK,Utilities,Utilities - Regulated Electric
+DVA UN,DVA,Healthcare,Medical Care Facilities
+DVN UN,DVN,Energy,Oil & Gas E&P
+DXCM UW,DXCM,Healthcare,Medical Devices
+EA UW,EA,Communication Services,Electronic Gaming & Multimedia
+EBAY UW,EBAY,Consumer Cyclical,Internet Retail
+ECL UN,ECL,Basic Materials,Specialty Chemicals
+ED UN,ED,Utilities,Utilities - Regulated Electric
+EFX UN,EFX,Industrials,Consulting Services
+EG UN,EG,Financial Services,Insurance - Reinsurance
+EIX UN,EIX,Utilities,Utilities - Regulated Electric
+EL UN,EL,Consumer Defensive,Household & Personal Products
+ELV UN,ELV,Healthcare,Healthcare Plans
+EMN UN,EMN,Basic Materials,Specialty Chemicals
+EMR UN,EMR,Industrials,Specialty Industrial Machinery
+ENPH UQ,ENPH,Technology,Solar
+EOG UN,EOG,Energy,Oil & Gas E&P
+EPAM UN,EPAM,Technology,Information Technology Services
+EQIX UW,EQIX,Real Estate,REIT - Specialty
+EQR UN,EQR,Real Estate,REIT - Residential
+EQT UN,EQT,Energy,Oil & Gas E&P
+ERIE UW,ERIE,Financial Services,Insurance Brokers
+ES UN,ES,Utilities,Utilities - Regulated Electric
+ESS UN,ESS,Real Estate,REIT - Residential
+ETN UN,ETN,Industrials,Specialty Industrial Machinery
+ETR UN,ETR,Utilities,Utilities - Regulated Electric
+EVRG UW,EVRG,Utilities,Utilities - Regulated Electric
+EW UN,EW,Healthcare,Medical Devices
+EXC UW,EXC,Utilities,Utilities - Regulated Electric
+EXPD UN,EXPD,Industrials,Integrated Freight & Logistics
+EXPE UW,EXPE,Consumer Cyclical,Travel Services
+EXR UN,EXR,Real Estate,REIT - Industrial
+F UN,F,Consumer Cyclical,Auto Manufacturers
+FANG UW,FANG,Energy,Oil & Gas E&P
+FAST UW,FAST,Industrials,Industrial Distribution
+FCX UN,FCX,Basic Materials,Copper
+FDS UN,FDS,Financial Services,Financial Data & Stock Exchanges
+FDX UN,FDX,Industrials,Integrated Freight & Logistics
+FE UN,FE,Utilities,Utilities - Regulated Electric
+FFIV UW,FFIV,Technology,Software - Infrastructure
+FICO UN,FICO,Technology,Software - Application
+FIS UN,FIS,Technology,Information Technology Services
+FISV UN,FISV,,
+FITB UW,FITB,Financial Services,Banks - Regional
+FMC UN,FMC,Basic Materials,Agricultural Inputs
+FOX UW,FOX,Communication Services,Entertainment
+FOXA UW,FOXA,Communication Services,Entertainment
+FRT UN,FRT,Real Estate,REIT - Retail
+FSLR UW,FSLR,Technology,Solar
+FTNT UW,FTNT,Technology,Software - Infrastructure
+FTV UN,FTV,Technology,Scientific & Technical Instruments
+GD UN,GD,Industrials,Aerospace & Defense
+GDDY UN,GDDY,Technology,Software - Infrastructure
+GE UN,GE,Industrials,Aerospace & Defense
+GEHC UW,GEHC,Healthcare,Medical Devices
+GEN UW,GEN,Technology,Software - Infrastructure
+GEV UN,GEV,Industrials,Specialty Industrial Machinery
+GILD UW,GILD,Healthcare,Drug Manufacturers - General
+GIS UN,GIS,Consumer Defensive,Packaged Foods
+GL UN,GL,Financial Services,Insurance - Life
+GLW UN,GLW,Technology,Electronic Components
+GM UN,GM,Consumer Cyclical,Auto Manufacturers
+GNRC UN,GNRC,Industrials,Specialty Industrial Machinery
+GOOG UW,GOOG,Communication Services,Internet Content & Information
+GOOGL UW,GOOGL,Communication Services,Internet Content & Information
+GPC UN,GPC,Consumer Cyclical,Auto Parts
+GPN UN,GPN,Industrials,Specialty Business Services
+GRMN UN,GRMN,Technology,Scientific & Technical Instruments
+GS UN,GS,Financial Services,Capital Markets
+GWW UN,GWW,Industrials,Industrial Distribution
+HAL UN,HAL,Energy,Oil & Gas Equipment & Services
+HAS UW,HAS,Consumer Cyclical,Leisure
+HBAN UW,HBAN,Financial Services,Banks - Regional
+HCA UN,HCA,Healthcare,Medical Care Facilities
+HD UN,HD,Consumer Cyclical,Home Improvement Retail
+HES UN,HES,,
+HIG UN,HIG,Financial Services,Insurance - Diversified
+HII UN,HII,Industrials,Aerospace & Defense
+HLT UN,HLT,Consumer Cyclical,Lodging
+HOLX UW,HOLX,,
+HON UW,HON,Industrials,Conglomerates
+HPE UN,HPE,Technology,Communication Equipment
+HPQ UN,HPQ,Technology,Computer Hardware
+HRL UN,HRL,Consumer Defensive,Packaged Foods
+HSIC UW,HSIC,Healthcare,Medical Distribution
+HST UW,HST,Real Estate,REIT - Hotel & Motel
+HSY UN,HSY,Consumer Defensive,Confectioners
+HUBB UN,HUBB,Industrials,Electrical Equipment & Parts
+HUM UN,HUM,Healthcare,Healthcare Plans
+HWM UN,HWM,Industrials,Aerospace & Defense
+IBM UN,IBM,Technology,Information Technology Services
+ICE UN,ICE,Financial Services,Financial Data & Stock Exchanges
+IDXX UW,IDXX,Healthcare,Diagnostics & Research
+IEX UN,IEX,Industrials,Specialty Industrial Machinery
+IFF UN,IFF,Basic Materials,Specialty Chemicals
+INCY UW,INCY,Healthcare,Biotechnology
+INTC UW,INTC,Technology,Semiconductors
+INTU UW,INTU,Technology,Software - Application
+INVH UN,INVH,Real Estate,REIT - Residential
+IP UN,IP,Consumer Cyclical,Packaging & Containers
+IPG UN,IPG,,
+IQV UN,IQV,Healthcare,Diagnostics & Research
+IR UN,IR,Industrials,Specialty Industrial Machinery
+IRM UN,IRM,Real Estate,REIT - Specialty
+ISRG UW,ISRG,Healthcare,Medical Instruments & Supplies
+IT UN,IT,Technology,Information Technology Services
+ITW UN,ITW,Industrials,Specialty Industrial Machinery
+IVZ UN,IVZ,Financial Services,Asset Management
+J UN,J,Industrials,Engineering & Construction
+JBHT UW,JBHT,Industrials,Integrated Freight & Logistics
+JBL UN,JBL,Technology,Electronic Components
+JCI UN,JCI,Industrials,Building Products & Equipment
+JKHY UW,JKHY,Technology,Information Technology Services
+JNJ UN,JNJ,Healthcare,Drug Manufacturers - General
+JNPR UN,JNPR,,
+JPM UN,JPM,Financial Services,Banks - Diversified
+K UN,K,,
+KDP UW,KDP,Consumer Defensive,Beverages - Non-Alcoholic
+KEY UN,KEY,Financial Services,Banks - Regional
+KEYS UN,KEYS,Technology,Scientific & Technical Instruments
+KHC UW,KHC,Consumer Defensive,Packaged Foods
+KIM UN,KIM,Real Estate,REIT - Retail
+KKR UN,KKR,Financial Services,Asset Management
+KLAC UW,KLAC,Technology,Semiconductor Equipment & Materials
+KMB UN,KMB,Consumer Defensive,Household & Personal Products
+KMI UN,KMI,Energy,Oil & Gas Midstream
+KMX UN,KMX,Consumer Cyclical,Auto & Truck Dealerships
+KO UN,KO,Consumer Defensive,Beverages - Non-Alcoholic
+KR UN,KR,Consumer Defensive,Grocery Stores
+KVUE UN,KVUE,Consumer Defensive,Household & Personal Products
+L UN,L,Financial Services,Insurance - Property & Casualty
+LDOS UN,LDOS,Technology,Information Technology Services
+LEN UN,LEN,Consumer Cyclical,Residential Construction
+LH UN,LH,Healthcare,Diagnostics & Research
+LHX UN,LHX,Industrials,Aerospace & Defense
+LII UN,LII,Industrials,Building Products & Equipment
+LIN UW,LIN,Basic Materials,Specialty Chemicals
+LKQ UW,LKQ,Consumer Cyclical,Auto Parts
+LLY UN,LLY,Healthcare,Drug Manufacturers - General
+LMT UN,LMT,Industrials,Aerospace & Defense
+LNT UW,LNT,Utilities,Utilities - Regulated Electric
+LOW UN,LOW,Consumer Cyclical,Home Improvement Retail
+LRCX UW,LRCX,Technology,Semiconductor Equipment & Materials
+LULU UW,LULU,Consumer Cyclical,Apparel Retail
+LUV UN,LUV,Industrials,Airlines
+LVS UN,LVS,Consumer Cyclical,Resorts & Casinos
+LW UN,LW,Consumer Defensive,Packaged Foods
+LYB UN,LYB,Basic Materials,Specialty Chemicals
+LYV UN,LYV,Communication Services,Entertainment
+MA UN,MA,Financial Services,Credit Services
+MAA UN,MAA,Real Estate,REIT - Residential
+MAR UW,MAR,Consumer Cyclical,Lodging
+MAS UN,MAS,Industrials,Building Products & Equipment
+MCD UN,MCD,Consumer Cyclical,Restaurants
+MCHP UW,MCHP,Technology,Semiconductors
+MCK UN,MCK,Healthcare,Medical Distribution
+MCO UN,MCO,Financial Services,Financial Data & Stock Exchanges
+MDLZ UW,MDLZ,Consumer Defensive,Confectioners
+MDT UN,MDT,Healthcare,Medical Devices
+MET UN,MET,Financial Services,Insurance - Life
+META UW,META,Communication Services,Internet Content & Information
+MGM UN,MGM,Consumer Cyclical,Resorts & Casinos
+MHK UN,MHK,Consumer Cyclical,"Furnishings, Fixtures & Appliances"
+MKC UN,MKC,Consumer Defensive,Packaged Foods
+MKTX UW,MKTX,Financial Services,Capital Markets
+MLM UN,MLM,Basic Materials,Building Materials
+MMM UN,MMM,Industrials,Conglomerates
+MNST UW,MNST,Consumer Defensive,Beverages - Non-Alcoholic
+MO UN,MO,Consumer Defensive,Tobacco
+MOH UN,MOH,Healthcare,Healthcare Plans
+MOS UN,MOS,Basic Materials,Agricultural Inputs
+MPC UN,MPC,Energy,Oil & Gas Refining & Marketing
+MPWR UW,MPWR,Technology,Semiconductors
+MRK UN,MRK,Healthcare,Drug Manufacturers - General
+MRNA UW,MRNA,Healthcare,Biotechnology
+MRSH UN,MRSH,Financial Services,Insurance Brokers
+MS UN,MS,Financial Services,Capital Markets
+MSCI UN,MSCI,Financial Services,Financial Data & Stock Exchanges
+MSFT UW,MSFT,Technology,Software - Infrastructure
+MSI UN,MSI,Technology,Communication Equipment
+MTB UN,MTB,Financial Services,Banks - Regional
+MTCH UW,MTCH,Communication Services,Internet Content & Information
+MTD UN,MTD,Healthcare,Diagnostics & Research
+MU UW,MU,Technology,Semiconductors
+NCLH UN,NCLH,Consumer Cyclical,Travel Services
+NDAQ UW,NDAQ,Financial Services,Financial Data & Stock Exchanges
+NDSN UW,NDSN,Industrials,Specialty Industrial Machinery
+NEE UN,NEE,Utilities,Utilities - Regulated Electric
+NEM UN,NEM,Basic Materials,Gold
+NFLX UW,NFLX,Communication Services,Entertainment
+NI UN,NI,Utilities,Utilities - Regulated Gas
+NKE UN,NKE,Consumer Cyclical,Footwear & Accessories
+NOC UN,NOC,Industrials,Aerospace & Defense
+NOW UN,NOW,Technology,Software - Application
+NRG UN,NRG,Utilities,Utilities - Independent Power Producers
+NSC UN,NSC,Industrials,Railroads
+NTAP UW,NTAP,Technology,Software - Infrastructure
+NTRS UW,NTRS,Financial Services,Asset Management
+NUE UN,NUE,Basic Materials,Steel
+NVDA UW,NVDA,Technology,Semiconductors
+NVR UN,NVR,Consumer Cyclical,Residential Construction
+NWS UW,NWS,Communication Services,Entertainment
+NWSA UW,NWSA,Communication Services,Entertainment
+NXPI UW,NXPI,Technology,Semiconductors
+O UN,O,Real Estate,REIT - Retail
+ODFL UW,ODFL,Industrials,Trucking
+OKE UN,OKE,Energy,Oil & Gas Midstream
+OMC UN,OMC,Communication Services,Advertising Agencies
+ON UW,ON,Technology,Semiconductors
+ORCL UN,ORCL,Technology,Software - Infrastructure
+ORLY UW,ORLY,Consumer Cyclical,Auto Parts
+OTIS UN,OTIS,Industrials,Specialty Industrial Machinery
+OXY UN,OXY,Energy,Oil & Gas E&P
+PANW UW,PANW,Technology,Software - Infrastructure
+PARA UW,PARA,,
+PAYC UN,PAYC,Technology,Software - Application
+PAYX UW,PAYX,Technology,Software - Application
+PCAR UW,PCAR,Industrials,Farm & Heavy Construction Machinery
+PCG UN,PCG,Utilities,Utilities - Regulated Electric
+PEG UN,PEG,Utilities,Utilities - Regulated Electric
+PEP UW,PEP,Consumer Defensive,Beverages - Non-Alcoholic
+PFE UN,PFE,Healthcare,Drug Manufacturers - General
+PFG UW,PFG,Financial Services,Asset Management
+PG UN,PG,Consumer Defensive,Household & Personal Products
+PGR UN,PGR,Financial Services,Insurance - Property & Casualty
+PH UN,PH,Industrials,Specialty Industrial Machinery
+PHM UN,PHM,Consumer Cyclical,Residential Construction
+PKG UN,PKG,Consumer Cyclical,Packaging & Containers
+PLD UN,PLD,Real Estate,REIT - Industrial
+PLTR UW,PLTR,Technology,Software - Infrastructure
+PM UN,PM,Consumer Defensive,Tobacco
+PNC UN,PNC,Financial Services,Banks - Regional
+PNR UN,PNR,Industrials,Specialty Industrial Machinery
+PNW UN,PNW,Utilities,Utilities - Regulated Electric
+PODD UW,PODD,Healthcare,Medical Devices
+POOL UW,POOL,Industrials,Industrial Distribution
+PPG UN,PPG,Basic Materials,Specialty Chemicals
+PPL UN,PPL,Utilities,Utilities - Regulated Electric
+PRU UN,PRU,Financial Services,Insurance - Life
+PSA UN,PSA,Real Estate,REIT - Industrial
+PSX UN,PSX,Energy,Oil & Gas Refining & Marketing
+PTC UW,PTC,Technology,Software - Application
+PWR UN,PWR,Industrials,Engineering & Construction
+PYPL UW,PYPL,Financial Services,Credit Services
+QCOM UW,QCOM,Technology,Semiconductors
+RCL UN,RCL,Consumer Cyclical,Travel Services
+REG UW,REG,Real Estate,REIT - Retail
+REGN UW,REGN,Healthcare,Biotechnology
+RF UN,RF,Financial Services,Banks - Regional
+RJF UN,RJF,Financial Services,Asset Management
+RL UN,RL,Consumer Cyclical,Apparel Manufacturing
+RMD UN,RMD,Healthcare,Medical Instruments & Supplies
+ROK UN,ROK,Industrials,Specialty Industrial Machinery
+ROL UN,ROL,Consumer Cyclical,Personal Services
+ROP UW,ROP,Technology,Software - Application
+ROST UW,ROST,Consumer Cyclical,Apparel Retail
+RSG UN,RSG,Industrials,Waste Management
+RTX UN,RTX,Industrials,Aerospace & Defense
+RVTY UN,RVTY,Healthcare,Diagnostics & Research
+SBAC UW,SBAC,Real Estate,REIT - Specialty
+SBUX UW,SBUX,Consumer Cyclical,Restaurants
+SCHW UN,SCHW,Financial Services,Capital Markets
+SHW UN,SHW,Basic Materials,Specialty Chemicals
+SJM UN,SJM,Consumer Defensive,Packaged Foods
+SLB UN,SLB,Energy,Oil & Gas Equipment & Services
+SMCI UW,SMCI,Technology,Computer Hardware
+SNA UN,SNA,Industrials,Tools & Accessories
+SNPS UW,SNPS,Technology,Software - Infrastructure
+SO UN,SO,Utilities,Utilities - Regulated Electric
+SOLV UN,SOLV,Healthcare,Medical Instruments & Supplies
+SPG UN,SPG,Real Estate,REIT - Retail
+SPGI UN,SPGI,Financial Services,Financial Data & Stock Exchanges
+SRE UN,SRE,Utilities,Utilities - Diversified
+STE UN,STE,Healthcare,Medical Devices
+STLD UW,STLD,Basic Materials,Steel
+STT UN,STT,Financial Services,Asset Management
+STX UW,STX,Technology,Computer Hardware
+STZ UN,STZ,Consumer Defensive,Beverages - Brewers
+SW UN,SW,Consumer Cyclical,Packaging & Containers
+SWK UN,SWK,Industrials,Tools & Accessories
+SWKS UW,SWKS,Technology,Semiconductors
+SYF UN,SYF,Financial Services,Credit Services
+SYK UN,SYK,Healthcare,Medical Devices
+SYY UN,SYY,Consumer Defensive,Food Distribution
+T UN,T,Communication Services,Telecom Services
+TAP UN,TAP,Consumer Defensive,Beverages - Brewers
+TDG UN,TDG,Industrials,Aerospace & Defense
+TDY UN,TDY,Technology,Scientific & Technical Instruments
+TECH UW,TECH,Healthcare,Biotechnology
+TEL UN,TEL,Technology,Electronic Components
+TER UW,TER,Technology,Semiconductor Equipment & Materials
+TFC UN,TFC,Financial Services,Banks - Regional
+TFX UN,TFX,Healthcare,Medical Instruments & Supplies
+TGT UN,TGT,Consumer Defensive,Discount Stores
+TJX UN,TJX,Consumer Cyclical,Apparel Retail
+TMO UN,TMO,Healthcare,Diagnostics & Research
+TMUS UW,TMUS,Communication Services,Telecom Services
+TPL UN,TPL,Energy,Oil & Gas E&P
+TPR UN,TPR,Consumer Cyclical,Luxury Goods
+TRGP UN,TRGP,Energy,Oil & Gas Midstream
+TRMB UW,TRMB,Technology,Scientific & Technical Instruments
+TROW UW,TROW,Financial Services,Asset Management
+TRV UN,TRV,Financial Services,Insurance - Property & Casualty
+TSCO UW,TSCO,Consumer Cyclical,Specialty Retail
+TSLA UW,TSLA,Consumer Cyclical,Auto Manufacturers
+TSN UN,TSN,Consumer Defensive,Farm Products
+TT UN,TT,Industrials,Building Products & Equipment
+TTWO UW,TTWO,Communication Services,Electronic Gaming & Multimedia
+TXN UW,TXN,Technology,Semiconductors
+TXT UN,TXT,Industrials,Aerospace & Defense
+TYL UN,TYL,Technology,Software - Application
+UAL UW,UAL,Industrials,Airlines
+UBER UN,UBER,Technology,Software - Application
+UDR UN,UDR,Real Estate,REIT - Residential
+UHS UN,UHS,Healthcare,Medical Care Facilities
+ULTA UW,ULTA,Consumer Cyclical,Specialty Retail
+UNH UN,UNH,Healthcare,Healthcare Plans
+UNP UN,UNP,Industrials,Railroads
+UPS UN,UPS,Industrials,Integrated Freight & Logistics
+URI UN,URI,Industrials,Rental & Leasing Services
+USB UN,USB,Financial Services,Banks - Regional
+V UN,V,Financial Services,Credit Services
+VICI UN,VICI,Real Estate,REIT - Diversified
+VLO UN,VLO,Energy,Oil & Gas Refining & Marketing
+VLTO UN,VLTO,Industrials,Pollution & Treatment Controls
+VMC UN,VMC,Basic Materials,Building Materials
+VRSK UW,VRSK,Industrials,Consulting Services
+VRSN UW,VRSN,Technology,Software - Infrastructure
+VRTX UW,VRTX,Healthcare,Biotechnology
+VST UN,VST,Utilities,Utilities - Independent Power Producers
+VTR UN,VTR,Real Estate,REIT - Healthcare Facilities
+VTRS UW,VTRS,Healthcare,Drug Manufacturers - Specialty & Generic
+VZ UN,VZ,Communication Services,Telecom Services
+WAB UN,WAB,Industrials,Railroads
+WAT UN,WAT,Healthcare,Diagnostics & Research
+WBA UW,WBA,,
+WBD UW,WBD,Communication Services,Entertainment
+WDAY UW,WDAY,Technology,Software - Application
+WDC UW,WDC,Technology,Computer Hardware
+WEC UN,WEC,Utilities,Utilities - Regulated Electric
+WELL UN,WELL,Real Estate,REIT - Healthcare Facilities
+WFC UN,WFC,Financial Services,Banks - Diversified
+WM UN,WM,Industrials,Waste Management
+WMB UN,WMB,Energy,Oil & Gas Midstream
+WMT UN,WMT,Consumer Defensive,Discount Stores
+WRB UN,WRB,Financial Services,Insurance - Property & Casualty
+WST UN,WST,Healthcare,Medical Instruments & Supplies
+WTW UW,WTW,Financial Services,Insurance Brokers
+WY UN,WY,Real Estate,REIT - Specialty
+WYNN UW,WYNN,Consumer Cyclical,Resorts & Casinos
+XEL UW,XEL,Utilities,Utilities - Regulated Electric
+XOM UN,XOM,Energy,Oil & Gas Integrated
+XYL UN,XYL,Industrials,Specialty Industrial Machinery
+YUM UN,YUM,Consumer Cyclical,Restaurants

@@ -1,0 +1,26 @@
+==========================================================================================
+ PER-CLASS F1 — where does the graph advantage live? (long OOS, n=5 seeds)
+==========================================================================================
+
+  signal            Down F1   Neutral F1    Up F1    macro  tails avg
+  -------------------------------------------------------------------
+  sub-industry       0.2579       0.5852   0.2355   0.3595     0.2467
+  bloomberg          0.2118       0.5795   0.2817   0.3577     0.2467
+  no-graph           0.2298       0.5472   0.2774   0.3515     0.2536
+
+  Deltas vs no-graph (positive = graph model better):
+    sub-industry   Down +0.0281   Neutral +0.0380   Up -0.0419   tails -0.0069
+    bloomberg      Down -0.0180   Neutral +0.0323   Up +0.0043   tails -0.0068
+
+==========================================================================================
+ WHAT THE PORTFOLIO ACTUALLY TRADES — quintile precision and realised spread
+==========================================================================================
+
+  signal           top-Q prec  bot-Q prec   LS spread/period
+  ----------------------------------------------------------
+  sub-industry          21.7%       20.3%             6.0bp
+  bloomberg             20.9%       21.2%             7.4bp
+  no-graph              21.8%       21.7%             9.7bp
+
+  LS spread is the raw long-short return the signal's own quintile picks earn,
+  before optimisation or costs — the cleanest measure of tradeable edge.

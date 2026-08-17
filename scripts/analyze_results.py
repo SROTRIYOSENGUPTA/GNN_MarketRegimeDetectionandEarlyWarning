@@ -133,6 +133,64 @@ def walk_forward():
     return out
 
 
+def _load_mpt_data(seeds=(42, 123, 7, 101, 2025)):
+    """Load results/mpt_backtest/s{seed}.json files, keyed by config name -> [sharpe per seed].
+
+    Returns (config_names, data, seeds_found) or (None, None, None) if no
+    backtest results exist yet (run scripts/run_mpt_backtest.py first).
+    """
+    per_seed = {}
+    for s in seeds:
+        p = RES / "mpt_backtest" / f"s{s}.json"
+        if p.exists():
+            per_seed[s] = {name: cfg["sharpe"] for name, cfg in json.load(open(p))["configs"].items()}
+    if not per_seed:
+        return None, None, None
+    seeds_found = sorted(per_seed)
+    config_names = sorted(set().union(*per_seed.values()))
+    data = {c: [per_seed[s][c] for s in seeds_found if c in per_seed[s]] for c in config_names}
+    return config_names, data, seeds_found
+
+
+def mpt_backtest():
+    print("\n" + "=" * 92)
+    print(" MPT BACKTEST  —  annualized Sharpe ratio by portfolio configuration")
+    print("=" * 92)
+    config_names, data, seeds_found = _load_mpt_data()
+    if config_names is None:
+        print(" (no results/mpt_backtest/*.json found yet — run scripts/run_mpt_backtest.py first)")
+        return None
+
+    header = f"{'config':<32}" + "".join(f"{f's{s}':>10}" for s in seeds_found) + f"{'mean':>10}{'std':>8}"
+    print(header)
+    print("-" * len(header))
+    for c in config_names:
+        mm, ss = stats(data[c])
+        print(f"{c:<32}" + "".join(f"{v:>10.4f}" for v in data[c]) + f"{mm:>10.4f}{ss:>8.4f}")
+
+    main_cfg = "A_bloomberg_gnn_cov_mv"
+    if main_cfg in data and len(seeds_found) > 1:
+        print(f"\nPaired t-tests vs {main_cfg} (n={len(seeds_found)}, df={len(seeds_found) - 1}):")
+        for c in config_names:
+            if c == main_cfg or len(data[c]) != len(data[main_cfg]):
+                continue
+            d, t, p = paired_t(data[main_cfg], data[c])
+            print(f"  A vs {c:<32}  Δ={d:+.4f}  t={t:+6.2f}  p{p}")
+
+    md_path = REPO / "RESULTS_MPT.md"
+    lines = ["# MPT Backtest Results\n",
+             f"Annualized Sharpe ratio, n={len(seeds_found)} seeds ({', '.join(f's{s}' for s in seeds_found)}).\n",
+             "| Config | " + " | ".join(f"s{s}" for s in seeds_found) + " | mean | std |",
+             "|---|" + "---|" * (len(seeds_found) + 2)]
+    for c in config_names:
+        mm, ss = stats(data[c])
+        vals = " | ".join(f"{v:.4f}" for v in data[c])
+        lines.append(f"| {c} | {vals} | {mm:.4f} | {ss:.4f} |")
+    md_path.write_text("\n".join(lines) + "\n")
+    print(f"\nWrote {md_path}")
+    return data
+
+
 def write_figures():
     """Optional matplotlib figures for the three findings."""
     import numpy as np
@@ -228,6 +286,28 @@ def write_figures():
     plt.tight_layout()
     plt.savefig(out_dir / "fig3_walk_forward.png", dpi=200)
     plt.close()
+
+    # ── Figure 4: MPT backtest Sharpe ratios ──
+    config_names, mpt_data, seeds_found = _load_mpt_data()
+    if config_names is not None:
+        means = [stats(mpt_data[c])[0] for c in config_names]
+        stds = [stats(mpt_data[c])[1] for c in config_names]
+        fig, ax = plt.subplots(figsize=(9, 4))
+        x = np.arange(len(config_names))
+        bars = ax.bar(x, means, yerr=stds, capsize=4, color="#1f77b4", edgecolor="black")
+        ax.set_xticks(x); ax.set_xticklabels(config_names, fontsize=8, rotation=20, ha="right")
+        ax.set_ylabel("Annualized Sharpe ratio")
+        ax.set_title(f"MPT backtest (n={len(seeds_found)} seeds): Sharpe by portfolio configuration")
+        ax.axhline(0.0, color="red", linestyle="--", linewidth=0.8)
+        for bar, v in zip(bars, means):
+            ax.text(bar.get_x() + bar.get_width() / 2, v + 0.02 * np.sign(v or 1), f"{v:.3f}",
+                    ha="center", fontsize=7.5)
+        plt.tight_layout()
+        plt.savefig(out_dir / "fig4_mpt_backtest.png", dpi=200)
+        plt.close()
+    else:
+        print("Skipping fig4_mpt_backtest.png — no results/mpt_backtest/*.json found yet")
+
     print(f"Wrote figures to {out_dir}")
 
 
@@ -238,5 +318,6 @@ if __name__ == "__main__":
     main_ablation()
     edge_decomposition()
     walk_forward()
+    mpt_backtest()
     if args.figures:
         write_figures()
