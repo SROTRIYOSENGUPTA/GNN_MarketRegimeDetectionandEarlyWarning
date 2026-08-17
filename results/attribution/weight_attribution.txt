@@ -1,0 +1,27 @@
+========================================================================================
+ A. SIGNAL SMOOTHING — within-sub-industry share of mu variance (n=5 seeds)
+========================================================================================
+    lower share  =>  predictions homogeneous inside peer groups
+
+  signal              within-group share       std
+  ------------------------------------------------
+  sub-industry                    0.4439    0.0768
+  bloomberg                       0.5692    0.0343
+  no-graph                        0.4797    0.0986
+
+  sub-industry vs no-graph: -0.0358 (MORE within-group homogenisation)
+
+  bloomberg vs no-graph: +0.0895 (LESS within-group homogenisation)
+
+========================================================================================
+ B. PORTFOLIO CONCENTRATION — mean-variance weights (n=2 seeds)
+========================================================================================
+
+  signal             group HHI   eff. #groups   max grp wt
+  --------------------------------------------------------
+  sub-industry          0.4986            2.0        50.1%
+  bloomberg             0.4971            2.0        50.0%
+  no-graph              0.5418            1.9        54.6%
+
+  Higher HHI / fewer effective groups => the book is a concentrated bet
+  on a handful of sub-industries rather than a diversified stock selection.
