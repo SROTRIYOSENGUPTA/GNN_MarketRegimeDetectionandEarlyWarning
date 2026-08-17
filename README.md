@@ -1,39 +1,96 @@
-# GNN Market Regime Detection and Early Warning
+# Graph Neural Networks for Cross-Sectional Equity Prediction
 
-This repository contains a financial graph learning project for market regime detection and early warning.
+A financial graph learning project studying whether graph neural networks
+over inter-firm relationships improve cross-sectional equity prediction —
+and whether any improvement is economically tradeable.
 
-The project models the equity market as a sequence of heterogeneous graphs and predicts:
-
-- the current market regime: `Bull`, `Crash`, `Liquidity`, `Stress`
-- whether a `Stress` regime is likely to appear in the next `5-20` trading days
-
-Read the full project report: [Report.md](./Report.md).
+The project began as market regime detection and early warning (the ECE538
+course scope, still documented below and in [Report.md](./Report.md)). It
+now centres on a cross-sectional 5-day forward return rank task, because
+the original regime labels were found to leak (see
+[RESULTS.md](./RESULTS.md) Appendix A).
 
 ![Final project poster](figures/final_project_poster.svg)
 
+## Current findings
+
+Full evidence, statistical tests and a claim-status table are in
+**[RESULTS.md](./RESULTS.md)**. Headline:
+
+| Claim | Evidence | Status |
+|---|---|---|
+| Graph structure improves cross-sectional classification | 7/7 independent windows, t = +11.67 | **Robust** |
+| Finer-than-sector partitions improve tail accuracy | +0.018 tail-F1, *p* < .001, 10 disjoint seeds | **Robust** |
+| Benefit saturates by ~25 groups | industry-group ≈ industry ≈ sub-industry | **Robust** |
+| Proprietary supply-chain data beats free GICS labels | Δ = +0.003, n.s. | **Not supported** |
+| Monotone granularity gradient | did not replicate on disjoint seeds | **Retracted** |
+| Graph signals improve tradeable long-short spread | worse in 6/7 windows, *p* < .05 | **Robustly false** |
+
+**The central result is a dissociation.** Graph structure reliably improves
+per-date macro-F1, but Markowitz mean-variance portfolios built on those
+same signals significantly *underperform* an identical no-graph portfolio
+(Δ = −0.94 Sharpe, *p* < .01), and the shortfall is present gross of
+transaction costs. Per-class analysis explains why: the accuracy gain sits
+almost entirely in the **Neutral** class — 60% of the distribution, which a
+quintile long-short book never trades — while tail accuracy is
+flat-to-worse.
+
+> Practical implication: evaluate cross-sectional models on tail metrics and
+> realised long-short spread, not macro-F1. And exhaust free industry
+> classifications before licensing relationship data.
+
+Two quantities are large relative to the effects measured, and are reported
+throughout rather than hidden: run-to-run CUDA nondeterminism (which alone
+moves the granularity comparison between *p* < .05 and n.s.) and
+evaluation-window choice (single-window spread estimates swing ~16 bp
+between runs of an identical configuration). Conclusions are therefore drawn
+from multi-window aggregates and disjoint-seed replications only.
+
+### Reproducing
+
+```bash
+uv sync --dev
+python scripts/analyze_results.py --figures   # original tables/figures
+python scripts/analyze_realsector.py          # real-sector ablation
+python scripts/analyze_granularity.py         # granularity + decomposition
+python scripts/analyze_recency.py             # look-ahead diagnostic
+python scripts/analyze_per_class.py results/... # mechanism
+```
+
+- Pipelines: `scripts/run_xsec_rank.py`, `scripts/run_mpt_backtest.py`,
+  `scripts/run_per_stock.py`, `scripts/run_baselines.py`
+- Raw experiment outputs: `results/` — see `periods/`, `seedsweep/`,
+  `realsector/`, `attribution/`, `mpt_program/`
+- Figures: `figures/v2/`
+
 ## Project Status
 
-- **Original scope (ECE538 course project):** everything described in this
-  README and in [Report.md](./Report.md) / [RESULTS.md](./RESULTS.md),
-  frozen at git tag [`v1.0-ece538-submission`](../../releases/tag/v1.0-ece538-submission).
-- **Post-submission extensions:** tracked in [CHANGELOG.md](./CHANGELOG.md).
-  Compare the current state to the submitted baseline with
-  `git diff v1.0-ece538-submission..main`.
+- **Original scope (ECE538 course project):** the regime-detection material
+  described below and in [Report.md](./Report.md), frozen at git tag
+  [`v1.0-ece538-submission`](../../releases/tag/v1.0-ece538-submission).
+- **Post-submission extensions and corrections:** tracked in
+  [CHANGELOG.md](./CHANGELOG.md). Compare against the submitted baseline
+  with `git diff v1.0-ece538-submission..main`.
 
-## New results
+> **Note on revisions.** Several claims in the original write-up were
+> corrected after further testing — most importantly, an earlier headline
+> attributing the predictive gain "specifically" to proprietary Bloomberg
+> relationships. That comparison used a sector-proxy baseline which, through
+> a labelling bug, was a *random* graph; against a real sector partition the
+> premium is not significant. The original results remain in
+> `results/main_ablation/` and are reproducible; RESULTS.md documents what
+> changed and why.
 
-A cross-sectional 5-day forward return rank classification task evaluates
-the heterogeneous-graph approach with statistical rigor. Across 5 random
-seeds and 3 walk-forward train cutoffs, the dynamic heterogeneous GNN
-using real Bloomberg supplier/customer/holder edges significantly
-outperforms non-Bloomberg ablations (p < .001 vs no-graph). See
-[RESULTS.md](./RESULTS.md) for the full evaluation, statistical tests,
-and figures.
+## Markowitz portfolio layer
 
-- Pipelines: `scripts/run_xsec_rank.py`, `scripts/run_per_stock.py`, `scripts/run_baselines.py`
-- Raw experiment outputs: `results/`
-- Figures: `figures/v2/`
-- Reproduce all tables/figures: `python scripts/analyze_results.py --figures`
+`market_regime_gnn/portfolio/mean_variance.py` implements mean-variance
+construction on top of the model's predictions: covariance estimation,
+convex signal shrinkage (Michaud 1989), and an optimiser supporting
+gross-exposure caps, dollar-neutrality, long/short direction masks and a
+transaction-cost-aware turnover penalty. `scripts/run_mpt_backtest.py`
+runs the walk-forward backtest. This layer is what establishes the
+dissociation above — it is the economic-significance test, not a trading
+system.
 
 
 ## What The Main Project Does
@@ -139,11 +196,32 @@ Each daily graph has one node type, `stock`, and three edge types:
 │   ├── run_real_data.py
 │   ├── train.py
 │   ├── data/
-│   └── models/
+│   ├── models/
+│   └── portfolio/            # Markowitz mean-variance layer
+│       └── mean_variance.py
+├── scripts/
+│   ├── run_xsec_rank.py      # cross-sectional rank pipeline (main)
+│   ├── run_mpt_backtest.py   # portfolio backtest
+│   ├── build_sector_file.py  # GICS sector file construction
+│   ├── fetch_sectors.py
+│   ├── analyze_results.py    # original tables/figures
+│   ├── analyze_realsector.py # real-sector ablation
+│   ├── analyze_granularity.py
+│   ├── analyze_recency.py    # look-ahead diagnostic
+│   ├── analyze_per_class.py  # mechanism
+│   └── analyze_weight_attribution.py
+├── results/                  # raw experiment JSON, one dir per study
+│   ├── periods/              # 7-window robustness sweep
+│   ├── seedsweep/            # 10 disjoint seeds x 4 GICS levels
+│   ├── realsector/           # main ablation, real sectors
+│   ├── attribution/          # per-class + weight attribution
+│   └── mpt_program/          # portfolio backtests
+├── RESULTS.md                # findings, tests, claim-status table
+├── RESULTS_MPT.md            # portfolio-layer detail
+├── CHANGELOG.md
 ├── pyproject.toml
 ├── uv.lock
-├── README.md
-└── GNNsMarketRegimeDetection&Early-Warning/
+└── GNNsMarketRegimeDetection&Early-Warning/   # legacy course-project layout
     ├── config.py
     ├── run_real_data.py
     ├── train.py
@@ -333,6 +411,36 @@ The following issues were addressed while updating this repository:
 - Shared default `RegimeConfig()` constructor arguments were replaced with per-call `None` sentinels, avoiding accidental cross-instance config reuse.
 - Import fallback branches now distinguish direct script execution from package imports, preventing misleading fallback behavior when a real dependency import fails.
 
+## Sector labels (`--sector-file`)
+
+The cross-sectional pipeline takes real GICS labels via `--sector-file`, and
+`--graph-sector-column` selects which level of the hierarchy builds the
+graph (`sector`, `gics_industry_group`, `gics_industry`,
+`gics_sub_industry`):
+
+```bash
+python scripts/build_sector_file.py path/to/gics_500.csv   # -> data_sectors_gics.csv
+
+python scripts/run_xsec_rank.py \
+  --xlsx "path/to/sp500_prices 1.xlsx" \
+  --sector-file data_sectors_gics.csv \
+  --graph-sector-column gics_sub_industry \
+  --edge-mode proxy --seed 42 --output out.json
+```
+
+**Without `--sector-file` the pipeline falls back to a placeholder
+assignment** (alphabetical order modulo 11) and warns at runtime. That
+placeholder is what produced the retracted headline described above — the
+sector one-hot features become noise and `--edge-mode proxy` degenerates
+into a random block graph. Always pass real labels.
+
+The GICS data itself is gitignored: the classifications are proprietary to
+S&P Dow Jones Indices / MSCI, so only the builder script is committed.
+
 ## One-Sentence Summary
 
-This repository is a financial GNN research workspace which is centered on dynamic heterogeneous graphs for market regime detection and early warning.
+A financial GNN research workspace showing that graph structure over firm
+peer groups reliably improves cross-sectional return-rank classification —
+and that the improvement does not become portfolio performance, because it
+concentrates in the part of the return distribution a long-short book never
+trades.
