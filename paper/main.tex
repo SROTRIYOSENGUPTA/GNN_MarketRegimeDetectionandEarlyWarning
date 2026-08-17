@@ -1,0 +1,239 @@
+\documentclass[11pt]{airesearch}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+
+% Layout
+\usepackage{fullpage}
+\usepackage{wrapfig}
+\usepackage{booktabs}
+\setlist[itemize]{leftmargin=*,topsep=1pt,itemsep=1pt}
+
+% Algorithm
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+% Todos
+\ifdefined\final
+  \usepackage[disable]{todonotes}
+\else
+  \usepackage[textsize=tiny]{todonotes}
+\fi
+\newcommand{\todoyfz}[2][]{\todo[size=\scriptsize,color=blue!20!white,#1]{Yifan: #2}}
+
+\newcommand{\projectpage}[1]{%
+  \begin{center}\small\vspace{-1.25ex}\texttt{Project Page}: \url{#1}\end{center}}
+\newcommand{\metadata}[2][Metadata]{%
+  \begin{center}\small\vspace{-1.25ex}\texttt{#1}: #2\end{center}}
+
+\title{\Huge \bfseries Better Rankings, Worse Portfolios:\\
+Graph Neural Networks Improve a Classification Metric\\
+That Portfolios Cannot Trade}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Graph neural networks for equity prediction are typically validated on
+classification metrics, with proprietary relationship data --- supply-chain
+links, institutional ownership --- presumed to be the highest-value input. We
+test both premises on a cross-sectional 5-day forward return rank task over
+S\&P 500 constituents (2015--2024), holding the architecture fixed and varying
+only the graph. Graph structure improves per-date macro-F1 robustly, in seven
+of seven non-overlapping evaluation windows ($t=+11.67$), and partition
+granularity matters as a \emph{step} rather than a gradient: moving from
+sector-level grouping to any finer partition raises tail-F1 by
+${\approx}0.018$ ($p<.001$, replicated on disjoint seeds), after which the
+benefit saturates by roughly 25 groups. Proprietary relationship data carries
+no premium --- a graph from free GICS labels is statistically indistinguishable
+from one built on Bloomberg supplier/customer and holder relationships.
+
+None of this becomes portfolio performance. In a Markowitz mean-variance
+portfolio the graph signals significantly \emph{underperform} an identical
+no-graph portfolio ($\Delta=-0.94$ Sharpe, $p<.01$), the shortfall is present
+gross of transaction costs, and realised long-short spread is worse in six of
+seven windows. Two analyses explain the dissociation. Per-class F1 shows the
+accuracy gain sits almost entirely in the Neutral class --- 60\% of the mass,
+which a quintile long-short book never trades --- while tail accuracy is
+flat-to-worse. Fama--MacBeth regressions show the residual return-predictive
+content does not survive controls for momentum, short-term reversal,
+volatility and industry fixed effects (23\% of univariate magnitude retained,
+pooled $t=+0.64$), and is identified almost entirely \emph{between} industries
+rather than within them. We conclude that balanced classification accuracy
+rewards precisely the region of the cross-sectional distribution portfolios
+cannot access, and that cross-sectional models should be selected on
+tail-region metrics and realised spread rather than macro-F1.
+\end{abstract}
+
+\projectpage{https://github.com/SROTRIYOSENGUPTA/GNN_MarketRegimeDetectionandEarlyWarning}
+
+\section{Introduction}
+
+Financial markets are relational systems: firms co-move because they share
+macroeconomic exposures, product markets, ownership structure, and production
+network dependencies. A large empirical literature documents that economic
+linkages between firms predict returns beyond firm-level characteristics ---
+most prominently \citet{cohen2008economic}, who show that returns of
+economically linked customers predict suppliers' future returns. Recent work
+models these linkages with graph neural networks, typically targeting the
+relationships themselves, for example forecasting the evolution of equity
+correlations \citep{fanshawe2026forecasting}.
+
+This literature rests on two assumptions that are rarely tested together.
+First, that the \emph{specificity} of relationship data matters --- that a
+curated bilateral supply-chain link is worth more than a coarse statement that
+two firms operate in the same industry, which is why such data is licensed at
+significant cost. Second, that improvements in classification accuracy
+translate into economic value. We test both, holding the model architecture
+fixed and varying only the graph, and find the first unsupported and the
+second inverted.
+
+Our contributions are:
+
+\begin{itemize}
+\item \textbf{A robustly replicated classification result.} Graph structure
+  over economic groupings improves cross-sectional macro-F1 in 7 of 7
+  non-overlapping windows ($t=+11.67$), and finer-than-sector partitions
+  improve tail-F1 by ${\approx}0.018$ ($p<.001$) on seeds disjoint from those
+  used to discover the effect. The benefit is a \emph{step} that saturates by
+  ${\sim}25$ groups, not the monotone gradient an earlier version of this work
+  reported and which failed replication.
+\item \textbf{No premium for proprietary relationship data.} Against a genuine
+  sector partition, Bloomberg supplier/customer and holder graphs are
+  statistically indistinguishable from free GICS labels. We document that the
+  opposite conclusion arises naturally when the ``sector proxy'' baseline is
+  degenerate --- in our own earlier analysis a labelling error made it a random
+  block graph, against which the proprietary premium appears significant.
+\item \textbf{An accuracy--tradeability dissociation, with mechanism.} The same
+  signals that rank better build significantly worse mean-variance portfolios,
+  gross of costs. Per-class F1 localises the gain to the untradeable Neutral
+  class; Fama--MacBeth regressions show the remainder is subsumed by momentum,
+  reversal and industry effects and is identified between rather than within
+  industries. We test and reject three competing explanations --- transaction
+  costs, signal smoothing, and portfolio concentration.
+\item \textbf{A quantified warning about evaluation practice.} Run-to-run
+  nondeterminism alone moves our granularity comparison between $p<.05$ and
+  non-significance, and single-window long-short spread estimates swing
+  ${\sim}16$\,bp between runs of an identical configuration. We report
+  multi-window aggregates and disjoint-seed replications throughout.
+\end{itemize}
+
+Our reading is that a graph's value for cross-sectional ranking lies in
+delimiting \emph{who is comparable to whom}, and that narrow peer groups do
+this better than either broad sectors or curated bilateral links --- but that
+this is group-level information, which classification metrics reward and
+quintile portfolios cannot use. This complements text-based approaches to
+endogenous industry classification \citep{hoberg2016text}, which similarly find
+that finer, more adaptive peer definitions carry economic content coarse
+classifications miss.
+
+\section{Method}
+
+\subsection{Data}
+Daily price and volume for 500 S\&P 500 constituents (2015--2024; 1.83M
+stock-days) from a Bloomberg-sourced workbook, with per-ticker reference
+metadata: top suppliers, top customers, and top-20 institutional holders.
+Sector assignments use GICS at four levels (Bloomberg \texttt{GICS\_*\_NAME};
+469/500 tickers, with a crosswalked fallback for 19 and an explicit unknown
+bucket for 12).
+
+Three limitations shape the analysis. First, the supplier/customer/holder
+metadata is a \emph{single static snapshot} taken near the end of the sample;
+Bloomberg's supply-chain function does not honour historical date overrides
+(verified directly), so the same graph applies to all years.
+Section~\ref{sec:robust} tests whether this look-ahead drives the results.
+Second, the universe is survivorship-biased: constituents were screened near
+the pull date. Third, prices exclude delisting returns, and portfolio
+transaction costs are a flat 5\,bps assumption.
+
+\subsection{Task}
+For each day $t$ and stock $i$ the label is the within-date rank quantile of
+the forward 5-day return: Down (bottom 20\%), Neutral (middle 60\%), Up (top
+20\%). Random-baseline macro-F1 is ${\approx}0.333$. This replaced an earlier
+regime-classification task whose labels were mechanical functions of
+observable aggregate features, so that a three-feature logistic regression
+achieved AUC $0.963$ and dominated any graph model --- a label-leakage failure
+documented, with two other abandoned formulations, in the project repository.
+
+\subsection{Model}
+Each trading day is a graph over stocks with up to three edge types: rolling
+return correlation (top-$k$), group membership (same-GICS-group at a
+configurable hierarchy level) or institutional-holder overlap (Jaccard
+$\geq 0.4$), and directed supplier/customer links. The model projects 22
+per-stock daily features into a hidden representation, applies two layers of
+per-relation scaled-dot-product attention at each of 30 daily snapshots,
+aggregates temporally with a per-stock LSTM, and classifies with a
+class-weighted cross-entropy head (${\sim}1.0$M parameters; 15 epochs; AdamW
+with cosine decay). Unless noted, training uses data through 2022-09-30 and
+validation covers 2022Q4--2024. All comparisons are paired $t$-tests across
+random seeds; results described as \emph{replicated} were re-run on a seed set
+disjoint from the one used to discover them.
+
+\subsection{Portfolio layer}
+To test economic significance a Markowitz mean-variance layer converts
+predictions to portfolios: expected returns $\mu_i = P(\text{Up})_i -
+P(\text{Down})_i$ shrunk toward zero \citep{michaud1989markowitz}, covariance
+from rolling correlations, long top-quintile / short bottom-quintile,
+dollar-neutral, gross exposure capped at 2.0, rebalanced every 5 days at
+5\,bps per unit turnover. We additionally evaluate a shrinkage sweep, a
+transaction-cost-aware turnover penalty, and equal-weight sizing of identical
+picks.
+
+\input{results_section}
+
+\section{Conclusion}
+
+Holding architecture fixed and varying only the graph, we find that graph
+structure over economic peer groups reliably improves cross-sectional
+return-rank classification --- in every one of seven independent evaluation
+windows --- and that how finely those peer groups are drawn matters, up to a
+saturation point around 25 groups. Neither result requires proprietary
+relationship data: free GICS classifications match Bloomberg supplier/customer
+graphs on every comparison we ran.
+
+The same models build significantly worse portfolios. The dissociation is not
+a transaction-cost artifact and is not repaired by shrinkage or turnover
+penalties. Per-class analysis shows the accuracy these models add sits in the
+middle of the cross-sectional distribution, which a quintile long-short book
+never trades, while tail accuracy is flat-to-worse; Fama--MacBeth regressions
+show what predictive content remains is largely subsumed by momentum,
+reversal and industry effects, and lives between industries rather than within
+them. Standard balanced classification metrics therefore reward a region of
+the distribution that portfolio construction cannot reach.
+
+We draw two implications. For practice, cross-sectional equity models should be
+selected on tail-region metrics and realised long-short spread rather than
+macro-F1, and free industry classifications should be exhausted before
+licensing relationship data. For the literature, the gap between classification
+accuracy and economic value is not merely an untested assumption but, in this
+setting, an inverted one --- and we would encourage reporting multi-window
+aggregates and disjoint-seed replications as a matter of course, given how
+large run-to-run and window-to-window variation proved to be relative to the
+effects measured.
+
+Several limitations bound these conclusions. The supply-chain metadata is a
+single static snapshot; a recency diagnostic indicates look-ahead does not
+drive our results, but a point-in-time reconstruction from SEC customer
+disclosures would close the question. The universe is survivorship-biased to
+S\&P 500 constituents screened near the snapshot date, and returns exclude
+delisting effects. Size and book-to-market are uncontrolled. Absolute effect
+sizes are modest throughout --- macro-F1 ${\approx}0.37$ against a $0.333$
+chance floor. Finally, our findings concern a 5-day horizon and a
+quintile-based long-short construction; whether the dissociation persists at
+longer horizons or under other portfolio rules is untested.
+
+\vspace{5ex}
+\bibliographystyle{plainnat}
+\bibliography{reference}
+
+\clearpage
+\appendix
+\renewcommand{\appendixpagename}{\centering \huge Appendix}
+\appendixpage
+\counterwithin{theorem}{section}
+\startcontents[section]
+\printcontents[section]{l}{1}{\setcounter{tocdepth}{2}}
+\clearpage
+\input{contents/appendix.tex}
+
+\end{document}

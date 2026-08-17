@@ -1,0 +1,202 @@
+\section{Results}
+
+All comparisons are paired $t$-tests across random seeds. Where a result is
+described as \emph{replicated}, it was re-run on a seed set disjoint from
+the one used to discover it.
+
+\subsection{Graph structure improves classification, robustly}
+Table~\ref{tab:periods} reports seven \emph{non-overlapping} evaluation
+windows, each trained only on prior data and evaluated on the following
+${\sim}15$ months. Graph structure improves per-date macro-F1 in
+\textbf{7 of 7 windows} ($t=+11.67$), spanning the COVID drawdown, the 2022
+bear market, and two recoveries. This is the most reproducible result in
+the study and is not period-dependent.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lccc}
+\toprule
+Evaluation window & macro-F1 $\Delta$ & tail-F1 $\Delta$ & LS spread $\Delta$ \\
+\midrule
+2016Q4--2017 & $+0.0209$ & $+0.0253$ & $-14.33$\,bp \\
+2017Q4--2018 & $+0.0177$ & $+0.0192$ & $-12.09$\,bp \\
+2018Q4--2019 & $+0.0218$ & $+0.0053$ & $-10.02$\,bp \\
+2019Q4--2020 & $+0.0182$ & $+0.0019$ & $-12.46$\,bp \\
+2020Q4--2021 & $+0.0163$ & $-0.0039$ & $-10.45$\,bp \\
+2021Q4--2022 & $+0.0307$ & $+0.0048$ & $+5.69$\,bp \\
+2022Q4--2024 & $+0.0216$ & $-0.0086$ & $-3.97$\,bp \\
+\midrule
+Graph wins & \textbf{7/7} & 5/7 & \textbf{1/7} \\
+Mean ($t$, df$=6$) & $\mathbf{+0.0210}$ $(+11.67)$ & $+0.0063$ $(+1.38)$ & $\mathbf{-8.23}$\,bp $(-3.13)$ \\
+\bottomrule
+\end{tabular}
+\caption{Sub-industry graph minus no-graph across seven independent windows,
+3 seeds each. Classification improves everywhere; realised long-short spread
+is worse almost everywhere.}
+\label{tab:periods}
+\end{table}
+
+\subsection{Partition granularity: a step, not a gradient}
+Table~\ref{tab:granularity} walks the graph partition down the GICS
+hierarchy on \textbf{ten seeds disjoint from all other results}. Moving from
+sector-level grouping to any finer partition improves tail-F1 by
+${\approx}0.018$ ($p<.001$); beyond industry-group level the benefit
+\emph{saturates}, with industry-group, industry and sub-industry
+statistically indistinguishable. Notably this is the one effect in the
+study that is \emph{larger and more significant on tail-F1 than on
+macro-F1}, i.e.\ on the part of the distribution a portfolio actually uses.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcccc}
+\toprule
+Partition & Edges & macro-F1 & tail-F1 & vs.\ sector (tail-F1) \\
+\midrule
+Sector (11) & 25{,}782 & $0.3664$ & $0.2344$ & --- \\
+Industry group (25) & 12{,}268 & $0.3728$ & $0.2524$ & $+0.0180$, $p<.01$ \\
+Industry (67) & 5{,}904 & $0.3722$ & $0.2528$ & $+0.0184$, $p<.001$ \\
+Sub-industry (124) & 3{,}548 & $0.3740$ & $0.2526$ & $+0.0183$, $p<.001$ \\
+\bottomrule
+\end{tabular}
+\caption{Granularity, $n=10$ disjoint seeds. Finer partitions use
+\emph{fewer} edges, so the mechanism is grouping precision, not connectivity.
+The effect saturates by ${\sim}25$ groups.}
+\label{tab:granularity}
+\end{table}
+
+An earlier version of this study reported a \emph{monotone} gradient with
+fineness ($+0.0090$ macro-F1, $p<.05$, $n=5$). That did not replicate:
+run-to-run nondeterminism alone moves the comparison between $p<.05$ and
+non-significance. We report the step-function result because it survives
+independent replication.
+
+\subsection{Proprietary relationship data carries no premium}
+With a genuine sector graph as the comparison, a graph built from Bloomberg
+supplier/customer and institutional-holder relationships is statistically
+indistinguishable from one built from free GICS labels
+($\Delta = +0.0033$, $t=0.82$, n.s.), while both beat no-graph
+($p<.001$ and $p<.01$). Supplier/customer edges recover ${\sim}90\%$ of the
+proprietary graph's gain; institutional-holder overlap and rolling
+return-correlation graphs add nothing ($\Delta = -0.006$ and $-0.005$, both
+n.s.).
+
+We note that an earlier version of this study reached the opposite
+conclusion because its ``sector proxy'' baseline was, through a labelling
+error, a random block graph. Against random edges the proprietary premium
+appears significant ($p<.05$); against a real sector partition it vanishes.
+We report this because validating relationship data against degenerate
+proxies is a plausible failure mode elsewhere in this literature.
+
+\subsection{The classification advantage does not become portfolio performance}
+A Markowitz mean-variance layer converts predictions to portfolios
+(long top-quintile / short bottom-quintile, dollar-neutral, gross cap 2.0,
+5\,bps costs, 5-day rebalance). On an adequately powered window
+(383 rebalances) the graph signals \emph{underperform} an identical
+no-graph portfolio: sub-industry Sharpe $0.174$ vs.\ $1.117$
+($\Delta=-0.94$, $p<.01$); Bloomberg $0.716$ ($\Delta=-0.40$, $p<.05$).
+
+The shortfall is not a transaction-cost effect. Decomposing gross of costs,
+the per-period gross-return gap is $-44.4$\,bp against a cost gap of
+$+5.0$\,bp, so costs explain ${\sim}10\%$. Neither signal shrinkage
+($\lambda: 0 \to 0.95$, Sharpe $0.431 \to 0.444$, n.s.) nor a
+transaction-cost-aware turnover penalty (turnover $1.489 \to 1.340$ but
+Sharpe $0.438 \to 0.357$, $p<.05$) recovers performance. Consistent with
+\citet{michaud1989markowitz}, equal-weight sizing of the \emph{same} picks
+exhibits $3.4\times$ lower seed variance than mean-variance sizing
+($0.31$ vs.\ $1.07$), and every configuration --- including no-graph ---
+concentrates ${\sim}50\%$ of gross exposure in a single sub-industry.
+
+\subsection{Mechanism: the advantage lives where portfolios cannot reach}
+Per-class F1 resolves the paradox (Table~\ref{tab:perclass}). Both graph
+models' macro-F1 advantage comes almost entirely from the \textbf{Neutral}
+class --- 60\% of the probability mass, and the one region a quintile
+long-short book never trades --- while tail accuracy is flat-to-worse. The
+realised long-short spread orders exactly as portfolio Sharpe does:
+$6.0 < 7.4 < 9.7$\,bp against Sharpe $0.174 < 0.716 < 1.117$.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcccc}
+\toprule
+Signal & Down F1 & Neutral F1 & Up F1 & LS spread \\
+\midrule
+Sub-industry & $0.2579$ & $\mathbf{0.5852}$ & $0.2355$ & $6.0$\,bp \\
+Bloomberg & $0.2118$ & $\mathbf{0.5795}$ & $0.2817$ & $7.4$\,bp \\
+No graph & $0.2298$ & $0.5472$ & $0.2774$ & $\mathbf{9.7}$\,bp \\
+\bottomrule
+\end{tabular}
+\caption{Per-class F1, long out-of-sample. Graph gains concentrate in
+Neutral ($+0.032$ to $+0.038$); tail F1 is slightly worse ($-0.007$).}
+\label{tab:perclass}
+\end{table}
+
+We tested and rejected three alternative mechanisms: transaction costs
+(above); \emph{signal smoothing}, where within-group variance shares were
+non-monotonic across configurations and inside noise; and \emph{portfolio
+concentration}, where group Herfindahl indices were near-identical
+($0.499$/$0.497$/$0.542$), with the no-graph book marginally the most
+concentrated.
+
+\subsection{Robustness}
+The static supply-chain snapshot induces look-ahead whose severity scales
+with distance from the pull date. If contamination drove the results, the
+graph advantage should shrink as evaluation approaches the snapshot; it does
+the opposite, being smallest in the most-contaminated window (2017,
+$+0.0096$) and largest and tightest in the cleanest (2024, $+0.0192$,
+$t=+19.7$). We therefore attribute the signal to persistent relationships,
+for which a stale snapshot is a serviceable proxy.
+
+Two quantities in this study are large relative to the effects measured:
+run-to-run nondeterminism (which alone flips the granularity gradient
+between $p<.05$ and n.s.) and evaluation-window choice (single-window
+long-short spread estimates swing ${\sim}16$\,bp between runs of an
+identical configuration). We accordingly report multi-window aggregates and
+disjoint-seed replications throughout, and treat single-window or
+single-seed comparisons as uninformative.
+
+\subsection{The signal does not survive standard controls}
+Table~\ref{tab:fm} reports Fama--MacBeth cross-sectional regressions of
+forward 5-day returns on the standardised graph signal, with 12--2 momentum,
+one-month reversal, 60-day volatility and GICS-sector fixed effects, averaged
+across dates with Newey--West standard errors (lag 5, matching the overlapping
+horizon). Even uncontrolled the return-predictive content is weak (pooled
+$t=+1.74$, significant in three of seven windows and negative in two), so the
+robust 7/7 macro-F1 result does not correspond to robust return prediction.
+After controls the signal retains 23\% of its univariate magnitude and is not
+significant.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+Evaluation window & Signal alone & $+$ controls $+$ industry FE \\
+\midrule
+2016Q4--2017 & $4.81$\,bp $(t{=}{+}2.57)$ & $2.75$\,bp $(t{=}{+}1.54)$ \\
+2017Q4--2018 & $2.45$\,bp $(t{=}{+}0.88)$ & $-0.09$\,bp $(t{=}{-}0.04)$ \\
+2018Q4--2019 & $3.48$\,bp $(t{=}{+}0.95)$ & $2.08$\,bp $(t{=}{+}0.93)$ \\
+2019Q4--2020 & $9.10$\,bp $(t{=}{+}2.54)$ & $2.06$\,bp $(t{=}{+}0.83)$ \\
+2020Q4--2021 & $-1.25$\,bp $(t{=}{-}0.16)$ & $-1.81$\,bp $(t{=}{-}0.33)$ \\
+2021Q4--2022 & $-5.78$\,bp $(t{=}{-}0.87)$ & $-3.50$\,bp $(t{=}{-}0.95)$ \\
+2022Q4--2024 & $5.30$\,bp $(t{=}{+}2.78)$ & $2.05$\,bp $(t{=}{+}2.15)$ \\
+\midrule
+\textbf{Pooled} & $\mathbf{2.88}$\,bp $(t{=}{+}1.74)$ & $\mathbf{0.67}$\,bp $(t{=}{+}0.64)$ \\
+\bottomrule
+\end{tabular}
+\caption{Fama--MacBeth coefficients on the standardised graph signal,
+bp per 5-day period, 707 cross-sectional regressions. Industry fixed effects
+implemented as within-sector demeaning, so the coefficient is identified off
+within-industry variation.}
+\label{tab:fm}
+\end{table}
+
+Because the industry fixed effect is within-sector demeaning, this also
+localises the signal: its predictive content is largely \emph{between}
+industries, not within them. Message passing ranks whole peer groups well ---
+which registers as macro-F1, concentrated in the Neutral class --- but does not
+separate stocks inside a group, which is what a quintile book requires; and
+group-level prediction is in turn largely subsumed by industry momentum.
+
+Size and book-to-market are not controlled for, as neither is available in our
+data. We note the direction of that limitation: the signal already fails
+against a partial control set, so additional controls can only reduce it
+further, not restore it.

@@ -1,0 +1,29 @@
+# Paper draft
+
+LaTeX source for the write-up. Kept in the repo so the paper is versioned
+alongside the results it cites.
+
+| File | Contents |
+|---|---|
+| `main.tex` | Full document: title, abstract, introduction, method, conclusion. `\input`s `results_section.tex`. |
+| `results_section.tex` | Results, including the Fama-MacBeth control subsection. |
+| `reference.bib` | Bibliography entries (Cohen & Frazzini 2008, Michaud 1989, Hoberg & Phillips 2016, Fanshawe et al. 2026). |
+
+## Syncing with Overleaf
+
+The Overleaf project has no Git integration, so this is a manual round-trip:
+
+- **Repo → Overleaf**: upload/replace `main.tex`, `results_section.tex` and
+  merge `reference.bib` into the project's existing `reference.bib`.
+- **Overleaf → repo**: Menu → Download → Source (.zip), then copy the `.tex`
+  files back here and commit.
+
+`main.tex` expects two files that live only in the Overleaf project and are
+not committed here: the `airesearch` document class and
+`contents/appendix.tex`. It will not compile standalone without them.
+
+## Keeping numbers in sync
+
+Every figure quoted in the draft comes from `RESULTS.md` in the repository
+root, which is generated from the raw JSON in `results/`. If a result changes,
+update `RESULTS.md` first, then the draft — not the other way round.
