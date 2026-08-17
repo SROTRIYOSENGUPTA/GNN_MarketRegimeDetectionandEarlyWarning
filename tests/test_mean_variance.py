@@ -75,3 +75,41 @@ def test_optimize_weights_respects_allowed_sign():
     assert abs(w[1]) < 1e-6
     assert w[2] <= 1e-8
     assert abs(w[3]) < 1e-6
+
+
+def test_turnover_penalty_reduces_trading():
+    rng = np.random.default_rng(3)
+    n = 6
+    cov = np.eye(n) * 0.01
+    w_prev = rng.normal(scale=0.2, size=n)
+    mu = rng.normal(scale=0.01, size=n)
+    free = optimize_weights(mu, cov, risk_aversion=1.0, gross_cap=2.0,
+                            dollar_neutral=True)
+    pen = optimize_weights(mu, cov, risk_aversion=1.0, gross_cap=2.0,
+                           dollar_neutral=True,
+                           turnover_penalty=0.05, w_prev=w_prev)
+    turn_free = np.abs(free - w_prev).sum()
+    turn_pen = np.abs(pen - w_prev).sum()
+    assert turn_pen < turn_free
+
+
+def test_huge_turnover_penalty_pins_to_prev():
+    n = 4
+    cov = np.eye(n) * 0.01
+    w_prev = np.array([0.3, -0.3, 0.2, -0.2])
+    mu = np.array([0.01, -0.01, 0.005, -0.005])
+    w = optimize_weights(mu, cov, risk_aversion=1.0, gross_cap=2.0,
+                         dollar_neutral=True,
+                         turnover_penalty=1e3, w_prev=w_prev)
+    np.testing.assert_allclose(w, w_prev, atol=1e-4)
+
+
+def test_zero_penalty_matches_unpenalized():
+    rng = np.random.default_rng(4)
+    n = 5
+    cov = np.eye(n) * 0.02
+    mu = rng.normal(scale=0.01, size=n)
+    a = optimize_weights(mu, cov, risk_aversion=1.0, gross_cap=2.0, dollar_neutral=True)
+    b = optimize_weights(mu, cov, risk_aversion=1.0, gross_cap=2.0, dollar_neutral=True,
+                         turnover_penalty=0.0, w_prev=np.ones(n))
+    np.testing.assert_allclose(a, b, atol=1e-6)

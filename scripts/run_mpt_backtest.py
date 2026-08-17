@@ -74,12 +74,14 @@ def rets_window_before(rets_hist, hist_dates, target_date, window):
     return rets_hist[lo:idx]
 
 
-def size_portfolio(mu_k, cov, sizing, gross_cap, dollar_neutral):
+def size_portfolio(mu_k, cov, sizing, gross_cap, dollar_neutral,
+                   turnover_penalty=0.0, w_prev=None):
     direction = quintile_direction(mu_k)
     if sizing == "mean_variance":
         return optimize_weights(
             mu_k, cov, risk_aversion=1.0, gross_cap=gross_cap,
             dollar_neutral=dollar_neutral, allowed_sign=direction,
+            turnover_penalty=turnover_penalty, w_prev=w_prev,
         )
     if sizing == "equal_weight_picks":
         w = np.zeros_like(mu_k)
@@ -102,7 +104,7 @@ def infer_periods_per_year(val_dates):
 
 def run_config(name, mu_all, cov_window, sizing, rets_hist, hist_dates,
                val_dates, val_fwd_ret, shrinkage, gross_cap, dollar_neutral,
-               cost_bps):
+               cost_bps, turnover_penalty=0.0):
     hist_dates_dt = np.array(hist_dates, dtype="datetime64[D]")
     val_dates_dt = np.array(val_dates, dtype="datetime64[D]")
     n_periods, n_assets = val_fwd_ret.shape
@@ -119,7 +121,8 @@ def run_config(name, mu_all, cov_window, sizing, rets_hist, hist_dates,
         else:
             rw = rets_window_before(rets_hist, hist_dates_dt, val_dates_dt[k], cov_window)
             cov = estimate_covariance(rw)
-            w = size_portfolio(mu_k, cov, sizing, gross_cap, dollar_neutral)
+            w = size_portfolio(mu_k, cov, sizing, gross_cap, dollar_neutral,
+                               turnover_penalty=turnover_penalty, w_prev=prev_w)
 
         turnover = float(np.abs(w - prev_w).sum())
         gross_return = float(w @ val_fwd_ret[k])
@@ -174,6 +177,11 @@ def main():
     p.add_argument("--gross-cap", type=float, default=2.0)
     p.add_argument("--dollar-neutral", action="store_true", default=True)
     p.add_argument("--cost-bps", type=float, default=5.0)
+    p.add_argument("--turnover-penalty", type=float, default=0.0,
+                    help="lambda on ||w - w_prev||_1 inside the MV objective "
+                         "(transaction-cost-aware Markowitz). Set to cost_bps/1e4 "
+                         "to make the optimizer internalize the trading cost it "
+                         "is charged externally. 0 disables (default).")
     args = p.parse_args()
 
     main_bundle = load_bundle(args.predictions)
@@ -206,6 +214,7 @@ def main():
             main_bundle["val_dates"], main_bundle["val_fwd_ret"],
             shrinkage=args.shrinkage, gross_cap=args.gross_cap,
             dollar_neutral=args.dollar_neutral, cost_bps=args.cost_bps,
+            turnover_penalty=args.turnover_penalty,
         )
         r = results[cfg["name"]]
         print(f"  sharpe={r['sharpe']:.3f} sortino={r['sortino']:.3f} "
@@ -221,6 +230,7 @@ def main():
         "gross_cap": args.gross_cap,
         "dollar_neutral": args.dollar_neutral,
         "cost_bps": args.cost_bps,
+        "turnover_penalty": args.turnover_penalty,
         "configs": results,
     }, indent=2))
     print(f"wrote {out_path}", flush=True)

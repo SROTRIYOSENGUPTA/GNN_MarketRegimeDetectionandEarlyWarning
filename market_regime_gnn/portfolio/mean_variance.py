@@ -69,24 +69,37 @@ def optimize_weights(
     gross_cap: float | None = None,
     dollar_neutral: bool = False,
     allowed_sign: np.ndarray | None = None,
+    turnover_penalty: float = 0.0,
+    w_prev: np.ndarray | None = None,
 ) -> np.ndarray:
-    """Solve max_w  mu.w - (risk_aversion/2) w.cov.w subject to optional constraints.
+    """Solve max_w  mu.w - (risk_aversion/2) w.cov.w - lambda ||w - w_prev||_1.
 
-    With no constraints this reduces to the closed-form classic Markowitz
-    solution w* = cov^-1 mu / risk_aversion (used directly, and as the
-    reference solution in tests). Any constraint (gross exposure cap,
-    dollar-neutrality, or long/short/exclude direction bounds — e.g. from
-    `quintile_direction`) routes to a convex solve via cvxpy.
+    With no constraints and no turnover penalty this reduces to the
+    closed-form classic Markowitz solution w* = cov^-1 mu / risk_aversion
+    (used directly, and as the reference solution in tests). Any constraint
+    (gross exposure cap, dollar-neutrality, or long/short/exclude direction
+    bounds — e.g. from `quintile_direction`) or a nonzero turnover penalty
+    routes to a convex solve via cvxpy.
+
+    The turnover term is transaction-cost-aware Markowitz: with lambda set
+    to the per-unit-turnover cost (e.g. 5bps -> 0.0005), the optimizer only
+    trades when the expected mean-variance improvement exceeds the cost of
+    getting there from `w_prev`.
     """
     n = mu.shape[0]
-    unconstrained = gross_cap is None and not dollar_neutral and allowed_sign is None
+    penalized = turnover_penalty > 0.0 and w_prev is not None
+    unconstrained = (gross_cap is None and not dollar_neutral
+                     and allowed_sign is None and not penalized)
     if unconstrained:
         return np.linalg.solve(cov, mu) / risk_aversion
 
     import cvxpy as cp
 
     w = cp.Variable(n)
-    objective = cp.Maximize(mu @ w - (risk_aversion / 2) * cp.quad_form(w, cp.psd_wrap(cov)))
+    obj = mu @ w - (risk_aversion / 2) * cp.quad_form(w, cp.psd_wrap(cov))
+    if penalized:
+        obj = obj - turnover_penalty * cp.norm(w - w_prev, 1)
+    objective = cp.Maximize(obj)
     constraints = []
     if dollar_neutral:
         constraints.append(cp.sum(w) == 0)
