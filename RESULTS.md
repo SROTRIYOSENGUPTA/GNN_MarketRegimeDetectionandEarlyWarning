@@ -163,17 +163,50 @@ gained +0.0135 from receiving real labels.
 
 ---
 
-## 4. Finding 2 — the granularity gradient (n=5)
+## 4. Finding 2 — partition granularity: a step, not a gradient (n=10, replicated)
 
-Walking the same-group graph down the GICS hierarchy
-(`results/granularity/`):
+Walking the same-group graph down the GICS hierarchy. The table below uses
+**10 seeds disjoint from all other results in this document**
+(`results/seedsweep/`), so it is an independent replication rather than an
+extension of the original n=5 run in `results/granularity/`.
 
-| Graph partition | Same-group edges | mean | std | vs sector | t | *p* |
-|---|---|---|---|---|---|---|
-| Sector (11 groups) | 25,782 | 0.3689 | 0.0064 | — | — | — |
-| Industry group (25) | 12,268 | 0.3750 | 0.0025 | +0.0061 | +1.92 | < .20 |
-| Industry (67) | 5,904 | 0.3753 | 0.0033 | +0.0064 | +2.94 | **< .05** |
-| **Sub-industry (124)** | **3,548** | **0.3779** | **0.0027** | **+0.0090** | **+3.68** | **< .05** |
+| Graph partition | Same-group edges | macro-F1 | **tail-F1** | LS spread |
+|---|---|---|---|---|
+| Sector (11 groups) | 25,782 | 0.3664 ± 0.0094 | **0.2344 ± 0.0114** | 10.78 ± 4.02 |
+| Industry group (25) | 12,268 | 0.3728 ± 0.0032 | **0.2524 ± 0.0113** | 10.89 ± 4.74 |
+| Industry (67) | 5,904 | 0.3722 ± 0.0017 | **0.2528 ± 0.0040** | 11.86 ± 5.73 |
+| Sub-industry (124) | 3,548 | 0.3740 ± 0.0042 | **0.2526 ± 0.0064** | 11.69 ± 4.49 |
+
+**Paired tests vs sector (n=10, df=9):**
+
+| Partition | macro-F1 | **tail-F1** | LS spread |
+|---|---|---|---|
+| Industry group (25) | +0.0063, *p* < .05 | **+0.0180, *p* < .01** | +0.11, n.s. |
+| Industry (67) | +0.0058, n.s. | **+0.0184, *p* < .001** | +1.07, n.s. |
+| Sub-industry (124) | +0.0076, *p* < .05 | **+0.0183, *p* < .001** | +0.90, n.s. |
+
+**This is a step function, not a gradient.** An earlier version of this
+section reported a monotone rise with fineness (+0.0090 macro-F1
+sector→sub-industry, *p* < .05, n=5). That does not replicate. On disjoint
+seeds, industry-group, industry and sub-industry are statistically
+indistinguishable from one another (tail-F1 0.2524 / 0.2528 / 0.2526);
+what is robust is the **jump from sector to anything finer**, after which
+the benefit saturates by roughly 25 groups.
+
+Two things make this the strongest positive result in the project. First,
+it replicates on fully disjoint seeds. Second, it is **larger and far more
+significant on tail-F1 (+0.018, *p* < .001) than on macro-F1 (+0.006 to
++0.008, *p* < .05)** — the only finding here that looks better on the
+portfolio-relevant metric than on the misleading one (cf. Finding 7).
+
+Granularity does **not** affect realised long-short spread at any level
+(all n.s.), so better tail ranking still does not become tradeable
+performance.
+
+For reference, the original n=5 run (`results/granularity/`, macro-F1
+only) gave sector 0.3689 → sub-industry 0.3779. Run-to-run CUDA
+nondeterminism alone moves this comparison between *p* < .05 and n.s.,
+which is why the 10-seed replication is the number to cite.
 
 **Headline comparison** — the free sub-industry graph vs the proprietary
 Bloomberg graph:
@@ -196,15 +229,12 @@ decisive; the 5/5 seed sweep and the monotone gradient are the stronger
 evidence. Treat "sub-industry ≥ Bloomberg" as established and
 "sub-industry > Bloomberg" as likely but not yet conclusive.
 
-> **Important caveat (see Finding 7).** This gradient is measured in
-> macro-F1, which averages Down/Neutral/Up equally. Finding 7 shows the
-> graph models' accuracy gain is concentrated in the **Neutral** class —
-> the 60% of the distribution a quintile long-short portfolio never
-> trades — while tail accuracy is flat-to-worse. The gradient reported
-> here is therefore a statement about macro-F1, **not** evidence of
-> tradeable signal. A re-measurement on tail-F1 and realised long-short
-> spread is in progress; this section should be read alongside Finding 7
-> until it lands.
+> **Resolved caveat.** An earlier revision flagged that this section was
+> measured only in macro-F1, which Finding 7 shows rewards the untradeable
+> Neutral class. The tail-F1 and long-short-spread columns above are that
+> re-measurement. Outcome: the granularity effect **does** hold on
+> tail-F1, and more strongly than on macro-F1 — but it does **not** reach
+> realised spread. Read alongside Findings 7 and 8.
 
 ---
 
@@ -386,7 +416,46 @@ the most concentrated.
 
 ---
 
-## 10. Revised headline claim
+## 10. Finding 8 — period sweep: what survives across independent windows
+
+The single strongest robustness test in the project
+(`results/periods/`): seven **non-overlapping** evaluation windows, each
+training only on prior data and evaluating the following ~15 months, so
+each is an independent read. Sub-industry graph vs no-graph, 3 seeds each.
+
+| Eval window | macro-F1 Δ | tail-F1 Δ | LS spread Δ |
+|---|---|---|---|
+| 2016Q4–2017 | +0.0209 | +0.0253 | −14.33 bp |
+| 2017Q4–2018 | +0.0177 | +0.0192 | −12.09 bp |
+| 2018Q4–2019 | +0.0218 | +0.0053 | −10.02 bp |
+| 2019Q4–2020 | +0.0182 | +0.0019 | −12.46 bp |
+| 2020Q4–2021 | +0.0163 | −0.0039 | −10.45 bp |
+| 2021Q4–2022 | +0.0307 | +0.0048 | +5.69 bp |
+| 2022Q4–2024 | +0.0216 | −0.0086 | −3.97 bp |
+| **Graph wins** | **7/7** | 5/7 | **1/7** |
+| **Mean (t, df=6)** | **+0.0210 (t=+11.67)** | +0.0063 (t=+1.38, n.s.) | **−8.23 bp (t=−3.13, *p* < .05)** |
+
+Three conclusions, each now robust across independent periods:
+
+1. **Graph structure improves macro-F1 in 7/7 windows** (t = +11.67), through
+   COVID, the 2022 drawdown, and two recoveries. Not period-dependent.
+2. The **tail-F1 advantage of graph-vs-no-graph is not robust** (5/7,
+   n.s.) — distinct from Finding 2, where finer-vs-coarser *partitions*
+   robustly improve tail-F1. Having a graph is not the same intervention
+   as choosing its resolution.
+3. **Long-short spread is reliably worse** (6/7 windows, mean −8.23 bp,
+   *p* < .05).
+
+This also retires an earlier single-window comparison. A standard-OOS
+measurement suggested graph signals produced a far *better* spread
+(sub-industry 14.72 bp vs no-graph 2.52 bp). The identical configuration
+in this sweep gives −3.97 bp. Spread estimates swing ~16 bp between runs
+of the same configuration, so **single-window spread comparisons are not
+informative**; only the multi-window aggregate is.
+
+---
+
+## 11. Revised headline claim
 
 > On a cross-sectional 5-day forward return rank task for S&P 500
 > constituents (2015–2024), graph neural networks over economically
@@ -412,6 +481,31 @@ good as paid supply-chain relationship data for ranking — but neither
 improves a quintile portfolio, because the accuracy they add sits in the
 middle of the distribution rather than the tails. Evaluate cross-sectional
 models on tail metrics, not macro-F1.**
+
+---
+
+## 12. Summary of claim status
+
+Every surviving claim below has been replicated on either disjoint seeds
+or independent time periods. Claims that failed replication are listed so
+the record is auditable.
+
+| Claim | Evidence | Status |
+|---|---|---|
+| Graph structure improves cross-sectional classification | 7/7 independent windows, t = +11.67 | **Robust** |
+| Finer-than-sector partitions improve tail accuracy | +0.018 tail-F1, *p* < .001, 10 disjoint seeds | **Robust** |
+| Benefit saturates by ~25 groups | industry-group ≈ industry ≈ sub-industry (n.s.) | **Robust** |
+| Correlation and holder-overlap edges add nothing | n.s. vs no-graph, n=5 | **Supported** |
+| Supply-chain edges beat a same-granularity public classification | +0.0015, n.s. | **Not supported** |
+| Monotone granularity gradient | did not replicate on disjoint seeds | **Retracted** |
+| Graph signals improve tradeable long-short spread | worse in 6/7 windows, *p* < .05 | **Robustly false** |
+| Look-ahead from the static snapshot explains the results | advantage smallest where contamination worst | **Rejected** |
+
+Mechanism hypotheses tested and rejected: transaction costs (explain ~10%
+of the portfolio shortfall), signal smoothing (non-monotonic, within
+noise), portfolio concentration (identical across configurations).
+Mechanism supported: the accuracy gain concentrates in the Neutral class
+(Finding 7).
 
 ---
 
