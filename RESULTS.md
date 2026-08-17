@@ -38,13 +38,21 @@ All numbers are reproducible from the raw JSON in [`results/`](results/):
 > grouping precision, not connectivity, is the driver. Correlation-only
 > graphs and institutional-holder graphs do not beat no-graph at all. A
 > recency diagnostic shows the static supply-chain snapshot's look-ahead
-> bias does not explain these results. A Markowitz portfolio layer finds no
-> significant risk-adjusted advantage for any signal variant (n=5), with
-> large seed-to-seed instability in the Bloomberg-signal portfolios.
+> bias does not explain these results. **But none of this transfers to
+> portfolios.** On an adequately powered out-of-sample window (383
+> rebalances), mean-variance portfolios built on the graph signals
+> significantly *underperform* an identical no-graph portfolio
+> (sub-industry Δ = −0.94 Sharpe, *p* < .01), gross of transaction costs.
+> Per-class analysis explains why: the graph models' accuracy gain sits
+> almost entirely in the **Neutral** class — 60% of the mass, which a
+> quintile long-short book never trades — while tail accuracy is
+> flat-to-worse and the realised long-short spread falls from 9.7 bp to
+> 6.0 bp per rebalance.
 
 **One-line version:** *partition granularity, not relationship specificity,
-drives graph-based cross-sectional return predictability — and the best
-partition is free.*
+drives graph-based cross-sectional return predictability — the best
+partition is free, and none of it is tradeable, because macro-F1 rewards
+the part of the distribution portfolios cannot touch.*
 
 ---
 
@@ -188,6 +196,16 @@ decisive; the 5/5 seed sweep and the monotone gradient are the stronger
 evidence. Treat "sub-industry ≥ Bloomberg" as established and
 "sub-industry > Bloomberg" as likely but not yet conclusive.
 
+> **Important caveat (see Finding 7).** This gradient is measured in
+> macro-F1, which averages Down/Neutral/Up equally. Finding 7 shows the
+> graph models' accuracy gain is concentrated in the **Neutral** class —
+> the 60% of the distribution a quintile long-short portfolio never
+> trades — while tail accuracy is flat-to-worse. The gradient reported
+> here is therefore a statement about macro-F1, **not** evidence of
+> tradeable signal. A re-measurement on tail-F1 and realised long-short
+> spread is in progress; this section should be read alongside Finding 7
+> until it lands.
+
 ---
 
 ## 5. Finding 3 — edge-source decomposition with real sectors (n=5)
@@ -263,58 +281,137 @@ robustness.
 
 ---
 
-## 8. Finding 6 — no demonstrated portfolio-level value (n=5)
+## 8. Finding 6 — graph signals build *significantly worse* portfolios (n=5)
 
-A Markowitz mean-variance layer on top of the model's predictions
-(`results/mpt_backtest/`, `RESULTS_MPT.md`; μ = P(Up)−P(Down), covariance
+A Markowitz mean-variance layer on the model's predictions
+(`results/mpt_program/`, `RESULTS_MPT.md`; μ = P(Up)−P(Down), covariance
 from rolling correlations, long top-quintile / short bottom-quintile,
-dollar-neutral, gross cap 2.0, 5 bps costs, 5-day rebalance):
+dollar-neutral, gross cap 2.0, 5 bps costs, 5-day rebalance).
 
-| Config | Sharpe mean ± std |
-|---|---|
-| Bloomberg μ + GNN-window Σ, MV | 0.31 ± 1.30 |
-| Bloomberg μ + sample Σ, MV | 0.28 ± 1.31 |
-| No-graph μ + GNN-window Σ, MV | 1.23 ± 0.40 |
-| No-graph μ + sample Σ, MV | 1.31 ± 0.39 |
-| Bloomberg μ, equal-weight picks | 0.76 ± 0.26 |
-| Equal-weight universe | 1.09 ± 0.00 |
+An initial run on the standard split (163 rebalances) found no significant
+differences. That was **underpowered, not neutral**: the standard error of
+a Sharpe estimate over ~2.25 years is roughly ±0.65. Extending the
+out-of-sample window (2019 cutoff, **383 rebalances**) resolves it:
 
-No pairwise comparison is significant at n=5. The robust observation is the
-**instability** of the Bloomberg-signal mean-variance portfolios (per-seed
-Sharpe from −1.39 to +1.78) against tight no-graph variants — a signal that
-does not reproduce across its own seed distribution is not tradeable
-regardless of its mean. An earlier n=3 claim of significant Bloomberg
-*under*performance did not replicate at n=5 and is retracted.
+| Signal | MV Sharpe (n=5) | vs no-graph | *p* |
+|---|---|---|---|
+| Sub-industry (best classifier) | 0.174 ± 0.368 | −0.943 | **< .01** |
+| Bloomberg | 0.716 ± 0.205 | −0.400 | **< .05** |
+| No-graph | 1.117 ± — | — | — |
 
-Classification-level accuracy differences in Findings 1–4 therefore do not
-(yet) translate into demonstrated economic value. Candidate mitigations —
-turnover penalties, stronger shrinkage, coarser rebalancing — are untested.
+**Both graph signals significantly underperform the no-graph signal**, and
+the best classifier produces the worst portfolio. An earlier n=3 claim of
+significant Bloomberg underperformance, later retracted when it failed to
+replicate at n=5 on the short window, is reinstated on the powered test.
+
+**It is not a transaction-cost effect.** Decomposing gross vs net:
+
+| Signal | Gross Sharpe | Net Sharpe | Cost drag | Turnover |
+|---|---|---|---|---|
+| Sub-industry | +0.257 | +0.144 | 8.4 bp | 1.678 |
+| Bloomberg | +0.657 | +0.595 | 4.5 bp | 0.904 |
+| No-graph | +0.982 | +0.928 | 3.4 bp | 0.682 |
+
+The per-period gross-return gap is −44.4 bp against a cost gap of +5.0 bp,
+so **costs explain ~10%** of the shortfall (sub-industry vs no-graph gross:
+*p* < .05). The graph signals build worse portfolios before any friction;
+turnover is a symptom, not the cause.
+
+Three further interventions were tested and none rescues performance:
+a **shrinkage sweep** (λ = 0 → 0.95) moves Sharpe 0.431 → 0.444 (n.s.) and
+seed-std only 1.066 → 1.007 — scalar shrinkage leaves the quintile ranking
+unchanged, so it cannot bind; a **turnover penalty** at 5 bps cuts turnover
+1.489 → 1.340 but also Sharpe 0.438 → 0.357 (*p* < .05); and **equal-weight
+sizing** of the same picks has 3.4× lower seed-variance than mean-variance
+sizing (0.31 vs 1.07), which is where Michaud (1989) error-maximisation
+actually shows up in this study. Incidentally, *every* configuration —
+including no-graph — concentrates ~50% of gross exposure in a single
+sub-industry and holds ~2 effective groups out of 125, a property of
+gross-capped mean-variance optimisation itself.
 
 ---
 
-## 9. Revised headline claim
+## 9. Finding 7 — mechanism: the advantage lives in the untradeable class
+
+Per-class F1 on the long OOS (`results/attribution/per_class_f1.txt`)
+explains the reversal:
+
+| Signal | Down F1 | **Neutral F1** | Up F1 | macro | **tails avg** |
+|---|---|---|---|---|---|
+| Sub-industry | 0.2579 | **0.5852** | 0.2355 | 0.3595 | 0.2467 |
+| Bloomberg | 0.2118 | **0.5795** | 0.2817 | 0.3577 | 0.2467 |
+| No-graph | 0.2298 | 0.5472 | 0.2774 | 0.3515 | **0.2536** |
+
+Deltas vs no-graph: sub-industry Neutral **+0.0380**, tails **−0.0069**;
+Bloomberg Neutral **+0.0323**, tails **−0.0068**.
+
+Both graph models' macro-F1 advantage comes almost entirely from the
+**Neutral** class — 60% of the probability mass, and the one region a
+quintile long-short book never trades. On the tails, the only part the
+portfolio touches, both are slightly *worse*.
+
+The portfolio-relevant metrics agree, and order identically to the Sharpes:
+
+| Signal | Top-Q precision | Bottom-Q precision | **LS spread/period** |
+|---|---|---|---|
+| Sub-industry | 21.7% | 20.3% | **6.0 bp** |
+| Bloomberg | 20.9% | 21.2% | **7.4 bp** |
+| No-graph | 21.8% | 21.7% | **9.7 bp** |
+
+```
+LS spread  6.0bp  <  7.4bp  <  9.7bp
+MV Sharpe  0.174  <  0.716  <  1.117
+```
+
+**Full causal chain:** graph structure raises macro-F1 → the gain sits in
+Neutral → tail precision is flat-to-worse → realised long-short spread
+shrinks → portfolios underperform gross of costs → higher turnover adds a
+further ~10%.
+
+**Methodological implication.** macro-F1 rewards precisely the part of the
+cross-sectional distribution a quintile portfolio cannot trade. Every
+classification result in Findings 1–4, including the granularity gradient,
+is measured in macro-F1 and therefore **may not carry portfolio
+relevance**. A re-measurement of the gradient on tail-F1 and long-short
+spread is in progress; until it lands, Finding 2 should be read as a
+statement about macro-F1 specifically, not about tradeable signal.
+
+For transparency, three mechanism hypotheses were tested and **rejected**
+before this one (`results/attribution/weight_attribution.txt`):
+transaction costs (above); *signal smoothing* — within-sub-industry share
+of μ variance is 0.444 (sub-industry) vs 0.480 (no-graph) vs 0.569
+(Bloomberg), non-monotonic and inside noise; and *portfolio concentration*
+— group HHI 0.499 / 0.497 / 0.542 respectively, with no-graph marginally
+the most concentrated.
+
+---
+
+## 10. Revised headline claim
 
 > On a cross-sectional 5-day forward return rank task for S&P 500
 > constituents (2015–2024), graph neural networks over economically
 > meaningful firm groupings significantly improve per-date macro-F1 over
-> no-graph and correlation-graph baselines (*p* < .001). The improvement is
-> driven by partition granularity rather than relationship specificity:
-> performance rises monotonically from sector- to sub-industry-level
-> groupings even as graph density falls 7×, and a graph built from free
-> GICS sub-industry labels matches or exceeds one built from proprietary
-> Bloomberg supplier/customer relationships on every seed tested.
-> Supply-chain edges recover ~90% of the full proprietary graph's gain but
-> provide no measurable premium over a same-granularity public
-> classification; institutional-holder overlap and rolling correlation
-> graphs provide no gain at all. A recency diagnostic indicates these
-> results are not explained by the static supply-chain snapshot's
-> look-ahead bias. A mean-variance portfolio layer finds no significant
-> risk-adjusted advantage for any variant, with marked seed instability in
-> the proprietary-signal portfolios.
+> no-graph and correlation-graph baselines (*p* < .001), driven by
+> partition granularity rather than relationship specificity: performance
+> rises monotonically from sector- to sub-industry-level groupings even as
+> graph density falls 7×, and a free GICS sub-industry graph matches or
+> exceeds a proprietary Bloomberg supplier/customer graph on every seed.
+> **However, this classification advantage does not transfer to
+> portfolios — it reverses.** On an adequately powered out-of-sample
+> window (383 rebalances), mean-variance portfolios built on the graph
+> signals significantly underperform an otherwise identical no-graph
+> portfolio (sub-industry Δ = −0.94 Sharpe, *p* < .01), and the shortfall
+> is present gross of transaction costs. Per-class analysis identifies the
+> cause: the graph models' accuracy gain is concentrated in the Neutral
+> class, which a quintile long-short book never trades, while tail
+> accuracy is flat-to-worse and the realised long-short spread falls from
+> 9.7 bp to 6.0 bp per rebalance.
 
-**Practitioner summary: for cross-sectional equity ranking with graph
-models, a free sub-industry classification is at least as good as paid
-supply-chain relationship data, and finer is better.**
+**Practitioner summary: a free sub-industry classification is at least as
+good as paid supply-chain relationship data for ranking — but neither
+improves a quintile portfolio, because the accuracy they add sits in the
+middle of the distribution rather than the tails. Evaluate cross-sectional
+models on tail metrics, not macro-F1.**
 
 ---
 
