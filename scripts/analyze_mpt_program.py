@@ -120,3 +120,60 @@ def main():
 
 if __name__ == "__main__":
     main()
+    decompose_reversal()
+
+
+def decompose_reversal():
+    """Gross-vs-net decomposition: is the portfolio reversal a cost story?
+
+    Answer: no. On the long OOS the graph signals trail no-graph by ~44bp
+    per period in GROSS return while the cost gap is only ~5bp, so costs
+    explain ~10% of the shortfall. The graph signals build portfolios that
+    are worse before a single basis point of trading friction.
+    """
+    import numpy as np
+    print("\n" + "=" * 94)
+    print(" 5. WHY THE REVERSAL? gross-vs-net decomposition (long OOS, n=5)")
+    print("=" * 94)
+
+    def dec(path, cfg):
+        h = json.load(open(path))["configs"][cfg]["history"]
+        g = np.array([x["gross_return"] for x in h])
+        c = np.array([x["cost"] for x in h])
+        n = np.array([x["period_return"] for x in h])
+        t = np.array([x["turnover"] for x in h])
+        ppy = 252 / 5
+        return dict(
+            gross_sharpe=g.mean() / g.std(ddof=1) * np.sqrt(ppy),
+            net_sharpe=n.mean() / n.std(ddof=1) * np.sqrt(ppy),
+            gross_mean=g.mean(), cost_mean=c.mean(),
+            turnover=t.mean(), hit=(g > 0).mean())
+
+    print(f"  {'signal':<16}{'gross Sharpe':>14}{'net Sharpe':>12}{'cost drag':>12}{'turnover':>11}{'hit':>8}")
+    print("  " + "-" * 73)
+    store = {}
+    for nm, pat, cfg in [("sub-industry", "long/subind_s{}.json", MAIN),
+                         ("bloomberg", "long/bloomberg_s{}.json", MAIN),
+                         ("no-graph", "long/subind_s{}.json", NONE_MV)]:
+        rows = [dec(B / pat.format(s), cfg) for s in SEEDS]
+        store[nm] = rows
+        print(f"  {nm:<16}{stats([r['gross_sharpe'] for r in rows])[0]:>+14.3f}"
+              f"{stats([r['net_sharpe'] for r in rows])[0]:>+12.3f}"
+              f"{stats([r['cost_mean'] for r in rows])[0]*1e4:>10.1f}bp"
+              f"{stats([r['turnover'] for r in rows])[0]:>11.3f}"
+              f"{stats([r['hit'] for r in rows])[0]:>8.1%}")
+    print()
+    for a in ("sub-industry", "bloomberg"):
+        d1, t1, p1 = paired_t([r["gross_sharpe"] for r in store[a]],
+                              [r["gross_sharpe"] for r in store["no-graph"]])
+        d2, t2, p2 = paired_t([r["net_sharpe"] for r in store[a]],
+                              [r["net_sharpe"] for r in store["no-graph"]])
+        print(f"  {a:>13} vs no-graph  GROSS: d={d1:+.3f} t={t1:+5.2f} p{p1}"
+              f"   |   NET: d={d2:+.3f} t={t2:+5.2f} p{p2}")
+    gg = (stats([r["gross_mean"] for r in store["sub-industry"]])[0]
+          - stats([r["gross_mean"] for r in store["no-graph"]])[0])
+    cg = (stats([r["cost_mean"] for r in store["sub-industry"]])[0]
+          - stats([r["cost_mean"] for r in store["no-graph"]])[0])
+    print(f"\n  per-period gross-return gap: {gg*1e4:+.1f}bp   cost gap: {cg*1e4:+.1f}bp"
+          f"   -> costs explain {abs(cg)/(abs(cg)+abs(gg)):.0%}")
+    print("  The shortfall is present BEFORE costs. Turnover is a symptom, not the cause.")
