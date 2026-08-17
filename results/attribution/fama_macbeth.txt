@@ -1,0 +1,22 @@
+================================================================================================
+ FAMA-MacBETH — is the graph signal distinct from momentum, reversal, volatility,
+ and industry effects?  (coefficient on standardised signal, bp per 5-day period)
+================================================================================================
+
+  NOTE: size and book-to-market are NOT controlled for (data unavailable).
+  Industry FE = within-GICS-sector demeaning of both y and the signal.
+
+  window                       signal alone      + controls + industry FE
+  -----------------------------------------------------------------------
+  2016Q4-2017              4.81bp (t=+2.57)            2.75bp (t=+1.54)
+  2017Q4-2018              2.45bp (t=+0.88)           -0.09bp (t=-0.04)
+  2018Q4-2019              3.48bp (t=+0.95)            2.08bp (t=+0.93)
+  2019Q4-2020              9.10bp (t=+2.54)            2.06bp (t=+0.83)
+  2020Q4-2021             -1.25bp (t=-0.16)           -1.81bp (t=-0.33)
+  2021Q4-2022             -5.78bp (t=-0.87)           -3.50bp (t=-0.95)
+  2022Q4-2024              5.30bp (t=+2.78)            2.05bp (t=+2.15)
+  -----------------------------------------------------------------------
+  POOLED                   2.88bp (t=+1.74)            0.67bp (t=+0.64)
+
+  pooled n = 707 cross-sectional regressions
+  signal retains 23% of its univariate magnitude after controls
