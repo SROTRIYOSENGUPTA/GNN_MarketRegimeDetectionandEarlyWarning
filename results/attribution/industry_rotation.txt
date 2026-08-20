@@ -1,0 +1,33 @@
+==============================================================================================
+ A. INDUSTRY ROTATION vs STOCK SELECTION — same signal, same dates, 5-day horizon
+==============================================================================================
+
+  window               stock-level LS     industry rotation      difference
+  ------------------------------------------------------------------------
+  2016Q4-2017                14.45bp              10.56bp        -3.89bp
+  2017Q4-2018                 8.34bp               8.46bp         0.12bp
+  2018Q4-2019                10.31bp              10.11bp        -0.21bp
+  2019Q4-2020                25.60bp              13.05bp       -12.55bp
+  2020Q4-2021                -3.79bp             -14.02bp       -10.23bp
+  2021Q4-2022               -17.30bp             -25.93bp        -8.63bp
+  2022Q4-2024                13.95bp              11.89bp        -2.06bp
+  ------------------------------------------------------------------------
+  MEAN                        7.37bp               2.02bp        -5.35bp
+
+  rotation minus stock-level: -5.35bp  t=-2.78  p<.05  (n=7 windows)
+  rotation better in 1/7 windows
+
+==============================================================================================
+ B. HORIZON SWEEP — does a group-level signal need longer to pay off?
+==============================================================================================
+
+    horizon      stock LS     rotation LS    stock rankIC   rotation rankIC
+  -----------------------------------------------------------------------
+        5d       5.75bp         0.10bp          0.0186            0.0172
+       10d      13.99bp         5.08bp          0.0261            0.0231
+       20d      30.32bp         9.53bp          0.0334            0.0287
+       60d      97.03bp        35.62bp          0.0449            0.0414
+
+  rankIC is the Spearman correlation between signal and realised forward
+  return, computed per date then averaged — the standard signal-quality
+  measure, and less tail-sensitive than a quintile spread.
