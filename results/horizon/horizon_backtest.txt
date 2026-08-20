@@ -1,0 +1,27 @@
+================================================================================================
+ PORTFOLIO BACKTEST BY HORIZON — non-overlapping rebalances, equal-weight quintiles
+================================================================================================
+
+   horizon      signal    Sharpe   mean/period   turnover  rebal/yr     n
+  -----------------------------------------------------------------------
+       5d       graph     0.368        2.5bp      0.649      50.4   101
+       5d    no-graph     0.110       -2.3bp      0.404      50.4   101
+      20d       graph     0.653       19.3bp      0.944      12.6    25
+      20d    no-graph     0.713       34.5bp      0.559      12.6    25
+      60d       graph     0.878       91.2bp      1.121       4.2     8
+      60d    no-graph     1.491      148.0bp      0.723       4.2     8
+
+================================================================================================
+ GRAPH minus NO-GRAPH by horizon (paired across window x seed)
+================================================================================================
+
+   horizon    d Sharpe    t (NW)    d turnover
+  --------------------------------------------
+       5d       0.258      1.99         0.245
+      20d      -0.060     -0.32         0.385
+      60d      -0.614     -1.22         0.398
+
+  wrote /tmp/hb.json
+
+  Non-overlapping rebalances: at horizon H the book is held H trading
+  days before trading again, so period returns are independent draws.
