@@ -90,21 +90,88 @@ proxies is a plausible failure mode elsewhere in this literature.
 \subsection{The classification advantage does not become portfolio performance}
 A Markowitz mean-variance layer converts predictions to portfolios
 (long top-quintile / short bottom-quintile, dollar-neutral, gross cap 2.0,
-5\,bps costs, 5-day rebalance). On an adequately powered window
-(383 rebalances) the graph signals \emph{underperform} an identical
-no-graph portfolio: sub-industry Sharpe $0.174$ vs.\ $1.117$
-($\Delta=-0.94$, $p<.01$); Bloomberg $0.716$ ($\Delta=-0.40$, $p<.05$).
+5\,bps costs). On an adequately powered window (383 rebalances) the graph
+signals underperform an identical no-graph portfolio: sub-industry Sharpe
+$0.174$ vs.\ $1.117$ ($\Delta=-0.94$), Bloomberg $0.716$ ($\Delta=-0.40$).
+The shortfall is not a transaction-cost effect --- the per-period
+gross-return gap is $-44.4$\,bp against a cost gap of $+5.0$\,bp, so costs
+explain ${\sim}10\%$. Neither signal shrinkage ($\lambda: 0 \to 0.95$,
+Sharpe $0.431 \to 0.444$, n.s.) nor a transaction-cost-aware turnover
+penalty (turnover $1.489 \to 1.340$ but Sharpe $0.438 \to 0.357$, $p<.05$)
+recovers performance.
 
-The shortfall is not a transaction-cost effect. Decomposing gross of costs,
-the per-period gross-return gap is $-44.4$\,bp against a cost gap of
-$+5.0$\,bp, so costs explain ${\sim}10\%$. Neither signal shrinkage
-($\lambda: 0 \to 0.95$, Sharpe $0.431 \to 0.444$, n.s.) nor a
-transaction-cost-aware turnover penalty (turnover $1.489 \to 1.340$ but
-Sharpe $0.438 \to 0.357$, $p<.05$) recovers performance. Consistent with
-\citet{michaud1989markowitz}, equal-weight sizing of the \emph{same} picks
+\paragraph{The sign is construction-dependent.} We emphasise that this
+result is specific to mean-variance sizing. Re-running with equal-weight
+quintile sizing and non-overlapping rebalances at the \emph{same} 5-day
+horizon reverses it: the graph signal is marginally \emph{better}
+($\Delta = +0.258$ Sharpe, $t=+1.99$). Consistent with
+\citet{michaud1989markowitz}, equal-weight sizing of identical picks
 exhibits $3.4\times$ lower seed variance than mean-variance sizing
-($0.31$ vs.\ $1.07$), and every configuration --- including no-graph ---
-concentrates ${\sim}50\%$ of gross exposure in a single sub-industry.
+($0.31$ vs.\ $1.07$), so at this effect size mean-variance comparisons
+cannot establish direction. Every configuration --- including no-graph ---
+concentrates ${\sim}50\%$ of gross exposure in a single sub-industry and
+holds ${\sim}2$ effective groups out of 125, a property of gross-capped
+mean-variance optimisation itself rather than of any signal.
+
+We therefore do not claim the graph signal is economically harmful. What
+the evidence supports is narrower and, we think, more interesting: a
+robust, replicated classification gain yields \emph{no demonstrable}
+portfolio advantage under any construction we tested.
+
+\subsection{Horizon and holding period}
+Table~\ref{tab:horizon} reports non-overlapping backtests at 5, 20 and 60
+days (hold $H$ days, then trade), equal-weight quintiles, with Newey--West
+standard errors on the paired difference.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lccccc}
+\toprule
+Horizon & Signal & Sharpe & Mean/period & Turnover/yr & $n$ periods \\
+\midrule
+5d & graph & $0.368$ & $2.5$\,bp & $32.7$ & 101 \\
+5d & no-graph & $0.110$ & $-2.3$\,bp & $20.4$ & 101 \\
+20d & graph & $0.653$ & $19.3$\,bp & $11.9$ & 25 \\
+20d & no-graph & $0.713$ & $34.5$\,bp & $7.0$ & 25 \\
+60d & graph & $0.878$ & $91.2$\,bp & $4.7$ & 8 \\
+60d & no-graph & $\mathbf{1.491}$ & $148.0$\,bp & $3.0$ & 8 \\
+\midrule
+\multicolumn{2}{l}{$\Delta$ Sharpe, 5d} & \multicolumn{4}{l}{$+0.258$ $(t{=}{+}1.99)$} \\
+\multicolumn{2}{l}{$\Delta$ Sharpe, 20d} & \multicolumn{4}{l}{$-0.060$ $(t{=}{-}0.32)$} \\
+\multicolumn{2}{l}{$\Delta$ Sharpe, 60d} & \multicolumn{4}{l}{$-0.614$ $(t{=}{-}1.22)$} \\
+\bottomrule
+\end{tabular}
+\caption{Non-overlapping horizon backtests. Absolute performance rises and
+annualised turnover falls ${\sim}7\times$ for both signals; the graph
+advantage does not improve with horizon.}
+\label{tab:horizon}
+\end{table}
+
+Longer holding periods improve absolute performance substantially for
+\emph{both} signals while cutting annualised turnover roughly sevenfold ---
+the cost channel identified above, now acting favourably. But the graph
+advantage does not improve with horizon; it shrinks and changes sign.
+
+Statistical power is the binding constraint here: non-overlapping 60-day
+holds leave only eight periods per window--seed, so a Sharpe standard error
+of roughly $1/\sqrt{8} \approx 0.35$ swamps the $0.614$ gap. Neither the
+20-day nor the 60-day difference is significant, and we do not read the
+point estimates as directional evidence. This is an intrinsic tension in
+horizon selection: longer horizons raise Sharpe but destroy the sample
+needed to verify it.
+
+\paragraph{Industry rotation does not help.} Because the Fama--MacBeth
+results below localise the signal between industries, we tested a
+group-level rotation book (long top-quintile sub-industries, short bottom,
+equal-weighting members within group) against the stock-level book on
+identical predictions. It is significantly \emph{worse} (mean $-5.35$\,bp,
+$t=-2.78$, $p<.05$; better in 1 of 7 windows). The inference from
+between-industry identification to a group-level portfolio is too strong:
+industry fixed effects shrinking a coefficient shows that between-industry
+variation carries signal, not that within-industry variation carries none.
+Aggregating to ${\sim}124$ group means discards real within-group
+information and reduces effective bets from ${\sim}200$ stocks to
+${\sim}50$ groups.
 
 \subsection{Mechanism: the advantage lives where portfolios cannot reach}
 Per-class F1 resolves the paradox (Table~\ref{tab:perclass}). Both graph

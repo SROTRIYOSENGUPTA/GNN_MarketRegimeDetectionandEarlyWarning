@@ -48,21 +48,29 @@ benefit saturates by roughly 25 groups. Proprietary relationship data carries
 no premium --- a graph from free GICS labels is statistically indistinguishable
 from one built on Bloomberg supplier/customer and holder relationships.
 
-None of this becomes portfolio performance. In a Markowitz mean-variance
-portfolio the graph signals significantly \emph{underperform} an identical
-no-graph portfolio ($\Delta=-0.94$ Sharpe, $p<.01$), the shortfall is present
-gross of transaction costs, and realised long-short spread is worse in six of
-seven windows. Two analyses explain the dissociation. Per-class F1 shows the
+None of this demonstrably becomes portfolio performance. Realised long-short
+spread is worse in six of seven windows, and mean-variance portfolios on the
+graph signals underperform an identical no-graph portfolio
+($\Delta=-0.94$ Sharpe). But the sign is construction-dependent --- under
+equal-weight sizing at the same horizon the graph signal is marginally
+\emph{better} ($+0.258$ Sharpe, $t=+1.99$) --- and no construction we tested
+reaches significance once power is accounted for. We therefore do not claim
+the signal is economically harmful, only that a robust classification gain
+yields no demonstrable portfolio advantage. Two analyses explain why any
+advantage is hard to realise. Per-class F1 shows the
 accuracy gain sits almost entirely in the Neutral class --- 60\% of the mass,
 which a quintile long-short book never trades --- while tail accuracy is
 flat-to-worse. Fama--MacBeth regressions show the residual return-predictive
 content does not survive controls for momentum, short-term reversal,
 volatility and industry fixed effects (23\% of univariate magnitude retained,
 pooled $t=+0.64$), and is identified almost entirely \emph{between} industries
-rather than within them. We conclude that balanced classification accuracy
-rewards precisely the region of the cross-sectional distribution portfolios
-cannot access, and that cross-sectional models should be selected on
-tail-region metrics and realised spread rather than macro-F1.
+rather than within them. Extending the holding period to 20 or 60 days raises
+absolute performance sharply and cuts annualised turnover roughly sevenfold
+for both signals, but does not widen the graph's advantage. We conclude that
+balanced classification accuracy rewards precisely the region of the
+cross-sectional distribution portfolios cannot access, and that
+cross-sectional models should be selected on tail-region metrics and realised
+spread rather than macro-F1.
 \end{abstract}
 
 \projectpage{https://github.com/SROTRIYOSENGUPTA/GNN_MarketRegimeDetectionandEarlyWarning}
@@ -105,12 +113,14 @@ Our contributions are:
   degenerate --- in our own earlier analysis a labelling error made it a random
   block graph, against which the proprietary premium appears significant.
 \item \textbf{An accuracy--tradeability dissociation, with mechanism.} The same
-  signals that rank better build significantly worse mean-variance portfolios,
-  gross of costs. Per-class F1 localises the gain to the untradeable Neutral
-  class; Fama--MacBeth regressions show the remainder is subsumed by momentum,
-  reversal and industry effects and is identified between rather than within
-  industries. We test and reject three competing explanations --- transaction
-  costs, signal smoothing, and portfolio concentration.
+  signals that rank better yield no demonstrable portfolio advantage under any
+  construction we tested. Per-class F1 localises the gain to the untradeable
+  Neutral class; Fama--MacBeth regressions show the remainder is subsumed by
+  momentum, reversal and industry effects and is identified between rather
+  than within industries. We test and reject four competing explanations ---
+  transaction costs, signal smoothing, portfolio concentration, and
+  industry-rotation construction --- and show that the direction of the
+  mean-variance comparison is itself sizing-dependent.
 \item \textbf{A quantified warning about evaluation practice.} Run-to-run
   nondeterminism alone moves our granularity comparison between $p<.05$ and
   non-significance, and single-window long-short spread estimates swing
@@ -191,15 +201,22 @@ saturation point around 25 groups. Neither result requires proprietary
 relationship data: free GICS classifications match Bloomberg supplier/customer
 graphs on every comparison we ran.
 
-The same models build significantly worse portfolios. The dissociation is not
-a transaction-cost artifact and is not repaired by shrinkage or turnover
-penalties. Per-class analysis shows the accuracy these models add sits in the
-middle of the cross-sectional distribution, which a quintile long-short book
-never trades, while tail accuracy is flat-to-worse; Fama--MacBeth regressions
-show what predictive content remains is largely subsumed by momentum,
-reversal and industry effects, and lives between industries rather than within
-them. Standard balanced classification metrics therefore reward a region of
-the distribution that portfolio construction cannot reach.
+The same models yield no demonstrable portfolio advantage. Per-class analysis
+shows the accuracy they add sits in the middle of the cross-sectional
+distribution, which a quintile long-short book never trades, while tail
+accuracy is flat-to-worse; Fama--MacBeth regressions show what predictive
+content remains is largely subsumed by momentum, reversal and industry
+effects, and lives between industries rather than within them. Standard
+balanced classification metrics therefore reward a region of the distribution
+that portfolio construction cannot reach.
+
+We are deliberately careful about the strength of this negative claim. The
+mean-variance comparison favours no-graph, but its sign reverses under
+equal-weight sizing, and no construction we tested --- across two sizing
+rules, three horizons, and a group-level rotation book --- reaches
+significance once power is accounted for. The defensible statement is that a
+robust and replicated classification gain does not translate into measurable
+economic value here, not that the signal destroys value.
 
 We draw two implications. For practice, cross-sectional equity models should be
 selected on tail-region metrics and realised long-short spread rather than
@@ -219,8 +236,13 @@ S\&P 500 constituents screened near the snapshot date, and returns exclude
 delisting effects. Size and book-to-market are uncontrolled. Absolute effect
 sizes are modest throughout --- macro-F1 ${\approx}0.37$ against a $0.333$
 chance floor. Finally, our findings concern a 5-day horizon and a
-quintile-based long-short construction; whether the dissociation persists at
-longer horizons or under other portfolio rules is untested.
+quintile-based long-short construction. We test 20- and 60-day horizons and a
+group-level rotation book, but statistical power falls sharply as the holding
+period lengthens --- non-overlapping 60-day holds leave only eight independent
+periods per window--seed --- so those comparisons bound the question rather
+than settle it. Distinguishing a genuinely absent economic effect from one
+too small to detect with roughly a decade of 500-stock data would require
+either a longer sample or a broader universe.
 
 \vspace{5ex}
 \bibliographystyle{plainnat}
