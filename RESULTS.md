@@ -22,6 +22,7 @@ All numbers are reproducible from the raw JSON in [`results/`](results/):
 - `scripts/analyze_recency.py` — Finding 5 (look-ahead diagnostic)
 - `scripts/analyze_per_class.py` — Finding 7 (mechanism)
 - `scripts/analyze_fama_macbeth.py` — Finding 9 (control regressions)
+- `scripts/run_horizon_backtest.py`, `scripts/analyze_industry_rotation.py` — Finding 10
 - `scripts/analyze_results.py` — original tables, walk-forward, MPT backtest
 
 ---
@@ -42,12 +43,15 @@ All numbers are reproducible from the raw JSON in [`results/`](results/):
 > diagnostic shows the static supply-chain snapshot's look-ahead does not
 > explain any of it.
 >
-> **None of this becomes portfolio performance.** On an adequately powered
-> window (383 rebalances) mean-variance portfolios built on the graph
-> signals significantly *underperform* an identical no-graph portfolio
-> (Δ = −0.94 Sharpe, *p* < .01), gross of transaction costs, and realised
-> long-short spread is worse in 6 of 7 windows (*p* < .05). Two analyses
-> explain why. Per-class F1 shows the accuracy gain sits almost entirely
+> **None of this demonstrably becomes portfolio performance.** Realised
+> long-short spread is worse in 6 of 7 windows (*p* < .05), and
+> mean-variance portfolios on the graph signals underperform an identical
+> no-graph portfolio (Δ = −0.94 Sharpe). But the sign is **construction-
+> dependent**: with equal-weight sizing at the same horizon the graph
+> signal is marginally *better* (+0.258 Sharpe, *t* = +1.99), and no
+> construction reaches significance once power is properly accounted for.
+> The tradeability question is **unresolved rather than settled negative**.
+> Two analyses explain why any advantage is hard to realise. Per-class F1 shows the accuracy gain sits almost entirely
 > in the **Neutral** class — 60% of the mass, which a quintile long-short
 > book never trades — while tail accuracy is flat-to-worse. Fama-MacBeth
 > regressions show the residual return-predictive content does not survive
@@ -319,7 +323,7 @@ robustness.
 
 ---
 
-## 8. Finding 6 — graph signals build *significantly worse* portfolios (n=5)
+## 8. Finding 6 — portfolio results are sizing-dependent and underpowered (n=5)
 
 A Markowitz mean-variance layer on the model's predictions
 (`results/mpt_program/`, `RESULTS_MPT.md`; μ = P(Up)−P(Down), covariance
@@ -337,10 +341,19 @@ out-of-sample window (2019 cutoff, **383 rebalances**) resolves it:
 | Bloomberg | 0.716 ± 0.205 | −0.400 | **< .05** |
 | No-graph | 1.117 ± — | — | — |
 
-**Both graph signals significantly underperform the no-graph signal**, and
-the best classifier produces the worst portfolio. An earlier n=3 claim of
-significant Bloomberg underperformance, later retracted when it failed to
-replicate at n=5 on the short window, is reinstated on the powered test.
+Under **mean-variance sizing** both graph signals underperform no-graph on
+this window, and the best classifier produces the worst portfolio.
+
+> **Important qualification (see Finding 10).** This result is specific to
+> mean-variance sizing and should not be read as a general property of the
+> signal. Re-running with **equal-weight quintile sizing** and
+> non-overlapping rebalances *reverses* the sign at the same 5-day horizon
+> (graph − no-graph = **+0.258** Sharpe, *t* = +1.99). That is consistent
+> with the observation below that MV sizing carries ~3.4× the seed variance
+> of equal-weight sizing on identical picks: at this effect size, MV-based
+> comparisons are too noisy to establish direction. No construction reaches
+> significance once power is accounted for. The honest summary is that the
+> tradeability question is **unresolved**, not settled negative.
 
 **It is not a transaction-cost effect.** Decomposing gross vs net:
 
@@ -352,8 +365,9 @@ replicate at n=5 on the short window, is reinstated on the powered test.
 
 The per-period gross-return gap is −44.4 bp against a cost gap of +5.0 bp,
 so **costs explain ~10%** of the shortfall (sub-industry vs no-graph gross:
-*p* < .05). The graph signals build worse portfolios before any friction;
-turnover is a symptom, not the cause.
+*p* < .05). Within the MV construction the gap is present before any
+friction; turnover is a symptom, not the cause. (This decomposition is
+itself MV-specific — see the qualification above.)
 
 Three further interventions were tested and none rescues performance:
 a **shrinkage sweep** (λ = 0 → 0.95) moves Sharpe 0.431 → 0.444 (n.s.) and
@@ -518,7 +532,69 @@ presentation, not the finding.
 
 ---
 
-## 12. Revised headline claim
+## 12. Finding 10 — horizon and sizing: longer holds help the strategy, not the graph
+
+Two constructions were tested to see whether the Finding 6 reversal was an
+artifact rather than a property of the signal
+(`results/horizon/`, `scripts/run_horizon_backtest.py`;
+`results/attribution/industry_rotation.txt`,
+`scripts/analyze_industry_rotation.py`). Equal-weight quintiles,
+**non-overlapping** rebalances (hold *H* days, then trade), 5 bps costs,
+7 windows × 3 seeds, Newey-West on the paired difference.
+
+| Horizon | Signal | Sharpe | Mean/period | Turnover/yr | n periods |
+|---|---|---|---|---|---|
+| 5d | graph | 0.368 | 2.5 bp | 32.7 | 101 |
+| 5d | no-graph | 0.110 | −2.3 bp | 20.4 | 101 |
+| 20d | graph | 0.653 | 19.3 bp | 11.9 | 25 |
+| 20d | no-graph | 0.713 | 34.5 bp | 7.0 | 25 |
+| 60d | graph | 0.878 | 91.2 bp | 4.7 | 8 |
+| 60d | no-graph | **1.491** | 148.0 bp | 3.0 | 8 |
+
+| Horizon | Δ Sharpe (graph − no-graph) | t (NW) |
+|---|---|---|
+| 5d | **+0.258** | +1.99 |
+| 20d | −0.060 | −0.32 |
+| 60d | −0.614 | −1.22 |
+
+**Confirmed for both signals.** Absolute performance rises sharply with
+horizon and annualised turnover falls ~7× (32.7 → 4.7 for the graph
+signal). Holding longer is simply a better strategy on this data, and it is
+the cost mechanism Finding 6 identified, now acting in the favourable
+direction.
+
+**Not confirmed.** The graph advantage does not improve with horizon; it
+shrinks and flips sign. Extending the horizon does not rescue the
+graph-vs-no-graph case.
+
+**Sizing flips the sign at 5 days.** With equal-weight quintiles the graph
+signal is marginally *better* (+0.258, *t* = +1.99), the opposite of
+Finding 6's mean-variance result on the same horizon. This is consistent
+with MV sizing carrying ~3.4× the seed variance of equal-weight sizing on
+identical picks: at this effect size MV comparisons cannot establish
+direction. **Finding 6's reversal is therefore MV-specific.**
+
+**Power collapses as horizon grows.** Non-overlapping 60-day holds leave
+only 8 periods per window-seed; a Sharpe standard error of roughly
+$1/\sqrt{8} \approx 0.35$ swamps the 0.614 gap. Neither the 20d nor the 60d
+difference is significant, and those point estimates should not be read as
+directional evidence. This is an intrinsic tension: longer horizons raise
+Sharpe but destroy the sample needed to verify it.
+
+**Industry rotation — rejected.** Because Finding 9 localised the signal
+between industries, a group-level rotation book (long top-quintile
+sub-industries, short bottom, equal-weight within group) was tested against
+the stock-level book on identical predictions. It is significantly *worse*
+(mean −5.35 bp, *t* = −2.78, *p* < .05; better in 1/7 windows). The
+inference from Finding 9 was too strong: industry fixed effects shrinking
+the coefficient shows between-industry variation carries signal, not that
+within-industry variation carries none. Aggregating to ~124 group means
+discards real within-group information and cuts effective bets from ~200
+stocks to ~50 groups.
+
+---
+
+## 13. Revised headline claim
 
 > On a cross-sectional 5-day forward return rank task for S&P 500
 > constituents (2015–2024), graph neural networks over economically
@@ -542,7 +618,12 @@ presentation, not the finding.
 > survive controls for momentum, short-term reversal, volatility and
 > industry fixed effects (retaining 23% of its univariate magnitude,
 > pooled *t* = +0.64), and is identified almost entirely *between*
-> industries rather than within them.
+> industries rather than within them. We stop short of claiming the graph
+> signal is economically harmful: the sign of the portfolio comparison
+> depends on the sizing rule, and no construction we tested reaches
+> significance at adequate power. What we can say is that a robust,
+> replicated classification gain yields no demonstrable portfolio
+> advantage.
 
 **Practitioner summary: a free sub-industry classification is at least as
 good as paid supply-chain relationship data for ranking — but neither
@@ -552,7 +633,7 @@ models on tail metrics, not macro-F1.**
 
 ---
 
-## 13. Summary of claim status
+## 14. Summary of claim status
 
 Every surviving claim below has been replicated on either disjoint seeds
 or independent time periods. Claims that failed replication are listed so
@@ -566,7 +647,10 @@ the record is auditable.
 | Correlation and holder-overlap edges add nothing | n.s. vs no-graph, n=5 | **Supported** |
 | Supply-chain edges beat a same-granularity public classification | +0.0015, n.s. | **Not supported** |
 | Monotone granularity gradient | did not replicate on disjoint seeds | **Retracted** |
-| Graph signals improve tradeable long-short spread | worse in 6/7 windows, *p* < .05 | **Robustly false** |
+| Graph signals improve tradeable long-short spread | worse in 6/7 windows, *p* < .05 | **Not supported** |
+| Graph signals build worse mean-variance portfolios | Δ = −0.94 Sharpe, but sign flips under equal-weight sizing | **Sizing-dependent** |
+| Longer holding periods improve absolute performance | Sharpe 0.11–0.37 (5d) → 0.88–1.49 (60d); turnover ÷7 | **Supported** |
+| Signal works better as industry rotation | −5.35 bp vs stock-level, *t* = −2.78 | **Rejected** |
 | Look-ahead from the static snapshot explains the results | advantage smallest where contamination worst | **Rejected** |
 | Signal is distinct from momentum / reversal / industry effects | retains 23% of magnitude, *t* = +0.64 pooled | **Not supported** |
 
