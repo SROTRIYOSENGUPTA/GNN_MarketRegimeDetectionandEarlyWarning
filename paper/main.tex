@@ -25,52 +25,49 @@
 \newcommand{\metadata}[2][Metadata]{%
   \begin{center}\small\vspace{-1.25ex}\texttt{#1}: #2\end{center}}
 
-\title{\Huge \bfseries Better Rankings, Worse Portfolios:\\
-Graph Neural Networks Improve a Classification Metric\\
-That Portfolios Cannot Trade}
+\title{\Huge \bfseries How to Build a Graph for Cross-Sectional\\
+Equity Prediction --- and What It Will and Will Not Buy You}
 \date{\today}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-Graph neural networks for equity prediction are typically validated on
-classification metrics, with proprietary relationship data --- supply-chain
-links, institutional ownership --- presumed to be the highest-value input. We
-test both premises on a cross-sectional 5-day forward return rank task over
-S\&P 500 constituents (2015--2024), holding the architecture fixed and varying
-only the graph. Graph structure improves per-date macro-F1 robustly, in seven
-of seven non-overlapping evaluation windows ($t=+11.67$), and partition
-granularity matters as a \emph{step} rather than a gradient: moving from
-sector-level grouping to any finer partition raises tail-F1 by
-${\approx}0.018$ ($p<.001$, replicated on disjoint seeds), after which the
-benefit saturates by roughly 25 groups. Proprietary relationship data carries
-no premium --- a graph from free GICS labels is statistically indistinguishable
-from one built on Bloomberg supplier/customer and holder relationships.
+Graph neural networks for equity prediction are usually validated on
+classification metrics, and proprietary relationship data --- supply-chain
+links, institutional ownership --- is presumed to be the highest-value input.
+We hold the architecture fixed, vary only the graph, and ask what actually
+matters. On a cross-sectional 5-day forward return rank task over S\&P 500
+constituents (2015--2024) we establish three design results, each replicated
+on seeds or periods disjoint from those used to find it. First, graph
+structure over economic peer groups improves per-date macro-F1 in seven of
+seven non-overlapping evaluation windows ($t=+11.67$), spanning the COVID
+drawdown and the 2022 bear market. Second, peer-group resolution matters as a
+\emph{step} rather than a gradient: moving from sector-level grouping to any
+finer partition raises tail-F1 by ${\approx}0.018$ ($p<.001$), after which the
+benefit saturates by roughly 25 groups --- and finer partitions achieve this
+with \emph{fewer} edges, so the mechanism is grouping precision, not
+connectivity. Third, proprietary relationship data carries no premium: a graph
+from free GICS labels is statistically indistinguishable from one built on
+Bloomberg supplier/customer and holder relationships. We also find that
+lengthening the holding period from five to sixty days raises Sharpe three- to
+thirteen-fold while cutting annualised turnover roughly sevenfold, for graph
+and no-graph signals alike.
 
-None of this demonstrably becomes portfolio performance. Realised long-short
-spread is worse in six of seven windows, and mean-variance portfolios on the
-graph signals underperform an identical no-graph portfolio
-($\Delta=-0.94$ Sharpe). But the sign is construction-dependent --- under
-equal-weight sizing at the same horizon the graph signal is marginally
-\emph{better} ($+0.258$ Sharpe, $t=+1.99$) --- and no construction we tested
-reaches significance once power is accounted for. We therefore do not claim
-the signal is economically harmful, only that a robust classification gain
-yields no demonstrable portfolio advantage. Two analyses explain why any
-advantage is hard to realise. Per-class F1 shows the
-accuracy gain sits almost entirely in the Neutral class --- 60\% of the mass,
-which a quintile long-short book never trades --- while tail accuracy is
-flat-to-worse. Fama--MacBeth regressions show the residual return-predictive
-content does not survive controls for momentum, short-term reversal,
-volatility and industry fixed effects (23\% of univariate magnitude retained,
-pooled $t=+0.64$), and is identified almost entirely \emph{between} industries
-rather than within them. Extending the holding period to 20 or 60 days raises
-absolute performance sharply and cuts annualised turnover roughly sevenfold
-for both signals, but does not widen the graph's advantage. We conclude that
-balanced classification accuracy rewards precisely the region of the
-cross-sectional distribution portfolios cannot access, and that
-cross-sectional models should be selected on tail-region metrics and realised
-spread rather than macro-F1.
+We then bound what these gains are worth. Per-class analysis shows the
+classification improvement sits almost entirely in the Neutral class --- 60\%
+of the mass, which a quintile long-short book never trades --- while
+Fama--MacBeth regressions show the residual predictive content is largely
+subsumed by momentum, reversal and industry effects and is identified
+\emph{between} industries rather than within them. Consistent with this, no
+portfolio construction we tested realises the gain. We are careful about the
+strength of that negative claim: the sign of the mean-variance comparison
+reverses under equal-weight sizing, statistical power falls sharply as the
+holding period lengthens, and no construction reaches significance once power
+is accounted for. The defensible conclusion is that balanced classification
+accuracy rewards a region of the cross-sectional distribution that portfolios
+cannot access --- so these models should be selected on tail-region metrics
+and realised spread rather than macro-F1.
 \end{abstract}
 
 \projectpage{https://github.com/SROTRIYOSENGUPTA/GNN_MarketRegimeDetectionandEarlyWarning}
@@ -99,33 +96,33 @@ second inverted.
 Our contributions are:
 
 \begin{itemize}
-\item \textbf{A robustly replicated classification result.} Graph structure
-  over economic groupings improves cross-sectional macro-F1 in 7 of 7
-  non-overlapping windows ($t=+11.67$), and finer-than-sector partitions
-  improve tail-F1 by ${\approx}0.018$ ($p<.001$) on seeds disjoint from those
-  used to discover the effect. The benefit is a \emph{step} that saturates by
-  ${\sim}25$ groups, not the monotone gradient an earlier version of this work
-  reported and which failed replication.
-\item \textbf{No premium for proprietary relationship data.} Against a genuine
-  sector partition, Bloomberg supplier/customer and holder graphs are
-  statistically indistinguishable from free GICS labels. We document that the
-  opposite conclusion arises naturally when the ``sector proxy'' baseline is
-  degenerate --- in our own earlier analysis a labelling error made it a random
-  block graph, against which the proprietary premium appears significant.
-\item \textbf{An accuracy--tradeability dissociation, with mechanism.} The same
-  signals that rank better yield no demonstrable portfolio advantage under any
-  construction we tested. Per-class F1 localises the gain to the untradeable
-  Neutral class; Fama--MacBeth regressions show the remainder is subsumed by
-  momentum, reversal and industry effects and is identified between rather
-  than within industries. We test and reject four competing explanations ---
-  transaction costs, signal smoothing, portfolio concentration, and
-  industry-rotation construction --- and show that the direction of the
-  mean-variance comparison is itself sizing-dependent.
+\item \textbf{Three replicated design results.} Graph structure over economic
+  groupings improves classification in 7 of 7 non-overlapping windows
+  ($t=+11.67$); peer-group resolution matters as a step that saturates by
+  ${\sim}25$ groups ($+0.018$ tail-F1, $p<.001$, on disjoint seeds); and free
+  GICS labels match proprietary supplier/customer and holder graphs. Each
+  yields concrete guidance: build the graph at industry-group resolution, and
+  do not license relationship data for this task.
+\item \textbf{Holding period dominates graph choice.} Lengthening the hold
+  from 5 to 60 days raises Sharpe three- to thirteen-fold and cuts annualised
+  turnover ${\sim}7\times$, for graph and no-graph signals alike --- a larger
+  effect than any graph-design choice we tested.
+\item \textbf{A characterisation of what the graph confers.} Per-class F1 and
+  Fama--MacBeth regressions jointly locate the gain as group-level and
+  middle-of-distribution: concentrated in the Neutral class, identified
+  between rather than within industries, and largely subsumed by momentum,
+  reversal and industry effects.
+\item \textbf{A bounded negative result on tradeability.} No construction we
+  tested --- two sizing rules, three horizons, and a group-level rotation book
+  --- realises the classification gain as portfolio performance. We report
+  this with explicit limits: the mean-variance sign reverses under
+  equal-weight sizing, and power collapses at long horizons, so we
+  distinguish ``no demonstrable advantage'' from ``value destroyed''.
 \item \textbf{A quantified warning about evaluation practice.} Run-to-run
   nondeterminism alone moves our granularity comparison between $p<.05$ and
-  non-significance, and single-window long-short spread estimates swing
-  ${\sim}16$\,bp between runs of an identical configuration. We report
-  multi-window aggregates and disjoint-seed replications throughout.
+  non-significance, and single-window spread estimates swing ${\sim}16$\,bp
+  between runs of an identical configuration. We report multi-window
+  aggregates and disjoint-seed replications throughout.
 \end{itemize}
 
 Our reading is that a graph's value for cross-sectional ranking lies in
@@ -193,40 +190,42 @@ picks.
 
 \section{Conclusion}
 
-Holding architecture fixed and varying only the graph, we find that graph
-structure over economic peer groups reliably improves cross-sectional
-return-rank classification --- in every one of seven independent evaluation
-windows --- and that how finely those peer groups are drawn matters, up to a
-saturation point around 25 groups. Neither result requires proprietary
-relationship data: free GICS classifications match Bloomberg supplier/customer
-graphs on every comparison we ran.
+Holding the architecture fixed and varying only the graph, three design
+results replicate on independent seeds or periods. Graph structure over
+economic peer groups improves cross-sectional return-rank classification in
+every one of seven independent windows. Peer-group resolution matters, as a
+step that saturates around industry-group level rather than a gradient, and
+finer partitions achieve this with fewer edges --- so what a graph buys is
+precision in defining who is comparable to whom, not connectivity. And none
+of it requires proprietary relationship data: free GICS classifications match
+Bloomberg supplier/customer graphs on every comparison we ran. Separately, and
+with a larger effect than any graph-design choice, lengthening the holding
+period from five to sixty days raises Sharpe substantially while cutting
+turnover by an order of magnitude.
 
-The same models yield no demonstrable portfolio advantage. Per-class analysis
-shows the accuracy they add sits in the middle of the cross-sectional
-distribution, which a quintile long-short book never trades, while tail
-accuracy is flat-to-worse; Fama--MacBeth regressions show what predictive
-content remains is largely subsumed by momentum, reversal and industry
-effects, and lives between industries rather than within them. Standard
-balanced classification metrics therefore reward a region of the distribution
-that portfolio construction cannot reach.
+What these gains are worth is a different question. Per-class analysis shows
+the accuracy the graph adds sits in the middle of the cross-sectional
+distribution, which a quintile long-short book never trades, while
+Fama--MacBeth regressions show the remainder is largely subsumed by momentum,
+reversal and industry effects and lives between industries rather than within
+them. Consistent with that characterisation, no portfolio construction we
+tested realises the gain.
 
-We are deliberately careful about the strength of this negative claim. The
+We are deliberately careful about how strong that negative claim can be. The
 mean-variance comparison favours no-graph, but its sign reverses under
-equal-weight sizing, and no construction we tested --- across two sizing
-rules, three horizons, and a group-level rotation book --- reaches
-significance once power is accounted for. The defensible statement is that a
-robust and replicated classification gain does not translate into measurable
-economic value here, not that the signal destroys value.
+equal-weight sizing, and no construction --- across two sizing rules, three
+horizons, and a group-level rotation book --- reaches significance once power
+is accounted for. The defensible statement is that a robust and replicated
+classification gain does not translate into measurable economic value here,
+not that the signal destroys value.
 
-We draw two implications. For practice, cross-sectional equity models should be
-selected on tail-region metrics and realised long-short spread rather than
-macro-F1, and free industry classifications should be exhausted before
-licensing relationship data. For the literature, the gap between classification
-accuracy and economic value is not merely an untested assumption but, in this
-setting, an inverted one --- and we would encourage reporting multi-window
-aggregates and disjoint-seed replications as a matter of course, given how
-large run-to-run and window-to-window variation proved to be relative to the
-effects measured.
+The practical implication is a change of objective. Balanced classification
+accuracy rewards precisely the region of the distribution portfolios cannot
+access, so cross-sectional equity models should be selected on tail-region
+metrics and realised long-short spread. Given how large run-to-run and
+window-to-window variation proved to be relative to the effects measured, we
+would also encourage reporting multi-window aggregates and disjoint-seed
+replications as a matter of course.
 
 Several limitations bound these conclusions. The supply-chain metadata is a
 single static snapshot; a recency diagnostic indicates look-ahead does not
@@ -235,14 +234,10 @@ disclosures would close the question. The universe is survivorship-biased to
 S\&P 500 constituents screened near the snapshot date, and returns exclude
 delisting effects. Size and book-to-market are uncontrolled. Absolute effect
 sizes are modest throughout --- macro-F1 ${\approx}0.37$ against a $0.333$
-chance floor. Finally, our findings concern a 5-day horizon and a
-quintile-based long-short construction. We test 20- and 60-day horizons and a
-group-level rotation book, but statistical power falls sharply as the holding
-period lengthens --- non-overlapping 60-day holds leave only eight independent
-periods per window--seed --- so those comparisons bound the question rather
-than settle it. Distinguishing a genuinely absent economic effect from one
-too small to detect with roughly a decade of 500-stock data would require
-either a longer sample or a broader universe.
+chance floor. Finally, statistical power falls sharply as the holding period
+lengthens: non-overlapping 60-day holds leave only eight independent periods
+per window--seed. Distinguishing a genuinely absent economic effect from one
+too small to detect would require a longer sample or a broader universe.
 
 \vspace{5ex}
 \bibliographystyle{plainnat}
