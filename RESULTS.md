@@ -354,7 +354,7 @@ this window, and the best classifier produces the worst portfolio.
 > mean-variance sizing and should not be read as a general property of the
 > signal. Re-running with **equal-weight quintile sizing** and
 > non-overlapping rebalances *reverses* the sign at the same 5-day horizon
-> (graph − no-graph = **+0.258** Sharpe, *t* = +1.99). That is consistent
+> (graph − no-graph = **+0.258** Sharpe, *t* = +1.55, n.s.). That is consistent
 > with the observation below that MV sizing carries ~3.4× the seed variance
 > of equal-weight sizing on identical picks: at this effect size, MV-based
 > comparisons are too noisy to establish direction. No construction reaches

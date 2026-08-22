@@ -36,6 +36,26 @@ environments. There is no LaTeX toolchain on this machine or on Amarel, so
 the draft has **not** been compiled end-to-end; the static check is the
 substitute.
 
+## Before every Overleaf sync
+
+```bash
+python scripts/check_claim_drift.py     # exit 0 clean, 1 findings, 2 registry stale
+```
+
+RESULTS.md's claim-status table and the prose around it are maintained by
+hand and separately, so they drift. This has already happened twice: a
+retracted claim stayed asserted in two prose sections, and a corrected
+t-statistic was left stale in four places. The script guards four things —
+superseded statistics, prose asserting a falsified claim, claims in the
+status table with no guard, and numbers that no longer match the JSON they
+came from. Run it before uploading, and again after pulling Overleaf edits
+back.
+
+A finding is not automatically a bug. If a paragraph is genuinely narrating
+history ("an earlier version reported..."), the correction cue in that
+paragraph quarantines it. If a *new* claim gets retracted, add it to the
+`RETRACTED` registry — check C fails until you do, which is the point.
+
 ## Keeping numbers in sync
 
 Every figure quoted in the draft comes from `RESULTS.md` in the repository
