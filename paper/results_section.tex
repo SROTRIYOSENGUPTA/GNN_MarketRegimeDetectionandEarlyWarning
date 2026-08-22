@@ -8,7 +8,7 @@ discover it.
 
 %% ===================== DESIGN FINDINGS =====================
 \subsection{Graph structure improves classification, robustly}
-Table~\ref{tab:periods} reports seven \emph{non-overlapping} evaluation
+Figure~\ref{fig:dissociation} and Table~\ref{tab:periods} report seven \emph{non-overlapping} evaluation
 windows, each trained only on prior data and evaluated on the following
 ${\sim}15$ months. Graph structure improves per-date macro-F1 in
 \textbf{7 of 7 windows} ($t=+11.67$), spanning the COVID drawdown, the 2022
@@ -39,8 +39,19 @@ column is discussed in Section~\ref{sec:bound}.}
 \label{tab:periods}
 \end{table}
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{fig1_dissociation.pdf}
+\caption{The central dissociation, across seven non-overlapping evaluation
+windows. (a) Graph structure improves per-date macro-F1 in every window.
+(b) The realised long-short spread of the same signal is worse in six of the
+seven. Bars are the graph-minus-no-graph difference, averaged over three
+seeds per window.}
+\label{fig:dissociation}
+\end{figure}
+
 \subsection{Draw peer groups finer than sector, but not much finer}
-Table~\ref{tab:granularity} walks the graph partition down the GICS
+Figure~\ref{fig:granularity} and Table~\ref{tab:granularity} walk the graph partition down the GICS
 hierarchy on \textbf{ten seeds disjoint from all other results}. Moving from
 sector-level grouping to any finer partition improves tail-F1 by
 ${\approx}0.018$ ($p<.001$); beyond industry-group level the benefit
@@ -64,6 +75,18 @@ Sub-industry (124) & 3{,}548 & $0.3740$ & $0.2526$ & $+0.0183$, $p<.001$ \\
 sector to anything finer, saturating by ${\sim}25$ groups.}
 \label{tab:granularity}
 \end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.62\textwidth]{fig2_granularity.pdf}
+\caption{Partition granularity, ten disjoint seeds. Tail-F1 steps up from
+sector-level grouping to any finer partition and then saturates, while the
+number of same-group edges falls monotonically. Performance therefore
+improves as the graph becomes \emph{sparser}, which identifies grouping
+precision rather than connectivity as the operative mechanism. Bars are
+$\pm1$ s.d. across seeds.}
+\label{fig:granularity}
+\end{figure}
 
 This is the one effect in the study that is \emph{larger and more
 significant on tail-F1 than on macro-F1} --- that is, on the part of the
@@ -99,7 +122,7 @@ plausible failure mode elsewhere in this literature.
 licensing relationship data for this task.
 
 \subsection{Hold longer: performance rises and turnover collapses}
-Table~\ref{tab:horizon} reports non-overlapping backtests at 5, 20 and 60
+Figure~\ref{fig:horizon} and Table~\ref{tab:horizon} report non-overlapping backtests at 5, 20 and 60
 days (hold $H$ days, then trade), equal-weight quintiles, 5\,bps costs.
 Absolute performance improves substantially for \emph{both} signals as the
 holding period lengthens, while annualised turnover falls roughly
@@ -126,6 +149,16 @@ both signals.}
 \label{tab:horizon}
 \end{table}
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{fig4_horizon.pdf}
+\caption{Holding-period effects under non-overlapping rebalancing.
+(a) Sharpe rises substantially with holding period for both signals.
+(b) Annualised turnover falls roughly sevenfold. Both effects are properties
+of the holding period rather than of the graph.}
+\label{fig:horizon}
+\end{figure}
+
 \paragraph{Design implication.} At this signal strength, a 20--60 day
 holding period dominates weekly rebalancing: gross performance is higher
 and the cost drag is an order of magnitude smaller. Note that this is a
@@ -134,7 +167,7 @@ no-graph signal too.
 
 %% ===================== WHAT THE SIGNAL IS =====================
 \subsection{What the signal is: group-level, middle-of-distribution}
-Per-class F1 (Table~\ref{tab:perclass}) shows where the classification gain
+Per-class F1 (Figure~\ref{fig:perclass}, Table~\ref{tab:perclass}) shows where the classification gain
 lives. Both graph models improve almost entirely on the \textbf{Neutral}
 class --- 60\% of the probability mass --- while tail accuracy is
 flat-to-worse.
@@ -154,6 +187,17 @@ No graph & $0.2298$ & $0.5472$ & $0.2774$ & $9.7$\,bp \\
 Neutral ($+0.032$ to $+0.038$); tail F1 is slightly worse ($-0.007$).}
 \label{tab:perclass}
 \end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.62\textwidth]{fig3_perclass.pdf}
+\caption{Per-class F1 for the graph and no-graph signals. The graph's
+advantage is concentrated in the Neutral class --- 60\% of the probability
+mass, and the region a quintile long-short book never trades --- while
+accuracy in the traded tails is slightly worse. Annotations give the
+graph-minus-no-graph difference.}
+\label{fig:perclass}
+\end{figure}
 
 Fama--MacBeth regressions (Table~\ref{tab:fm}) locate the signal along a
 second dimension. Controlling for 12--2 momentum, one-month reversal,
