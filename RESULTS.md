@@ -229,16 +229,22 @@ Bloomberg graph:
 | Sub-industry vs Supply-only | +0.0075 | +3.75 | **< .05** | 5/5 |
 | Sub-industry vs NoGraph | +0.0231 | +11.38 | **< .001** | 5/5 |
 
-**Interpretation.** Performance rises monotonically as the partition gets
-finer, while edge count falls 7× — so the mechanism is grouping *precision*,
-not connectivity. Message passing among a small set of true economic peers
-(a sub-industry here averages ~4 firms) beats both broad sector pooling and
+**Interpretation.** Performance improves as the partition moves from sector
+to industry-group level, while edge count falls 7× — so the mechanism is
+grouping *precision*, not connectivity. The improvement is a **step, not a
+monotone gradient**: it saturates by roughly 25 groups, and the further
+refinements to industry (67) and sub-industry (124) are statistically
+indistinguishable from industry group (see the retraction note in the claim
+table — the monotone reading did not replicate on disjoint seeds).
+
+Message passing among a small set of true economic peers (a sub-industry
+here averages ~4 firms) beats both broad sector pooling and
 curated bilateral supply-chain links. The best-performing graph in the
 entire study is built from a free, public classification.
 
 The *p* < .10 on the headline pairwise test is suggestive rather than
-decisive; the 5/5 seed sweep and the monotone gradient are the stronger
-evidence. Treat "sub-industry ≥ Bloomberg" as established and
+decisive; the 5/5 seed sweep is the stronger evidence (the monotone gradient
+originally cited here has since been retracted). Treat "sub-industry ≥ Bloomberg" as established and
 "sub-industry > Bloomberg" as likely but not yet conclusive.
 
 > **Resolved caveat.** An earlier revision flagged that this section was
@@ -553,9 +559,18 @@ artifact rather than a property of the signal
 
 | Horizon | Δ Sharpe (graph − no-graph) | t (NW) |
 |---|---|---|
-| 5d | **+0.258** | +1.99 |
-| 20d | −0.060 | −0.32 |
-| 60d | −0.614 | −1.22 |
+| 5d | **+0.258** | +1.55 |
+| 20d | −0.060 | −0.26 |
+| 60d | −0.614 | −1.00 |
+
+> **Corrected 2026-08-22.** These *t*-statistics were first reported as
+> +1.99 / −0.32 / −1.22. Those values pooled the three seeds as if they
+> were independent observations; seeds are re-trainings of the same
+> architecture on identical data, so the effective *n* was inflated 3× and
+> every *t* by ≈√3. The table now collapses seeds within a window and
+> treats the 7 disjoint windows as the units of inference. Point estimates
+> are unaffected (the correction is linear in Δ).
+
 
 **Confirmed for both signals.** Absolute performance rises sharply with
 horizon and annualised turnover falls ~7× (32.7 → 4.7 for the graph
@@ -568,7 +583,7 @@ shrinks and flips sign. Extending the horizon does not rescue the
 graph-vs-no-graph case.
 
 **Sizing flips the sign at 5 days.** With equal-weight quintiles the graph
-signal is marginally *better* (+0.258, *t* = +1.99), the opposite of
+signal is marginally *better* (+0.258, *t* = +1.55, n.s.), the opposite of
 Finding 6's mean-variance result on the same horizon. This is consistent
 with MV sizing carrying ~3.4× the seed variance of equal-weight sizing on
 identical picks: at this effect size MV comparisons cannot establish
@@ -594,18 +609,107 @@ stocks to ~50 groups.
 
 ---
 
-## 13. Revised headline claim
+## 13. Finding 11 — better portfolio construction does not recover the value
+
+Findings 6 and 10 showed the graph signal builds no better book than the
+no-graph baseline. The obvious rebuttal is that the quintile portfolio is a
+bad *map* from signal to weights, not that the signal is worthless. Sprint 1
+tested that directly: 3 horizons × 6 constructions on identical stored
+predictions (7 windows × 3 seeds), with a primary specification fixed in
+advance — **20-day horizon, continuous dollar-neutral weights** — so the
+grid could not be mined for a headline.
+
+Constructions: equal-weight quintile, equal-weight decile, continuous
+dollar-neutral (centred scores, 5% position cap), and three
+confidence-filtered variants excluding the middle 25/50/75% of the
+cross-section. Costs 5 bp, gross 2.0, γ = 5, non-overlapping rebalances.
+
+### The pre-registered answer is null
+
+| 20d, continuous | Sharpe | CER | maxDD | turn/yr |
+|---|---|---|---|---|
+| graph | 0.693 | 0.0107 | −0.080 | 11.05 |
+| no-graph | 0.725 | 0.0263 | −0.113 | 5.71 |
+| **Δ** | **−0.032** | −0.0156 | | **+5.34** |
+
+Δ Sharpe = −0.032, *t* = −0.15 (n = 7 windows), bootstrap *p* = 0.416. The
+graph is fractionally behind while paying roughly double the turnover.
+
+### The sign of the advantage is a function of horizon, not construction
+
+| Horizon | Δ Sharpe range across the 6 constructions | graph wins |
+|---|---|---|
+| 5d | +0.040 … +0.258 | 6/6 |
+| 20d | −0.167 … −0.032 | 0/6 |
+| 60d | −0.614 … −0.164 | 0/6 |
+
+Construction choice moves Δ Sharpe by ~0.2 within a horizon; horizon moves
+it by ~0.9. Whatever the graph adds is a 5-day phenomenon, and **every 5-day
+CER in the grid is negative** (−0.0071 to −0.0231) because those books run
+at 30–38 turns/yr. The graph wins only where the strategy loses money, and
+loses wherever the strategy is profitable.
+
+### The mechanism: negative incremental R²
+
+Section 1 of the sweep measures information content before any portfolio is
+formed, which removes sizing as an explanation:
+
+| Horizon | Signal | IC | Rank IC | ICIR | incremental R² |
+|---|---|---|---|---|---|
+| 5d | graph | 0.0126 | 0.0186 | 0.121 | **+0.00010** |
+| 5d | no-graph | 0.0076 | 0.0106 | 0.062 | — |
+| 20d | graph | 0.0244 | 0.0334 | 0.261 | **−0.00072** |
+| 20d | no-graph | 0.0362 | 0.0399 | 0.260 | — |
+| 60d | graph | 0.0352 | 0.0449 | 0.471 | **−0.00288** |
+| 60d | no-graph | 0.0642 | 0.0642 | 0.552 | — |
+
+The graph's IC exceeds the baseline's only at 5 days. At 20 and 60 days
+incremental R² is *negative* — the graph model is not adding weak
+information at the profitable horizons, it is adding noise. This is a
+portfolio-free statement, so it cannot be blamed on weighting, cost
+assumptions, or position caps.
+
+### The one significant cell does not survive
+
+5d quintile shows Δ = +0.258, bootstrap *p* = 0.017 — the only cell of 18
+under .05. It is not evidence:
+
+1. **The two tests disagree.** *t* = +1.55 on 7 windows is far from
+   significance (≈2.45 needed at 6 df). The pooled bootstrap has more
+   observations and hence more power, but calibration on synthetic data puts
+   its false-positive rate at 12.5% at a nominal 5% — it is a *liberal*
+   test, not a conservative one.
+2. **Multiple comparisons.** 18 cells at α = .05 predicts ≈0.9 false
+   positives. Observing exactly one is the modal outcome under pure noise.
+   Bonferroni-corrected: 0.017 × 18 = 0.31.
+3. **It loses money.** CER = −0.0140 at 32.7 turns/yr.
+
+### Why this strengthens the paper
+
+Finding 6 established that the economic value is weak. Finding 11 replaces
+that null with an identified mechanism and a bound that construction cannot
+argue with: the graph's advantage has a **term structure** that is
+orthogonal to the cost structure. It is largest at the horizon where
+turnover is most punitive and negative at the horizons where the strategy
+works. A reader who wants to believe the value is recoverable now has to
+explain a negative incremental R², measured without any portfolio at all.
+
+---
+
+## 14. Revised headline claim
 
 > On a cross-sectional 5-day forward return rank task for S&P 500
 > constituents (2015–2024), graph neural networks over economically
 > meaningful firm groupings significantly improve per-date macro-F1 over
 > no-graph and correlation-graph baselines (*p* < .001), driven by
-> partition granularity rather than relationship specificity: performance
-> rises monotonically from sector- to sub-industry-level groupings even as
-> graph density falls 7×, and a free GICS sub-industry graph matches or
-> exceeds a proprietary Bloomberg supplier/customer graph on every seed.
+> partition granularity rather than relationship specificity: moving from
+> sector- to industry-group-level groupings improves tail accuracy
+> (+0.018 tail-F1, *p* < .001) even as graph density falls, the benefit
+> saturates by roughly 25 groups with no further gain from industry or
+> sub-industry detail, and a free GICS graph matches a proprietary
+> Bloomberg supplier/customer graph on every seed.
 > **However, this classification advantage does not transfer to
-> portfolios — it reverses.** On an adequately powered out-of-sample
+> portfolios.** On an adequately powered out-of-sample
 > window (383 rebalances), mean-variance portfolios built on the graph
 > signals significantly underperform an otherwise identical no-graph
 > portfolio (sub-industry Δ = −0.94 Sharpe, *p* < .01), and the shortfall
@@ -618,22 +722,34 @@ stocks to ~50 groups.
 > survive controls for momentum, short-term reversal, volatility and
 > industry fixed effects (retaining 23% of its univariate magnitude,
 > pooled *t* = +0.64), and is identified almost entirely *between*
-> industries rather than within them. We stop short of claiming the graph
-> signal is economically harmful: the sign of the portfolio comparison
-> depends on the sizing rule, and no construction we tested reaches
+> industries rather than within them. A pre-registered sweep over three
+> horizons and six portfolio constructions rules out the objection that
+> the mapping from signal to weights was simply badly chosen: the
+> pre-committed specification returns Δ = −0.032 Sharpe (*t* = −0.15,
+> *p* = .42), construction choice moves the comparison by ~0.2 Sharpe
+> while horizon moves it by ~0.9, and the graph model's incremental R²
+> over the no-graph baseline is *negative* at both 20 and 60 days — a
+> portfolio-free measurement. The graph's advantage exists only at a
+> 5-day horizon, where 30–38 annual turns render every certainty-
+> equivalent return in the grid negative. We stop short of calling the
+> graph signal economically harmful: the sign of the mean-variance
+> comparison depends on the sizing rule, and no construction reaches
 > significance at adequate power. What we can say is that a robust,
 > replicated classification gain yields no demonstrable portfolio
-> advantage.
+> advantage, and that this is a property of the signal's term structure
+> rather than of any particular portfolio map.
 
 **Practitioner summary: a free sub-industry classification is at least as
 good as paid supply-chain relationship data for ranking — but neither
-improves a quintile portfolio, because the accuracy they add sits in the
-middle of the distribution rather than the tails. Evaluate cross-sectional
-models on tail metrics, not macro-F1.**
+improves a tradeable portfolio, because the accuracy they add sits in the
+middle of the distribution rather than the tails, and what little edge
+reaches the tails lives at a 5-day horizon whose turnover costs exceed it.
+Evaluate cross-sectional models on tail metrics at your intended holding
+period, not on macro-F1.**
 
 ---
 
-## 14. Summary of claim status
+## 15. Summary of claim status
 
 Every surviving claim below has been replicated on either disjoint seeds
 or independent time periods. Claims that failed replication are listed so
@@ -653,6 +769,10 @@ the record is auditable.
 | Signal works better as industry rotation | −5.35 bp vs stock-level, *t* = −2.78 | **Rejected** |
 | Look-ahead from the static snapshot explains the results | advantage smallest where contamination worst | **Rejected** |
 | Signal is distinct from momentum / reversal / industry effects | retains 23% of magnitude, *t* = +0.64 pooled | **Not supported** |
+| Better portfolio construction recovers the economic value | pre-registered 20d continuous: Δ = −0.032, *t* = −0.15, *p* = .42 | **Not supported** |
+| Graph adds information at tradeable horizons | incremental R² negative at 20d and 60d | **Rejected** |
+| Graph advantage is confined to a 5-day horizon | 6/6 constructions positive at 5d, 0/6 at 20d and 60d | **Supported** |
+| 5-day graph advantage is exploitable | every 5d CER negative (−0.007 to −0.023) at 30–38 turns/yr | **Not supported** |
 
 Mechanism hypotheses tested and rejected: transaction costs (explain ~10%
 of the portfolio shortfall), signal smoothing (non-monotonic, within

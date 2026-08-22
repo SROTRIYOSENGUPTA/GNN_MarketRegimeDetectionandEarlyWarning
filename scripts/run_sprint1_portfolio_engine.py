@@ -72,6 +72,7 @@ def nw_t(x, lag=1):
 
 
 def spearman(x, y):
+    x = np.asarray(x, dtype=float); y = np.asarray(y, dtype=float)
     ok = np.isfinite(x) & np.isfinite(y)
     if ok.sum() < 10:
         return np.nan
@@ -83,6 +84,7 @@ def spearman(x, y):
 
 
 def pearson(x, y):
+    x = np.asarray(x, dtype=float); y = np.asarray(y, dtype=float)
     ok = np.isfinite(x) & np.isfinite(y)
     if ok.sum() < 10:
         return np.nan
@@ -227,13 +229,17 @@ def main():
                     d = np.load(p, allow_pickle=True)
                     pr = d["val_probs"].astype(float)
                     sc = pr[..., 2] - pr[..., 0]
-                    fwd = np.array([forward_return(d["rets_hist"].astype(float),
-                                                   d["hist_dates"], dt, H)
-                                    for dt in d["val_dates"]], dtype=object)
+                    # NB: keep this a plain list. np.array(..., dtype=object) on a
+                    # list of equal-length arrays produces a 2-D object array, and
+                    # np.isfinite then rejects the object dtype.
+                    fwd = [forward_return(d["rets_hist"].astype(float),
+                                          d["hist_dates"], dt, H)
+                           for dt in d["val_dates"]]
                     per_ic, per_ric = [], []
                     for k, f in enumerate(fwd):
                         if f is None:
                             continue
+                        f = np.asarray(f, dtype=float)
                         per_ic.append(pearson(sc[k], f)); per_ric.append(spearman(sc[k], f))
                     if per_ic:
                         ics.append(np.nanmean(per_ic)); rics.append(np.nanmean(per_ric))
@@ -262,45 +268,67 @@ def main():
     for H in HORIZONS:
         for kind, cq in kinds:
             label = kind if cq is None else f"conf@{int(cq*100)}%"
+            # Seeds are re-trainings of the same architecture on identical
+            # data -- replicates, not observations. Keep them grouped by
+            # window so inference can collapse them first: pooling
+            # window x seed makes each calendar return appear len(SEEDS)
+            # times, inflating n and shrinking every p-value.
             agg = {}
             for tag in ("subind", "none"):
-                res = []
+                per_win = {}
                 for w in WINDOWS:
-                    for s in SEEDS:
-                        p = pred_dir / f"{tag}_{w}_s{s}.npz"
-                        if not p.exists():
+                    seed_res = []
+                    for sd in SEEDS:
+                        fp = pred_dir / f"{tag}_{w}_s{sd}.npz"
+                        if not fp.exists():
                             continue
-                        d = np.load(p, allow_pickle=True)
+                        d = np.load(fp, allow_pickle=True)
                         pr = d["val_probs"].astype(float)
                         sc = pr[..., 2] - pr[..., 0]
                         r = backtest(sc, d["val_dates"], d["rets_hist"].astype(float),
                                      d["hist_dates"], H, kind, cq)
                         if r:
-                            res.append(r)
-                if res:
-                    agg[tag] = res
+                            seed_res.append(r)
+                    if seed_res:
+                        per_win[w] = seed_res
+                if per_win:
+                    agg[tag] = per_win
             if len(agg) < 2:
                 continue
             for tag, lbl in (("subind", "graph"), ("none", "no-graph")):
-                R = agg[tag]
+                R = [r for rs in agg[tag].values() for r in rs]
                 star = " *" if (H == 20 and kind == "continuous") else ""
                 print(f"  {H:>6}d{label:>16}{lbl:>11}"
                       f"{np.nanmean([x['sharpe'] for x in R]):>9.3f}"
                       f"{np.nanmean([x['cer'] for x in R]):>9.4f}"
                       f"{np.nanmean([x['max_dd'] for x in R]):>9.3f}"
                       f"{np.nanmean([x['turnover_yr'] for x in R]):>9.2f}{star}", flush=True)
-            dg = [x["sharpe"] for x in agg["subind"]]
-            dn = [x["sharpe"] for x in agg["none"]]
-            m = min(len(dg), len(dn))
-            dm, dt = nw_t([a - b for a, b in zip(dg[:m], dn[:m])])
-            pooled_g = np.concatenate([x["rets"] for x in agg["subind"]])
-            pooled_n = np.concatenate([x["rets"] for x in agg["none"]])
+            # One observation per window: average the seed replicates.
+            wins = [w for w in WINDOWS if w in agg["subind"] and w in agg["none"]]
+            dif = [float(np.nanmean([x["sharpe"] for x in agg["subind"][w]]))
+                   - float(np.nanmean([x["sharpe"] for x in agg["none"][w]]))
+                   for w in wins]
+            dm, dt = nw_t(dif)
+
+            def _win_series(tag, w):
+                """Seed-averaged return series for one window.
+
+                Replicates share val_dates within a window, so element-wise
+                averaging is aligned; truncate to the shortest to be safe."""
+                rs = [np.asarray(x["rets"], float) for x in agg[tag][w]]
+                k = min(len(r) for r in rs)
+                return np.mean(np.vstack([r[:k] for r in rs]), axis=0)
+
+            pooled_g = np.concatenate([_win_series("subind", w) for w in wins])
+            pooled_n = np.concatenate([_win_series("none", w) for w in wins])
             obs, pboot = block_bootstrap_sharpe_diff(pooled_g, pooled_n)
             print(f"  {'':>8}{'  -> graph-nograph':>16}{'':>11}{dm:>9.3f}"
-                  f"   t={dt:+.2f}  bootstrap p={pboot:.3f}", flush=True)
+                  f"   t={dt:+.2f} (n={len(dif)} windows)"
+                  f"  bootstrap p={pboot:.3f}", flush=True)
             store[f"pf_H{H}_{label}"] = dict(
                 d_sharpe=float(dm) if np.isfinite(dm) else None,
                 t=float(dt) if np.isfinite(dt) else None,
+                n_windows=len(dif),
                 boot_p=float(pboot) if np.isfinite(pboot) else None)
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
