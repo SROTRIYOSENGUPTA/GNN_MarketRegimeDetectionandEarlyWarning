@@ -258,13 +258,71 @@ than stock selection ($-5.35$\,bp, $t=-2.78$, $p<.05$; better in 1 of 7
 windows), showing that between-industry identification does not imply a
 group-level portfolio. And extending the horizon, though it improves
 absolute performance, does not widen the graph's advantage:
-$\Delta$ Sharpe is $+0.258$ $(t{=}{+}1.99)$ at 5 days, $-0.060$
-$(t{=}{-}0.32)$ at 20, and $-0.614$ $(t{=}{-}1.22)$ at 60.
+$\Delta$ Sharpe is $+0.258$ $(t{=}{+}1.55)$ at 5 days, $-0.060$
+$(t{=}{-}0.26)$ at 20, and $-0.614$ $(t{=}{-}1.00)$ at 60.
 
-\paragraph{How strong is this negative result?} Weaker than it first
-appears, and we prefer to say so. The sign of the mean-variance comparison
-\emph{reverses} under equal-weight sizing at the same horizon
-($+0.258$ Sharpe, $t=+1.99$); consistent with
+\paragraph{Is the mapping from signal to weights the problem?} The natural
+objection to all of the above is that these are bad \emph{maps} from signal
+to weights, not evidence about the signal. We test that directly on stored
+predictions, sweeping three horizons against six constructions ---
+equal-weight quintile and decile, continuous dollar-neutral weights with a
+5\% position cap, and three variants that trade only the most confident
+$25/50/75\%$ of the cross-section --- with one specification, 20-day
+continuous, fixed in advance as primary so that the $18$-cell grid cannot be
+mined for a headline. The pre-registered cell returns
+$\Delta$ Sharpe $=-0.032$ $(t{=}{-}0.15$, $n{=}7$ windows, bootstrap
+$p=.42)$, with the graph book turning over $11.1$ times a year against the
+baseline's $5.7$.
+
+The grid's structure is more informative than any single cell.
+Construction choice moves $\Delta$ Sharpe by roughly $0.2$ within a horizon;
+horizon moves it by roughly $0.9$. The graph leads in six of six
+constructions at five days and none of six at twenty or sixty
+(Figure~\ref{fig:termstructure}). Every five-day certainty-equivalent return
+in the grid is negative ($-0.007$ to $-0.023$) because those books run at
+$30$--$38$ annual turns. The graph's advantage, in other words, is
+concentrated at exactly the horizon where turnover is most punitive, and is
+absent or negative wherever the strategy is profitable.
+
+Information-content measures taken \emph{before} any portfolio is formed
+confirm this is a property of the signal rather than of the weighting rule.
+Rank IC rises with horizon for both signals, but the graph exceeds the
+baseline only at five days ($0.0186$ vs.\ $0.0106$); at twenty and sixty
+days it is behind ($0.0334$ vs.\ $0.0399$; $0.0449$ vs.\ $0.0642$), and the
+graph model's incremental $R^2$ over the no-graph baseline is
+\emph{negative} at both ($-0.00072$ and $-0.00288$). At tradeable horizons
+the graph is not contributing weak information; it is contributing noise.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.95\textwidth]{fig5_termstructure.pdf}
+\caption{The pre-registered construction sweep. \textbf{(a)} Graph-minus-
+no-graph Sharpe for all six portfolio constructions against holding period;
+the pre-registered specification (continuous dollar-neutral weights) is
+highlighted. The lines move together, so the spread across constructions at
+a fixed horizon (${\sim}0.2$ Sharpe) is small relative to the movement
+across horizons (${\sim}0.9$): the sign of the comparison is a property of
+the holding period, not of the portfolio map. Every five-day book in the
+graph-favourable region has a negative certainty-equivalent return, running
+at $30$--$38$ annual turns. \textbf{(b)} The portfolio-free mechanism: the
+graph model's incremental $R^2$ over the no-graph baseline is positive only
+at five days and negative at both tradeable horizons, so weighting, cost
+assumptions and position limits cannot account for the shortfall.}
+\label{fig:termstructure}
+\end{figure}
+
+\paragraph{How strong is this negative result?} Stronger than a bare null,
+but bounded, and we prefer to be precise about which parts are which. What
+the construction sweep does establish is that the shortfall is not an
+artifact of the portfolio map: the pre-registered specification is null, the
+sign of the comparison tracks horizon rather than construction, and the
+negative incremental $R^2$ at tradeable horizons is measured with no
+portfolio at all, so it cannot be attributed to weighting, cost assumptions
+or position limits.
+
+What remains genuinely uncertain is direction and magnitude. The sign of the
+mean-variance comparison \emph{reverses} under equal-weight sizing at the
+same horizon ($+0.258$ Sharpe, $t=+1.55$, n.s.); consistent with
 \citet{michaud1989markowitz}, equal-weight sizing of identical picks
 exhibits $3.4\times$ lower seed variance than mean-variance sizing
 ($0.31$ vs.\ $1.07$), so mean-variance comparisons cannot establish
@@ -272,14 +330,22 @@ direction at this effect size. Statistical power also falls sharply with
 holding period: non-overlapping 60-day holds leave only eight independent
 periods per window--seed, so a Sharpe standard error of roughly
 $1/\sqrt{8} \approx 0.35$ swamps the observed gaps. Across two sizing rules,
-three horizons and a group-level construction, no comparison reaches
-significance once power is accounted for.
+three horizons, six constructions and a group-level book, no comparison
+reaches significance once power and multiplicity are accounted for. One cell
+of the eighteen --- five-day quintiles --- carries a bootstrap $p=.017$, but
+its window-level statistic is $t=+1.55$ against a $6$-degree-of-freedom
+threshold near $2.45$; a Bonferroni correction over the grid puts it at
+$0.31$; our block bootstrap over-rejects on synthetic null data
+($12.5\%$ at a nominal $5\%$); and the cell's certainty-equivalent return is
+$-0.014$. Eighteen tests at $\alpha=.05$ predict $0.9$ false positives, so
+one is the modal outcome under no effect.
 
-The defensible claim is therefore narrow: a robust and replicated
-classification gain yields \emph{no demonstrable} portfolio advantage here.
-We do not claim the signal destroys value, and we cannot distinguish a
-genuinely absent economic effect from one too small to detect with a decade
-of 500-stock data.
+The defensible claim is therefore narrow but not empty: a robust and
+replicated classification gain yields \emph{no demonstrable} portfolio
+advantage here, and this is a property of the signal's term structure rather
+than of any portfolio map we can construct. We do not claim the signal
+destroys value, and we cannot distinguish a genuinely absent economic effect
+from one too small to detect with a decade of 500-stock data.
 
 %% ===================== ROBUSTNESS =====================
 \subsection{Robustness}

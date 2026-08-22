@@ -62,14 +62,26 @@ of the mass, which a quintile long-short book never trades --- while
 Fama--MacBeth regressions show the residual predictive content is largely
 subsumed by momentum, reversal and industry effects and is identified
 \emph{between} industries rather than within them. Consistent with this, no
-portfolio construction we tested realises the gain. We are careful about the
-strength of that negative claim: the sign of the mean-variance comparison
-reverses under equal-weight sizing, statistical power falls sharply as the
-holding period lengthens, and no construction reaches significance once power
-is accounted for. The defensible conclusion is that balanced classification
-accuracy rewards a region of the cross-sectional distribution that portfolios
-cannot access --- so these models should be selected on tail-region metrics
-and realised spread rather than macro-F1.
+portfolio construction realises the gain: a pre-registered sweep over three
+holding periods and six constructions returns $\Delta$ Sharpe $=-0.032$
+$(t{=}{-}0.15)$ on the specification committed to in advance, and the
+comparison is governed by holding period rather than by construction ---
+the graph leads in six of six constructions at five days and none of six at
+twenty or sixty, while every five-day book has a negative
+certainty-equivalent return at $30$--$38$ annual turns. Information measures
+taken before any portfolio is formed give the mechanism: the graph model's
+incremental $R^2$ over the no-graph baseline is \emph{negative} at both
+twenty and sixty days, so at tradeable horizons the graph contributes noise
+rather than weak signal. We remain careful about direction --- the sign of
+the mean-variance comparison reverses under equal-weight sizing, power falls
+sharply as the holding period lengthens, and no comparison survives
+correction for multiplicity --- but the shortfall is not an artifact of the
+mapping from signal to weights. The conclusion for practice is that balanced
+classification accuracy rewards a region of the cross-sectional distribution
+that portfolios cannot access, and that the accuracy which does reach the
+tails sits at a horizon whose turnover costs exceed it --- so these models
+should be selected on tail-region metrics and realised spread at the intended
+holding period, never on macro-F1.
 \end{abstract}
 
 \projectpage{https://github.com/SROTRIYOSENGUPTA/GNN_MarketRegimeDetectionandEarlyWarning}

@@ -13,6 +13,9 @@ Four figures, matching the restructured Results section:
                       Neutral class that a quintile book never trades.
   fig4_horizon        holding-period effect: Sharpe up, turnover down ~7x, for
                       both signals.
+  fig5_termstructure  the construction sweep: horizon governs the graph-vs-
+                      no-graph sign while construction barely moves it, and
+                      incremental R^2 goes negative at tradeable horizons.
 
 Provenance. macro-F1 per window is read directly from results/periods/*.json.
 Metrics derived from the per-stock prediction bundles (tail-F1, long-short
@@ -21,6 +24,7 @@ the SUMMARY block below, transcribed from:
     results/attribution/per_class_f1.txt
     results/attribution/granularity_metrics.txt
     results/horizon/horizon_backtest.txt
+    results/sprint1/sprint1_seedfix.json
     RESULTS.md Findings 2, 8 and 10
 If the underlying runs are regenerated, refresh those files and this block
 together.
@@ -79,6 +83,25 @@ SUMMARY = {
         "edges": [25782, 12268, 5904, 3548],
         "tail_f1": [0.2344, 0.2524, 0.2528, 0.2526],
         "tail_sd": [0.0114, 0.0113, 0.0040, 0.0064],
+    },
+    # Finding 11 — Sprint 1 pre-registered horizon x construction sweep.
+    # Source: results/sprint1/sprint1_seedfix.json (seed replicates collapsed
+    # within window; n = 7 windows).
+    "sprint1": {
+        "h": [5, 20, 60],
+        "constructions": ["quintile", "decile", "continuous",
+                          "conf@25%", "conf@50%", "conf@75%"],
+        # d Sharpe (graph - no-graph), rows = construction, cols = horizon
+        "d_sharpe": [
+            [+0.258, -0.060, -0.614],
+            [+0.040, -0.167, -0.462],
+            [+0.146, -0.032, -0.164],
+            [+0.137, -0.045, -0.179],
+            [+0.079, -0.083, -0.257],
+            [+0.074, -0.085, -0.294],
+        ],
+        "primary": 2,                       # continuous == pre-registered
+        "inc_r2": [+0.00010, -0.00072, -0.00288],
     },
     # Finding 7 — per-class F1, long OOS
     "perclass": {
@@ -218,9 +241,59 @@ def fig4_horizon():
     plt.close(fig)
 
 
+def fig5_termstructure():
+    """The construction sweep: horizon governs the comparison, not construction.
+
+    Panel (a) plots every construction's graph-minus-no-graph Sharpe against
+    holding period; the lines move together, so the spread across
+    constructions at a fixed horizon (~0.2) is small next to the movement
+    across horizons (~0.9). Panel (b) gives the portfolio-free mechanism:
+    incremental R^2 turns negative at the tradeable horizons.
+    """
+    d = SUMMARY["sprint1"]
+    x = np.arange(len(d["h"]))
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(6.6, 2.5))
+
+    for i, (name, row) in enumerate(zip(d["constructions"], d["d_sharpe"])):
+        primary = (i == d["primary"])
+        a1.plot(x, row, marker="o" if primary else ".",
+                ms=5.5 if primary else 4,
+                lw=1.6 if primary else 0.8,
+                color=C_GRAPH if primary else C_GREY,
+                alpha=1.0 if primary else 0.55,
+                zorder=3 if primary else 2,
+                label=f"{name} (pre-registered)" if primary else None)
+    a1.axhline(0, color="black", lw=0.7, zorder=1)
+    a1.set_xticks(x); a1.set_xticklabels([f"{v}d" for v in d["h"]])
+    a1.set_xlabel("holding period")
+    a1.set_ylabel(r"$\Delta$ Sharpe (graph $-$ no graph)")
+    a1.set_title("(a) Horizon governs the sign", loc="left")
+    a1.legend(frameon=False, loc="lower left")
+    a1.yaxis.grid(True); a1.set_axisbelow(True)
+    a1.text(1.55, 0.14, "6/6 constructions favour\nthe graph at 5d;\n0/6 at 20d and 60d",
+            fontsize=6.5, color=C_GREY, ha="center", va="center")
+
+    bars = a2.bar(x, [v * 1e3 for v in d["inc_r2"]], 0.5,
+                  color=[C_GRAPH if v > 0 else C_NONE for v in d["inc_r2"]],
+                  edgecolor="black", linewidth=0.5)
+    for b in bars[1:]:
+        b.set_hatch("//")
+    a2.axhline(0, color="black", lw=0.7)
+    a2.set_xticks(x); a2.set_xticklabels([f"{v}d" for v in d["h"]])
+    a2.set_xlabel("forecast horizon")
+    a2.set_ylabel(r"incremental $R^2$ over no-graph ($\times 10^{-3}$)")
+    a2.set_title(r"(b) Incremental $R^2$ turns negative", loc="left")
+    a2.yaxis.grid(True); a2.set_axisbelow(True)
+
+    fig.subplots_adjust(wspace=0.33)
+    fig.savefig(OUT / "fig5_termstructure.pdf")
+    plt.close(fig)
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     fig1_dissociation(); fig2_granularity(); fig3_perclass(); fig4_horizon()
+    fig5_termstructure()
     for f in sorted(OUT.glob("*.pdf")):
         print(f"  wrote {f.relative_to(REPO)}  ({f.stat().st_size/1024:.0f} kB)")
 

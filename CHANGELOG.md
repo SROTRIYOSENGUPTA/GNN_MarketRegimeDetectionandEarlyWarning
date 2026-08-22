@@ -13,7 +13,39 @@ git diff v1.0-ece538-submission..main
 
 ## [Unreleased]
 
+### Added — Sprint 1: portfolio-mapping sweep (Finding 11)
+
+- `scripts/run_sprint1_portfolio_engine.py` — pre-registered sweep over 3
+  horizons x 6 portfolio constructions on stored predictions, with
+  portfolio-free information metrics (IC, rank IC, ICIR, incremental R^2)
+  and a moving-block bootstrap for Sharpe differences. Primary
+  specification (20d, continuous dollar-neutral) fixed in advance so the
+  18-cell grid cannot be mined.
+- `results/sprint1/` — console output and JSON for the Amarel run.
+- `figures/paper/fig5_termstructure.pdf` — the term-structure result:
+  horizon governs the graph-vs-no-graph sign while construction barely
+  moves it, and incremental R^2 goes negative at tradeable horizons.
+- Result: the pre-registered cell is null (Delta Sharpe = -0.032,
+  t = -0.15, bootstrap p = 0.42). This closes the "the portfolio map was
+  just badly chosen" objection to Findings 6 and 10, and replaces a bare
+  null with an identified mechanism.
+
 ### Corrected — findings that changed after re-testing
+
+- **Seed-replicate inflation in portfolio inference — corrected.** Every
+  portfolio test pooled window x seed as if seeds were independent
+  observations. Seeds are re-trainings of one architecture on identical
+  data, so effective n was inflated 3x, every t-statistic by ~sqrt(3), and
+  the pooled block bootstrap saw each calendar return three times. Now
+  collapsed within window, leaving the 7 disjoint windows as the units of
+  inference. Point estimates unaffected (the correction is linear in the
+  difference). Finding 10's horizon t-statistics were published as
+  +1.99 / -0.32 / -1.22 and are actually **+1.55 / -0.26 / -1.00**.
+- **Monotone granularity claim leaked back into prose.** The retraction was
+  recorded in the claim table but the RESULTS.md headline and the
+  granularity interpretation still asserted a monotone gradient. Both now
+  describe the effect as a step saturating at ~25 groups, matching the
+  claim table.
 
 - **Fake sector labels.** `run_xsec_rank.py` assigned sectors as
   `np.arange(n) % 11` (alphabetical ticker order modulo 11). Two
