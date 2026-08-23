@@ -148,6 +148,69 @@ endogenous industry classification \citep{hoberg2016text}, which similarly find
 that finer, more adaptive peer definitions carry economic content coarse
 classifications miss.
 
+\section{Related work}
+
+\paragraph{Economic links and cross-predictability.} That inter-firm linkages
+carry return-predictive information is well established.
+\citet{cohen2008economic} show customer returns predict supplier returns;
+\citet{menzly2010market} obtain cross-predictability from supplier--customer
+industry pairs; \citet{hoberg2016text} construct product-market networks from
+10-K text; and \citet{lee2019technological} do the same from patent
+similarity. \citet{hou2007industry} attributes much of the lead--lag structure
+in returns to slow information diffusion within industries. This literature
+establishes that links matter, and is generally read as implying that
+\emph{better-identified} links matter more --- which is the premise behind
+licensing bilateral relationship data. We test that implication directly by
+holding the architecture fixed and varying only the graph, and do not find it:
+a free classification-derived graph matches a proprietary
+supplier/customer-and-holder graph on every seed.
+
+\paragraph{Industry classification as a design choice.} A separate literature
+compares classification schemes on their ability to explain comovement and
+fundamentals. \citet{bhojraj2003whats} evaluate SIC, NAICS, GICS and
+Fama--French groupings for capital-market research and find GICS strongest;
+\citet{chan2007industry} study how classification affects measured return
+comovement. \citet{moskowitz1999industries} show industry effects account for
+much of what is read as individual-stock momentum. We take the next step and
+treat classification \emph{resolution} as a tunable graph-construction
+parameter rather than a fixed choice, which surfaces a result these papers do
+not address: the benefit is a step that saturates near 25 groups, and it is
+realised with fewer edges rather than more.
+
+\paragraph{Graph neural networks for equity prediction.} A now-substantial
+body of work applies graph learning to stock prediction, differing mainly in
+the relation source and the temporal encoder ---
+\citet{chen2018incorporating} using shareholder links,
+\citet{feng2019temporal} adding a ranking objective over sector and
+supply-chain relations, \citet{kim2019hats} using hierarchical attention over
+multiple relation types, and \citet{sawhney2021exploring} exploiting
+scale-free structure. These papers report accuracy, ranking or return metrics
+and generally treat an improvement in them as the result. Our contribution is
+orthogonal to architecture: we ask which part of the predictive distribution
+the improvement occupies, and find it concentrated in the untraded middle. The
+mechanism we identify --- performance improving as the graph becomes sparser
+but more precisely grouped --- is consistent with the graph-learning findings
+that homophily governs when message passing helps
+\citep{zhu2020beyond} and that excessive smoothing degrades node
+discrimination \citep{li2018deeper}.
+
+\paragraph{Machine learning in asset pricing, and evaluation credibility.}
+\citet{gu2020empirical} establish the benchmark for ML in cross-sectional
+return prediction and the practice of evaluating on economic rather than
+purely statistical criteria. Our negative result is best read against three
+strands of evidence on why reported edges fail to survive:
+\citet{novymarx2016taxonomy} and \citet{korajczyk2004momentum} on trading
+costs consuming high-turnover anomalies, which is precisely the channel that
+disqualifies our five-day effect; \citet{harvey2016cross} and
+\citet{mclean2016does} on multiplicity and post-publication decay, which
+motivates our pre-committing a primary specification before sweeping an
+18-cell grid; and \citet{bailey2014pseudo} on backtest overfitting. On the
+portfolio side, \citet{michaud1989markowitz} identifies the error-maximisation
+property of mean-variance optimisation \citep{markowitz1952portfolio} that
+makes our sizing comparison underpowered, and \citet{demiguel2009optimal}
+explain why the equal-weight book we compare against is a demanding rather
+than a naive benchmark.
+
 \section{Method}
 
 \subsection{Data}
@@ -182,8 +245,9 @@ return correlation (top-$k$), group membership (same-GICS-group at a
 configurable hierarchy level) or institutional-holder overlap (Jaccard
 $\geq 0.4$), and directed supplier/customer links. The model projects 22
 per-stock daily features into a hidden representation, applies two layers of
-per-relation scaled-dot-product attention at each of 30 daily snapshots,
-aggregates temporally with a per-stock LSTM, and classifies with a
+per-relation scaled-dot-product attention \citep{vaswani2017attention,
+velickovic2018graph} at each of 30 daily snapshots, aggregates temporally with
+a per-stock LSTM \citep{hochreiter1997long}, and classifies with a
 class-weighted cross-entropy head (${\sim}1.0$M parameters; 15 epochs; AdamW
 with cosine decay). Unless noted, training uses data through 2022-09-30 and
 validation covers 2022Q4--2024. All comparisons are paired $t$-tests across
@@ -191,14 +255,16 @@ random seeds; results described as \emph{replicated} were re-run on a seed set
 disjoint from the one used to discover them.
 
 \subsection{Portfolio layer}
-To test economic significance a Markowitz mean-variance layer converts
-predictions to portfolios: expected returns $\mu_i = P(\text{Up})_i -
+To test economic significance a mean-variance layer \citep{markowitz1952portfolio}
+converts predictions to portfolios: expected returns $\mu_i = P(\text{Up})_i -
 P(\text{Down})_i$ shrunk toward zero \citep{michaud1989markowitz}, covariance
-from rolling correlations, long top-quintile / short bottom-quintile,
+from rolling correlations with ridge regularisation in the spirit of
+\citet{ledoit2004wellconditioned}, long top-quintile / short bottom-quintile,
 dollar-neutral, gross exposure capped at 2.0, rebalanced every 5 days at
 5\,bps per unit turnover. We additionally evaluate a shrinkage sweep, a
 transaction-cost-aware turnover penalty, and equal-weight sizing of identical
-picks.
+picks --- the last motivated by \citet{demiguel2009optimal}, who show naive
+diversification is hard to beat once estimation error is priced in.
 
 \input{results_section}
 

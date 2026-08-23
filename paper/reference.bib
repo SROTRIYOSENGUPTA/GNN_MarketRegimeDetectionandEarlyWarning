@@ -1,26 +1,461 @@
-@article{cohen2008economic,
-  title={Economic Links and Predictable Returns},
-  author={Cohen, Lauren and Frazzini, Andrea},
-  journal={The Journal of Finance},
-  volume={63}, number={4}, pages={1977--2011}, year={2008}
+% ---------------------------------------------------------------------------
+% Bibliography.
+%
+% Grouped by the role each entry plays in the argument, so it is obvious what
+% is cited for positioning versus for method attribution.
+%
+% PROVENANCE NOTE. These entries were compiled from domain knowledge, not
+% exported from a publisher database. Titles, authors, journals and years are
+% reliable; a few volume/issue/page fields have not been checked against a DOI.
+% Verify against the publisher record before submission -- the entries marked
+% "% VERIFY" are the ones most worth a second look.
+% ---------------------------------------------------------------------------
+
+
+% ===========================================================================
+% PORTFOLIO THEORY -- the mean-variance layer
+% ===========================================================================
+
+@article{markowitz1952portfolio,
+  author  = {Markowitz, Harry},
+  title   = {Portfolio Selection},
+  journal = {The Journal of Finance},
+  year    = {1952},
+  volume  = {7},
+  number  = {1},
+  pages   = {77--91},
 }
 
 @article{michaud1989markowitz,
-  title={The {M}arkowitz Optimization Enigma: Is `Optimized' Optimal?},
-  author={Michaud, Richard O.},
-  journal={Financial Analysts Journal},
-  volume={45}, number={1}, pages={31--42}, year={1989}
+  author  = {Michaud, Richard O.},
+  title   = {The {Markowitz} Optimization Enigma: Is `Optimized' Optimal?},
+  journal = {Financial Analysts Journal},
+  year    = {1989},
+  volume  = {45},
+  number  = {1},
+  pages   = {31--42},
+}
+
+@article{demiguel2009optimal,
+  author  = {DeMiguel, Victor and Garlappi, Lorenzo and Uppal, Raman},
+  title   = {Optimal Versus Naive Diversification: How Inefficient is the
+             1/{N} Portfolio Strategy?},
+  journal = {The Review of Financial Studies},
+  year    = {2009},
+  volume  = {22},
+  number  = {5},
+  pages   = {1915--1953},
+}
+
+@article{ledoit2004wellconditioned,
+  author  = {Ledoit, Olivier and Wolf, Michael},
+  title   = {A Well-Conditioned Estimator for Large-Dimensional Covariance
+             Matrices},
+  journal = {Journal of Multivariate Analysis},
+  year    = {2004},
+  volume  = {88},
+  number  = {2},
+  pages   = {365--411},
+}
+
+
+% ===========================================================================
+% ECONOMIC LINKS AND CROSS-PREDICTABILITY -- what the graph is meant to encode
+% ===========================================================================
+
+@article{cohen2008economic,
+  author  = {Cohen, Lauren and Frazzini, Andrea},
+  title   = {Economic Links and Predictable Returns},
+  journal = {The Journal of Finance},
+  year    = {2008},
+  volume  = {63},
+  number  = {4},
+  pages   = {1977--2011},
+}
+
+@article{menzly2010market,
+  author  = {Menzly, Lior and Ozbas, Oguzhan},
+  title   = {Market Segmentation and Cross-predictability of Returns},
+  journal = {The Journal of Finance},
+  year    = {2010},
+  volume  = {65},
+  number  = {4},
+  pages   = {1555--1580},
 }
 
 @article{hoberg2016text,
-  title={Text-Based Network Industries and Endogenous Product Differentiation},
-  author={Hoberg, Gerard and Phillips, Gordon},
-  journal={Journal of Political Economy},
-  volume={124}, number={5}, pages={1423--1465}, year={2016}
+  author  = {Hoberg, Gerard and Phillips, Gordon},
+  title   = {Text-Based Network Industries and Endogenous Product
+             Differentiation},
+  journal = {Journal of Political Economy},
+  year    = {2016},
+  volume  = {124},
+  number  = {5},
+  pages   = {1423--1465},
 }
 
-@article{fanshawe2026forecasting,
-  title={Forecasting Equity Correlations with Hybrid Transformer Graph Neural Network},
-  author={Fanshawe, Jack and Masih, Rumi and Cameron, Alexander},
-  journal={arXiv preprint arXiv:2601.04602}, year={2026}
+@article{lee2019technological,     % VERIFY volume/pages
+  author  = {Lee, Charles M. C. and Sun, Stephen Teng and Wang, Rongfei and
+             Zhang, Ran},
+  title   = {Technological Links and Predictable Returns},
+  journal = {Journal of Financial Economics},
+  year    = {2019},
+  volume  = {132},
+  number  = {3},
+  pages   = {76--96},
+}
+
+@article{hou2007industry,
+  author  = {Hou, Kewei},
+  title   = {Industry Information Diffusion and the Lead-Lag Effect in Stock
+             Returns},
+  journal = {The Review of Financial Studies},
+  year    = {2007},
+  volume  = {20},
+  number  = {4},
+  pages   = {1113--1138},
+}
+
+
+% ===========================================================================
+% INDUSTRY CLASSIFICATION -- the granularity result's direct antecedents
+% ===========================================================================
+
+@article{bhojraj2003whats,
+  author  = {Bhojraj, Sanjeev and Lee, Charles M. C. and Oler, Derek K.},
+  title   = {What's My Line? A Comparison of Industry Classification Schemes
+             for Capital Market Research},
+  journal = {Journal of Accounting Research},
+  year    = {2003},
+  volume  = {41},
+  number  = {5},
+  pages   = {745--774},
+}
+
+@article{chan2007industry,          % VERIFY volume/pages
+  author  = {Chan, Louis K. C. and Lakonishok, Josef and Swaminathan, Bhaskaran},
+  title   = {Industry Classifications and Return Comovement},
+  journal = {Financial Analysts Journal},
+  year    = {2007},
+  volume  = {63},
+  number  = {6},
+  pages   = {56--70},
+}
+
+@article{moskowitz1999industries,
+  author  = {Moskowitz, Tobias J. and Grinblatt, Mark},
+  title   = {Do Industries Explain Momentum?},
+  journal = {The Journal of Finance},
+  year    = {1999},
+  volume  = {54},
+  number  = {4},
+  pages   = {1249--1290},
+}
+
+
+% ===========================================================================
+% CONTROL VARIABLES -- the Fama-MacBeth specification
+% ===========================================================================
+
+@article{jegadeesh1993returns,
+  author  = {Jegadeesh, Narasimhan and Titman, Sheridan},
+  title   = {Returns to Buying Winners and Selling Losers: Implications for
+             Stock Market Efficiency},
+  journal = {The Journal of Finance},
+  year    = {1993},
+  volume  = {48},
+  number  = {1},
+  pages   = {65--91},
+}
+
+@article{jegadeesh1990evidence,
+  author  = {Jegadeesh, Narasimhan},
+  title   = {Evidence of Predictable Behavior of Security Returns},
+  journal = {The Journal of Finance},
+  year    = {1990},
+  volume  = {45},
+  number  = {3},
+  pages   = {881--898},
+}
+
+@article{lehmann1990fads,
+  author  = {Lehmann, Bruce N.},
+  title   = {Fads, Martingales, and Market Efficiency},
+  journal = {The Quarterly Journal of Economics},
+  year    = {1990},
+  volume  = {105},
+  number  = {1},
+  pages   = {1--28},
+}
+
+@article{ang2006crosssection,
+  author  = {Ang, Andrew and Hodrick, Robert J. and Xing, Yuhang and
+             Zhang, Xiaoyan},
+  title   = {The Cross-Section of Volatility and Expected Returns},
+  journal = {The Journal of Finance},
+  year    = {2006},
+  volume  = {61},
+  number  = {1},
+  pages   = {259--299},
+}
+
+@article{fama1993common,
+  author  = {Fama, Eugene F. and French, Kenneth R.},
+  title   = {Common Risk Factors in the Returns on Stocks and Bonds},
+  journal = {Journal of Financial Economics},
+  year    = {1993},
+  volume  = {33},
+  number  = {1},
+  pages   = {3--56},
+}
+
+
+% ===========================================================================
+% ECONOMETRIC METHOD -- techniques the paper actually runs
+% ===========================================================================
+
+@article{fama1973risk,
+  author  = {Fama, Eugene F. and MacBeth, James D.},
+  title   = {Risk, Return, and Equilibrium: Empirical Tests},
+  journal = {Journal of Political Economy},
+  year    = {1973},
+  volume  = {81},
+  number  = {3},
+  pages   = {607--636},
+}
+
+@article{newey1987simple,
+  author  = {Newey, Whitney K. and West, Kenneth D.},
+  title   = {A Simple, Positive Semi-Definite, Heteroskedasticity and
+             Autocorrelation Consistent Covariance Matrix},
+  journal = {Econometrica},
+  year    = {1987},
+  volume  = {55},
+  number  = {3},
+  pages   = {703--708},
+}
+
+@article{kunsch1989jackknife,
+  author  = {K{\"u}nsch, Hans R.},
+  title   = {The Jackknife and the Bootstrap for General Stationary
+             Observations},
+  journal = {The Annals of Statistics},
+  year    = {1989},
+  volume  = {17},
+  number  = {3},
+  pages   = {1217--1241},
+}
+
+@article{politis1994stationary,
+  author  = {Politis, Dimitris N. and Romano, Joseph P.},
+  title   = {The Stationary Bootstrap},
+  journal = {Journal of the American Statistical Association},
+  year    = {1994},
+  volume  = {89},
+  number  = {428},
+  pages   = {1303--1313},
+}
+
+@article{ledoit2008robust,
+  author  = {Ledoit, Olivier and Wolf, Michael},
+  title   = {Robust Performance Hypothesis Testing with the {Sharpe} Ratio},
+  journal = {Journal of Empirical Finance},
+  year    = {2008},
+  volume  = {15},
+  number  = {5},
+  pages   = {850--859},
+}
+
+
+% ===========================================================================
+% MULTIPLICITY AND BACKTEST CREDIBILITY -- why the primary spec is pre-registered
+% ===========================================================================
+
+@article{harvey2016cross,
+  author  = {Harvey, Campbell R. and Liu, Yan and Zhu, Heqing},
+  title   = {{\ldots}and the Cross-Section of Expected Returns},
+  journal = {The Review of Financial Studies},
+  year    = {2016},
+  volume  = {29},
+  number  = {1},
+  pages   = {5--68},
+}
+
+@article{mclean2016does,
+  author  = {McLean, R. David and Pontiff, Jeffrey},
+  title   = {Does Academic Publication Destroy Stock Return Predictability?},
+  journal = {The Journal of Finance},
+  year    = {2016},
+  volume  = {71},
+  number  = {1},
+  pages   = {5--32},
+}
+
+@article{bailey2014pseudo,
+  author  = {Bailey, David H. and Borwein, Jonathan M. and
+             L{\'o}pez de Prado, Marcos and Zhu, Qiji Jim},
+  title   = {Pseudo-Mathematics and Financial Charlatanism: The Effects of
+             Backtest Overfitting on Out-of-Sample Performance},
+  journal = {Notices of the American Mathematical Society},
+  year    = {2014},
+  volume  = {61},
+  number  = {5},
+  pages   = {458--471},
+}
+
+
+% ===========================================================================
+% TRANSACTION COSTS -- why the five-day edge is not exploitable
+% ===========================================================================
+
+@article{novymarx2016taxonomy,
+  author  = {Novy-Marx, Robert and Velikov, Mihail},
+  title   = {A Taxonomy of Anomalies and Their Trading Costs},
+  journal = {The Review of Financial Studies},
+  year    = {2016},
+  volume  = {29},
+  number  = {1},
+  pages   = {104--147},
+}
+
+@article{korajczyk2004momentum,
+  author  = {Korajczyk, Robert A. and Sadka, Ronnie},
+  title   = {Are Momentum Profits Robust to Trading Costs?},
+  journal = {The Journal of Finance},
+  year    = {2004},
+  volume  = {59},
+  number  = {3},
+  pages   = {1039--1082},
+}
+
+
+
+% ===========================================================================
+% MACHINE LEARNING IN ASSET PRICING -- the broader empirical setting
+% ===========================================================================
+
+@article{gu2020empirical,
+  author  = {Gu, Shihao and Kelly, Bryan and Xiu, Dacheng},
+  title   = {Empirical Asset Pricing via Machine Learning},
+  journal = {The Review of Financial Studies},
+  year    = {2020},
+  volume  = {33},
+  number  = {5},
+  pages   = {2223--2273},
+}
+
+@book{grinold2000active,
+  author    = {Grinold, Richard C. and Kahn, Ronald N.},
+  title     = {Active Portfolio Management: A Quantitative Approach for
+               Producing Superior Returns and Controlling Risk},
+  publisher = {McGraw-Hill},
+  year      = {2000},
+  edition   = {2nd},
+}
+
+
+% ===========================================================================
+% GRAPH NEURAL NETWORKS FOR EQUITY PREDICTION -- the papers we are positioned against
+% ===========================================================================
+
+@article{feng2019temporal,          % VERIFY article number
+  author  = {Feng, Fuli and He, Xiangnan and Wang, Xiang and Luo, Cheng and
+             Liu, Yiqun and Chua, Tat-Seng},
+  title   = {Temporal Relational Ranking for Stock Prediction},
+  journal = {ACM Transactions on Information Systems},
+  year    = {2019},
+  volume  = {37},
+  number  = {2},
+}
+
+@inproceedings{chen2018incorporating,   % VERIFY pages
+  author    = {Chen, Yingmei and Wei, Zhongyu and Huang, Xuanjing},
+  title     = {Incorporating Corporation Relationship via Graph Convolutional
+               Neural Networks for Stock Price Prediction},
+  booktitle = {Proceedings of the 27th ACM International Conference on
+               Information and Knowledge Management (CIKM)},
+  year      = {2018},
+}
+
+@article{kim2019hats,
+  author  = {Kim, Raehyun and So, Chan Ho and Jeong, Minbyul and
+             Lee, Sanghoon and Kim, Jinkyu and Kang, Jaewoo},
+  title   = {{HATS}: A Hierarchical Graph Attention Network for Stock Movement
+             Prediction},
+  journal = {arXiv preprint arXiv:1908.07999},
+  year    = {2019},
+}
+
+@inproceedings{sawhney2021exploring,    % VERIFY pages
+  author    = {Sawhney, Ramit and Agarwal, Shivam and Wadhwa, Arnav and
+               Shah, Rajiv Ratn},
+  title     = {Exploring the Scale-Free Nature of Stock Markets: Hyperbolic
+               Graph Learning for Algorithmic Trading},
+  booktitle = {Proceedings of the Web Conference (WWW)},
+  year      = {2021},
+}
+
+@article{fanshawe2026forecasting,   % VERIFY -- pre-existing stub;
+                                    % author list and venue incomplete
+  author  = {Fanshawe, Thomas and others},
+  title   = {Forecasting with Graph Neural Networks in Financial Markets},
+  journal = {Working paper},
+  year    = {2026},
+}
+
+
+% ===========================================================================
+% GRAPH LEARNING MECHANISM -- why grouping precision beats connectivity
+% ===========================================================================
+
+@inproceedings{zhu2020beyond,
+  author    = {Zhu, Jiong and Yan, Yujun and Zhao, Lingxiao and
+               Heimann, Mark and Akoglu, Leman and Koutra, Danai},
+  title     = {Beyond Homophily in Graph Neural Networks: Current Limitations
+               and Effective Designs},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2020},
+  volume    = {33},
+}
+
+@inproceedings{li2018deeper,
+  author    = {Li, Qimai and Han, Zhichao and Wu, Xiao-Ming},
+  title     = {Deeper Insights into Graph Convolutional Networks for
+               Semi-Supervised Learning},
+  booktitle = {Proceedings of the AAAI Conference on Artificial Intelligence},
+  year      = {2018},
+}
+
+
+% ===========================================================================
+% ARCHITECTURE COMPONENTS
+% ===========================================================================
+
+@inproceedings{vaswani2017attention,
+  author    = {Vaswani, Ashish and Shazeer, Noam and Parmar, Niki and
+               Uszkoreit, Jakob and Jones, Llion and Gomez, Aidan N. and
+               Kaiser, Lukasz and Polosukhin, Illia},
+  title     = {Attention Is All You Need},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2017},
+  volume    = {30},
+}
+
+@inproceedings{velickovic2018graph,
+  author    = {Veli{\v{c}}kovi{\'c}, Petar and Cucurull, Guillem and
+               Casanova, Arantxa and Romero, Adriana and Li{\`o}, Pietro and
+               Bengio, Yoshua},
+  title     = {Graph Attention Networks},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2018},
+}
+
+@article{hochreiter1997long,
+  author  = {Hochreiter, Sepp and Schmidhuber, J{\"u}rgen},
+  title   = {Long Short-Term Memory},
+  journal = {Neural Computation},
+  year    = {1997},
+  volume  = {9},
+  number  = {8},
+  pages   = {1735--1780},
 }

@@ -199,13 +199,17 @@ graph-minus-no-graph difference.}
 \label{fig:perclass}
 \end{figure}
 
-Fama--MacBeth regressions (Table~\ref{tab:fm}) locate the signal along a
-second dimension. Controlling for 12--2 momentum, one-month reversal,
-60-day volatility and GICS-sector fixed effects, the coefficient retains
+Fama--MacBeth regressions \citep{fama1973risk} (Table~\ref{tab:fm}) locate the
+signal along a second dimension. Controlling for 12--2 momentum
+\citep{jegadeesh1993returns}, one-month reversal \citep{jegadeesh1990evidence,
+lehmann1990fads}, 60-day volatility \citep{ang2006crosssection} and
+GICS-sector fixed effects, the coefficient retains
 23\% of its univariate magnitude and is not significant. Because the
 industry fixed effect is implemented as within-sector demeaning, this says
 the predictive content is largely \emph{between} industries rather than
-within them.
+within them --- the dimension \citet{moskowitz1999industries} and
+\citet{hou2007industry} identify as carrying industry-level momentum and
+lead--lag structure.
 
 \begin{table}[h]
 \centering
@@ -225,8 +229,10 @@ Evaluation window & Signal alone & $+$ controls $+$ industry FE \\
 \bottomrule
 \end{tabular}
 \caption{Fama--MacBeth coefficients on the standardised signal, bp per
-5-day period, 707 cross-sectional regressions, Newey--West (lag 5).
-Size and book-to-market are unavailable in our data and are not controlled.}
+5-day period, 707 cross-sectional regressions, Newey--West (lag 5)
+\citep{newey1987simple}.
+Size and book-to-market \citep{fama1993common} are unavailable in our
+data and are not controlled.}
 \label{tab:fm}
 \end{table}
 
@@ -270,8 +276,8 @@ equal-weight quintile and decile, continuous dollar-neutral weights with a
 $25/50/75\%$ of the cross-section --- with one specification, 20-day
 continuous, fixed in advance as primary so that the $18$-cell grid cannot be
 mined for a headline. The pre-registered cell returns
-$\Delta$ Sharpe $=-0.032$ $(t{=}{-}0.15$, $n{=}7$ windows, bootstrap
-$p=.42)$, with the graph book turning over $11.1$ times a year against the
+$\Delta$ Sharpe $=-0.032$ $(t{=}{-}0.15$, $n{=}7$ windows, moving-block
+bootstrap \citep{kunsch1989jackknife} $p=.42)$, with the graph book turning over $11.1$ times a year against the
 baseline's $5.7$.
 
 The grid's structure is more informative than any single cell.
@@ -280,14 +286,16 @@ horizon moves it by roughly $0.9$. The graph leads in six of six
 constructions at five days and none of six at twenty or sixty
 (Figure~\ref{fig:termstructure}). Every five-day certainty-equivalent return
 in the grid is negative ($-0.007$ to $-0.023$) because those books run at
-$30$--$38$ annual turns. The graph's advantage, in other words, is
+$30$--$38$ annual turns --- the cost channel that
+\citet{novymarx2016taxonomy} and \citet{korajczyk2004momentum} show erodes
+high-turnover anomalies. The graph's advantage, in other words, is
 concentrated at exactly the horizon where turnover is most punitive, and is
 absent or negative wherever the strategy is profitable.
 
 Information-content measures taken \emph{before} any portfolio is formed
 confirm this is a property of the signal rather than of the weighting rule.
-Rank IC rises with horizon for both signals, but the graph exceeds the
-baseline only at five days ($0.0186$ vs.\ $0.0106$); at twenty and sixty
+Rank IC and its information ratio \citep{grinold2000active} rise with horizon
+for both signals, but the graph exceeds the baseline only at five days ($0.0186$ vs.\ $0.0106$); at twenty and sixty
 days it is behind ($0.0334$ vs.\ $0.0399$; $0.0449$ vs.\ $0.0642$), and the
 graph model's incremental $R^2$ over the no-graph baseline is
 \emph{negative} at both ($-0.00072$ and $-0.00288$). At tradeable horizons
@@ -335,10 +343,18 @@ reaches significance once power and multiplicity are accounted for. One cell
 of the eighteen --- five-day quintiles --- carries a bootstrap $p=.017$, but
 its window-level statistic is $t=+1.55$ against a $6$-degree-of-freedom
 threshold near $2.45$; a Bonferroni correction over the grid puts it at
-$0.31$; our block bootstrap over-rejects on synthetic null data
+$0.31$; our block bootstrap --- fixed block length, so the
+random-length stationary variant of \citet{politis1994stationary} is an
+untested alternative --- over-rejects on synthetic null data
 ($12.5\%$ at a nominal $5\%$); and the cell's certainty-equivalent return is
 $-0.014$. Eighteen tests at $\alpha=.05$ predict $0.9$ false positives, so
-one is the modal outcome under no effect.
+one is the modal outcome under no effect. This is the multiplicity problem
+\citet{harvey2016cross} document across the cross-sectional return
+literature, and the mechanism by which \citet{bailey2014pseudo} show backtest
+search manufactures out-of-sample failure; pre-committing the primary
+specification is our defence against it. For the Sharpe comparison
+specifically, \citet{ledoit2008robust} give the robust testing framework our
+bootstrap approximates.
 
 The defensible claim is therefore narrow but not empty: a robust and
 replicated classification gain yields \emph{no demonstrable} portfolio
