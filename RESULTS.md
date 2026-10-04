@@ -696,7 +696,82 @@ explain a negative incremental R², measured without any portfolio at all.
 
 ---
 
-## 14. Revised headline claim
+## 14. Finding 12 — breakeven costs: the shortfall is informational, not transactional
+
+Every economic conclusion so far rests on one flat assumption: 5 bp per unit
+of turnover. The sensitivity question deserves a breakeven rather than a band
+— at what cost does each book stop working, and how does that compare with
+what a desk actually pays?
+
+Because the engine computes net return as `gross − c·turn`, cost enters the
+mean linearly and `(sharpe, cer, turnover_yr, H)` determines `(mean, sd)`
+exactly. Eliminating the mean between the Sharpe and CER definitions gives a
+quadratic in `sd`; the positive root inverts the published aggregates with a
+maximum reconstruction residual of **2.2 × 10⁻¹⁶**, i.e. machine precision.
+The breakevens below are therefore exact arithmetic on the grid, not a
+simulation.
+
+Three quantities, in basis points:
+
+- **c_gross** — cost at which mean net return reaches zero (gross alpha
+  exactly pays for trading).
+- **c_cer** — cost at which the certainty-equivalent return reaches zero, the
+  risk-adjusted breakeven at γ = 5. Always below `c_gross`, by the variance
+  penalty.
+- **c_delta** — cost at which the graph's CER advantage over no-graph
+  vanishes.
+
+| Horizon | Construction | c_gross (graph) | c_cer (graph) | c_cer (no-graph) | **c_delta** |
+|---|---|---|---|---|---|
+| 5d | quintile | 25.1 | 0.7 | −20.0 | +34.9 |
+| 5d | decile | 22.2 | −1.0 | −24.4 | +23.1 |
+| 5d | continuous | 26.1 | 2.3 | −16.4 | +22.2 |
+| 20d | quintile | 144.5 | 8.7 | 31.7 | **−24.6** |
+| 20d | decile | 134.0 | 12.3 | 36.9 | **−12.6** |
+| 20d | continuous | 168.6 | 14.7 | 51.1 | **−24.2** |
+| 60d | quintile | 621.1 | 41.3 | 135.6 | **−130.3** |
+| 60d | decile | 429.3 | 31.2 | 138.0 | **−108.9** |
+| 60d | continuous | 721.9 | 48.0 | 166.2 | **−125.7** |
+
+(Confidence-filtered variants behave like their unfiltered counterparts and
+are in `results/sprint1/breakeven_cost.json`.)
+
+**The headline: c_delta is negative at every 20d and 60d cell.** A negative
+breakeven has no execution interpretation — it says the graph trails the
+baseline *even with free trading*. At the pre-registered specification the
+figure is −24.2 bp. No improvement in execution, venue, or scheduling can
+recover the gap, because the gap is not being paid away in costs.
+
+This is the same conclusion as the negative incremental R² in Finding 11,
+reached by a completely independent route. Finding 11 measured information
+before a portfolio existed; this measures money after one does. They agree,
+which is the strongest form of support either claim has.
+
+**The 5-day picture is the mirror image, and it is not good news.** There
+`c_delta` is +22 to +35 bp, so the graph's *advantage* is genuinely robust to
+costs. But the *book* is not: `c_cer` for the graph is 0.7–2.3 bp, and
+negative for the decile variant. Against realistic S&P 500 large-cap costs of
+roughly 3–10 bp all-in, a 5-day book at 30–38 annual turns is under water on
+a risk-adjusted basis before the graph question is even asked. The graph
+reliably wins a race that nobody can finish.
+
+Note the gap between `c_gross` and `c_cer` — 26.1 vs 2.3 bp at 5d continuous.
+Almost the entire economic burden at short horizons is the γ = 5 variance
+penalty, not trading friction. A risk-neutral investor would see a very
+different picture, which is worth stating explicitly rather than hiding in a
+parameter.
+
+**What this does not establish.** Point estimates only. Bootstrap p-values and
+window-level t-statistics are not recomputed at each cost level, which would
+need the per-period return series in the prediction bundles. The derivation
+also holds return variance fixed as cost varies; the omitted terms are
+`c²·var(turn)` and a covariance, and with a ~3 bp per-period cost against
+~200–240 bp period volatility they are immaterial. Reproduce with
+`python scripts/analyze_breakeven_cost.py`.
+
+---
+
+## 15. Revised headline claim
 
 > On a cross-sectional 5-day forward return rank task for S&P 500
 > constituents (2015–2024), graph neural networks over economically
@@ -749,7 +824,7 @@ period, not on macro-F1.**
 
 ---
 
-## 15. Summary of claim status
+## 16. Summary of claim status
 
 Every surviving claim below has been replicated on either disjoint seeds
 or independent time periods. Claims that failed replication are listed so
@@ -773,6 +848,9 @@ the record is auditable.
 | Graph adds information at tradeable horizons | incremental R² negative at 20d and 60d | **Rejected** |
 | Graph advantage is confined to a 5-day horizon | 6/6 constructions positive at 5d, 0/6 at 20d and 60d | **Supported** |
 | 5-day graph advantage is exploitable | every 5d CER negative (−0.007 to −0.023) at 30–38 turns/yr | **Not supported** |
+| Transaction costs explain the graph's deficit at tradeable horizons | c_delta negative in all 12 cells at 20d and 60d (−2.5 to −130 bp) | **Rejected** |
+| The graph's cost disadvantage can be executed away | negative breakeven has no execution interpretation | **Rejected** |
+| A 5-day book is viable at realistic costs | c_cer 0.7–2.3 bp vs ~3–10 bp realistic large-cap cost | **Not supported** |
 
 Mechanism hypotheses tested and rejected: transaction costs (explain ~10%
 of the portfolio shortfall), signal smoothing (non-monotonic, within

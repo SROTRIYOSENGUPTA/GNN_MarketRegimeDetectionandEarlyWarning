@@ -301,6 +301,38 @@ graph model's incremental $R^2$ over the no-graph baseline is
 \emph{negative} at both ($-0.00072$ and $-0.00288$). At tradeable horizons
 the graph is not contributing weak information; it is contributing noise.
 
+\paragraph{Breakeven costs.} Every statement above is conditioned on one flat
+assumption, 5\,bp per unit of turnover, and the sensitivity question is better
+answered with a breakeven than a band. Because the engine forms net return as
+$\text{gross}-c\cdot\text{turn}$, cost enters the mean linearly and the
+reported $(\text{Sharpe}, \text{CER}, \text{turnover}, H)$ determine the
+period mean and volatility exactly; inverting them reproduces the grid to
+machine precision ($2.2\times10^{-16}$), so the figures below are arithmetic
+on the published results rather than a further simulation.
+
+Let $c_{\Delta}$ denote the cost at which the graph's CER advantage over the
+no-graph baseline vanishes. \emph{At every twenty- and sixty-day cell
+$c_{\Delta}$ is negative}, from $-2.5$ to $-130$\,bp, and $-24.2$\,bp at the
+pre-registered specification. A negative breakeven admits no execution
+reading: it says the graph trails the baseline \emph{with free trading}. No
+improvement in venue, scheduling or implementation can close a gap that is not
+being paid away in costs. This is the conclusion of the incremental-$R^2$
+result reached by an independent route --- one measured before a portfolio
+exists, the other after --- and their agreement is the strongest support
+either has.
+
+The five-day picture inverts, and is not more encouraging. There
+$c_{\Delta}$ is $+22$ to $+35$\,bp, so the graph's \emph{advantage} is robust
+to costs; but the \emph{book} is not. Its risk-adjusted breakeven
+$c_{\text{CER}}$ is $0.7$--$2.3$\,bp, and negative for the decile variant,
+against realistic S\&P~500 large-cap costs of roughly $3$--$10$\,bp all-in. At
+$30$--$38$ annual turns a five-day book is under water before the graph
+question is posed. The gap between the gross breakeven ($26.1$\,bp at 5d
+continuous) and $c_{\text{CER}}$ ($2.3$\,bp) locates almost the whole burden
+at short horizons in the $\gamma=5$ variance penalty rather than in trading
+friction --- a dependence on the risk-aversion parameter we prefer to state
+plainly.
+
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.95\textwidth]{fig5_termstructure.pdf}

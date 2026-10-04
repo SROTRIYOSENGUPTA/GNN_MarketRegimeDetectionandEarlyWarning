@@ -125,6 +125,22 @@ RETRACTED = {
         asserts=[r"5-day (?:advantage|edge) is (?:exploitable|tradeable)",
                  r"exploit the (?:five|5)-day"],
         note="every 5d CER is negative at 30-38 turns/yr"),
+    "Transaction costs explain the graph's deficit at tradeable horizons": dict(
+        asserts=[r"costs explain the (?:graph'?s? )?(?:deficit|shortfall|gap)",
+                 r"transaction costs (?:explain|account for|drive) the (?:deficit|shortfall|gap|underperformance)",
+                 r"(?:deficit|shortfall|gap) is (?:a )?(?:transaction[- ])?cost"],
+        note="c_delta is negative in all 12 cells at 20d and 60d -- the graph "
+             "trails even at zero cost"),
+    "The graph's cost disadvantage can be executed away": dict(
+        asserts=[r"execut(?:e|ed|ing) (?:it |this |the gap |the shortfall )?away",
+                 r"better execution (?:would|could|might) (?:recover|close|fix|rescue)",
+                 r"lower(?:ing)? costs (?:would|could|might) (?:recover|close|rescue)"],
+        note="a negative breakeven has no execution interpretation"),
+    "A 5-day book is viable at realistic costs": dict(
+        asserts=[r"(?:five|5)[- ]day book is (?:viable|profitable|tradeable)",
+                 r"viable at realistic (?:costs|trading costs)",
+                 r"(?:five|5)[- ]day (?:strategy|book) (?:is|remains) profitable"],
+        note="c_cer is 0.7-2.3 bp against ~3-10 bp realistic large-cap cost"),
     "Look-ahead from the static snapshot explains the results": dict(
         asserts=[r"look-ahead explains", r"driven by look-ahead",
                  r"contamination (?:explains|drives) the"],
