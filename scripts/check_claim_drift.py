@@ -132,9 +132,17 @@ RETRACTED = {
         note="c_delta is negative in all 12 cells at 20d and 60d -- the graph "
              "trails even at zero cost"),
     "The graph's cost disadvantage can be executed away": dict(
-        asserts=[r"execut(?:e|ed|ing) (?:it |this |the gap |the shortfall )?away",
-                 r"better execution (?:would|could|might) (?:recover|close|fix|rescue)",
-                 r"lower(?:ing)? costs (?:would|could|might) (?:recover|close|rescue)"],
+        # Bridged with [\s\S]{0,70} rather than fixed word order: an earlier
+        # version required "better execution could recover" verbatim and
+        # missed "better execution the gap could be recovered". Paragraphs
+        # wrap, so the bridge must cross newlines.
+        asserts=[r"execut(?:e|ed|ing)[\s\S]{0,25}away",
+                 r"(?:better|improved|cheaper)\s+execution[\s\S]{0,70}"
+                 r"(?:recover|close|closed|closing|fix|rescue|eliminat)",
+                 r"(?:recover|closed?|rescued?|fixed)[\s\S]{0,40}"
+                 r"(?:by|with|through)[\s\S]{0,20}execution",
+                 r"(?:lower|lowering|reduce|reducing|cutting)\s+(?:the\s+)?costs?"
+                 r"[\s\S]{0,60}(?:recover|close|rescue|fix|eliminat)"],
         note="a negative breakeven has no execution interpretation"),
     "A 5-day book is viable at realistic costs": dict(
         asserts=[r"(?:five|5)[- ]day book is (?:viable|profitable|tradeable)",
